@@ -134,3 +134,4 @@ yarn.lock
 **/*.img
 **/vms/
 **/.DS_Store
+**/run.log
