@@ -1,0 +1,11 @@
+{
+  "vsphere_server": "",
+  "vsphere_user": "",
+  "vsphere_password": "",
+  "vsphere_cluster": "",
+  "vsphere_datacenter": "",
+  "vsphere_resourcepool": "",
+  "vsphere_datastore": "",
+  "vsphere_network": "",
+  "domain": ""
+}
