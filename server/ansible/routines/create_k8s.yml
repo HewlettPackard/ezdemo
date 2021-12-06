@@ -1,0 +1,53 @@
+### Kubernetes Cluster with 1 Master and 1 Worker, no DF
+- hosts: localhost
+  # gather_facts: True
+  tasks:
+  - shell: "hpecp k8sworker get /api/v2/worker/k8shost/ -o json"
+    register: output
+    ignore_errors: True
+  - set_fact:
+      workers: "{{ output.stdout | from_json }}"
+  - set_fact:
+      worker_ids: "{{ workers | json_query(jmesquery) }}"
+    vars:
+      jmesquery: "_embedded.k8shosts[]._links.self.href"
+  - set_fact:
+      master_list: "{{ worker_ids[:1] | map('regex_replace', '$', ':master') | list }}"
+  - set_fact:
+      worker_list: "{{ worker_ids[-1:] | map('regex_replace', '$', ':worker') | list }}"
+  - set_fact:
+      k8shost_list: "{{ master_list + worker_list }}"
+
+  - name: creating K8s cluster
+    shell: "hpecp k8scluster create \
+    --name k8scluster \
+    --k8s_version 1.20.11 \
+    --k8shosts-config {{ k8shost_list | join(',')  }} \
+    --addons '{{ addons_list }}' \
+    --ext_id_svr_bind_pwd '5ambaPwd@' \
+    --ext_id_svr_user_attribute 'CN' \
+    --ext_id_svr_bind_type 'search_bind' \
+    --ext_id_svr_bind_dn 'cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com' \
+    --ext_id_svr_host '{{ (groups['ad_server'] | list)[0] }}' \
+    --ext_id_svr_group_attribute 'member' \
+    --ext_id_svr_security_protocol 'ldaps' \
+    --ext_id_svr_base_dn 'CN=Users,DC=samdom,DC=example,DC=com' \
+    --ext_id_svr_verify_peer 'false' \
+    --ext_id_svr_type 'Active Directory' \
+    --ext_id_svr_port '636' \
+    --external-groups '{{ external_groups_list }}'"
+    ignore_errors: True
+    vars:
+      addons_list: '["istio", "kubeflow"]'
+      external_groups_list: '["CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com","CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"]'
+    register: cluster_id
+
+  - name: wait for K8s cluster
+    shell: 'hpecp k8scluster wait-for-status "{{ item }}" --status [''ready''] --timeout-secs 1200'
+    with_items: "{{ cluster_id.stdout }}"
+    ignore_errors: True
+
+  # - name: create mlflow tenant
+  #   import_tasks: configure_mlops.yml
+  #   when: not is_mlops | bool
+

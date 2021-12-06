@@ -1,0 +1,11 @@
+#cloud-config
+
+runcmd:
+  # - echo "ip_resolve=4" >> /etc/yum.conf
+  # - /bin/dd if=/dev/zero of=/var/swapfile bs=1M count=12694
+  # - /sbin/mkswap /var/swapfile
+  # - chmod 600 /var/swapfile
+  # - /sbin/swapon /var/swapfile
+  # - echo /var/swapfile none swap defaults 0 0 | sudo tee -a /etc/fstab 
+
+output : { all : '| tee -a /var/log/cloud-init-output.log' }

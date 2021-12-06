@@ -1,0 +1,53 @@
+ ###################################
+# HPE Container Platform Deployment
+#
+# for feature improvements contact: dirk.derichsweiler@hpe.com
+# 
+# modified by Erdinc Kaya <kaya@hpe.com>
+
+######################################################################################################
+# PREPARE
+######################################################################################################
+- name: Prepare HCP Hosts
+  import_playbook: routines/prepare_centos.yml 
+  # when: skip_preparation is not defined
+
+######################################################################################################
+# INSTALL FALCO
+######################################################################################################
+- name: Install falco
+  import_playbook: routines/install_falco.yml
+  when: is_runtime | bool
+
+######################################################################################################
+# INSTALL HCP
+######################################################################################################
+- name: Install HCP
+  import_playbook: routines/install_hcp.yml
+  when: is_runtime | bool
+
+######################################################################################################
+# SETUP LOCAL CLIENT
+######################################################################################################
+- name: Configure hosts for env
+  import_playbook: routines/configure_settings.yml
+  when: is_runtime | bool
+
+######################################################################################################
+# IMPORT HOSTS
+######################################################################################################
+- name: Import Hosts
+  import_playbook: routines/import_hosts.yml
+  when: is_runtime | bool
+
+######################################################################################################
+# INSTALL MAPR
+######################################################################################################
+- name: Prepare MapR Hosts
+  import_playbook: routines/prepare_ubuntu.yml
+  when: is_mapr | bool
+
+- name: Install External MapR Hosts
+  import_playbook: routines/create_mapr.yml
+  when: is_mapr | bool
+

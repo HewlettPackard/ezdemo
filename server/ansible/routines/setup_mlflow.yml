@@ -1,0 +1,55 @@
+### Create MLFlow cluster
+
+  - name: create mlflow secret
+    shell: "echo {{ mlflowsc_yml }} | {{ kubeatns }} apply -f -"
+    ignore_errors: True
+    vars:
+      mlflowsc_yml: |-
+        apiVersion: v1 
+        data: 
+          MLFLOW_ARTIFACT_ROOT: czM6Ly9tbGZsb3c= #s3://mlflow 
+          AWS_ACCESS_KEY_ID: YWRtaW4= #admin 
+          AWS_SECRET_ACCESS_KEY: YWRtaW4xMjM= #admin123 
+        kind: Secret
+        metadata: 
+          name: mlflow-sc 
+          labels: 
+            kubedirector.hpe.com/secretType: mlflow 
+        type: Opaque 
+
+  - set_fact:
+  - name: create mlflow cluster
+    shell: "echo {{ mlflow_yml }} | {{ kubeatns }} apply -f -"
+    ignore_errors: True
+    vars:
+      mlflow_yml: |-
+        apiVersion: "kubedirector.hpe.com/v1beta1"
+        kind: "KubeDirectorCluster"
+        metadata: 
+          name: "mlflow"
+          namespace: "{{ tenant_ns.stdout }}"
+          labels: 
+            description: "mlflow"
+        spec: 
+          app: "mlflow"
+          namingScheme: "CrNameRole"
+          appCatalog: "local"
+          connections:
+            secrets:
+              - mlflow-sc
+          roles: 
+            - 
+              id: "controller"
+              members: 1
+              resources: 
+                requests: 
+                  cpu: "2"
+                  memory: "4Gi"
+                  nvidia.com/gpu: "0"
+                limits: 
+                  cpu: "2"
+                  memory: "4Gi"
+                  nvidia.com/gpu: "0"
+              #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+              podLabels: 
+                hpecp.hpe.com/dtap: "hadoop2"

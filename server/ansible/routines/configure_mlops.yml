@@ -1,0 +1,64 @@
+### Configure MLTenant
+- hosts: localhost
+  tasks:
+  - name: get cluster id
+    shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
+    register: cluster_id
+
+  - name: get cluster name
+    shell: "hpecp k8scluster get {{ cluster_id.stdout }} -o json | jq -r '.label.name'"
+    register: cluster_name
+
+  - name: create tenant
+    shell: "hpecp tenant create --name 'MLtenant' --description 'MLOPS Example' --k8s-cluster-id {{ cluster_id.stdout }} --tenant-type k8s --features '{ ml_project: true }' --quota-cores 1000"
+    register: tenant
+    ignore_errors: True
+
+  - name: get tenant id
+    shell: "hpecp tenant list -o text | grep MLtenant | cut -d' ' -f1"
+    register: tenant_id
+
+  - name: wait for tenant
+    shell: "hpecp tenant wait-for-status --id {{ tenant_id.stdout }} --status ['ready'] --timeout-secs 1800"
+
+  - name: get tenant namespace
+    shell: "hpecp tenant get {{ tenant_id.stdout }} | grep '^namespace: ' | cut -d' ' -f2"
+    register: tenant_ns
+
+  - set_fact:
+      kubeatns: "kubectl --kubeconfig ~/.kube/hpecp_admin.config -n {{ tenant_ns.stdout }}"
+
+  - name: get admin role
+    shell: "hpecp role list --query \"[?label.name=='Admin'][_links.self.href]\" --output text"
+    register: admin_role
+
+  - name: get member role
+    shell: "hpecp role list --query \"[?label.name=='Member'][_links.self.href]\" --output text"
+    register: member_role
+    
+  - name: add admins to tenant
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ADMIN_GROUP }}' --role-id {{ admin_role.stdout }}"
+    vars: 
+      ADMIN_GROUP: "CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com"
+    ignore_errors: True
+
+  - name: add members to tenant
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ MEMBER_GROUP }}' --role-id {{ member_role.stdout }}"
+    vars: 
+      MEMBER_GROUP: "CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"
+    ignore_errors: True
+  
+  # - name: create gitea
+  #   include_tasks: ./setup_gitea.yml
+  
+  # - name: mlflow cluster
+  #   include_tasks: ./setup_mlflow.yml
+
+  # - name: create notebook
+  #   include_tasks: ./setup_notebook.yml
+
+  # - name: create minio
+  #   include_tasks: ./setup_minio.yml
+
+  # - name: verify kubeflow
+  #   shell: "true" ## if needed

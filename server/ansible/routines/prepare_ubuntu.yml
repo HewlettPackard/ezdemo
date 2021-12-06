@@ -1,0 +1,138 @@
+## Configure mapr ubuntu hosts
+- hosts: "{{ groups['mapr'] }}"
+
+  tasks:
+  # - shell: "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections"
+  - name: Prepare Ubuntu nodes for MapR Installation
+    shell: "update-locale LC_ALL=en_US.utf8"
+    become: yes
+  - shell: "echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag"
+  - lineinfile:
+      dest: /etc/sysctl.conf
+      regexp: "{{item.regex}}"
+      line: "{{item.line}}"
+      create: true
+    with_items:
+      - regex: ^vm\.swappiness
+        line: vm.swappiness = 1
+      - regex: ^net\.ipv4\.tcp_retries2
+        line: net.ipv4.tcp_retries2 = 5
+      - regex: ^vm\.overcommit_memory
+        line: vm.overcommit_memory = 0
+      - regex: ^net\.ipv4\.tcp_fin_timeout
+        line: net.ipv4.tcp_fin_timeout = 30
+    become: yes
+  - lineinfile:
+      path: /etc/hosts
+      regexp: 'ip6-|IPv6|::1|127.0.1.1'
+      state: absent
+    become: yes 
+  - lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '^PasswordAuthentication'
+      line: "PasswordAuthentication yes"
+    become: yes
+  - apt: 
+      name: "*"
+      state: latest
+    become: yes
+  - copy:
+      dest: /usr/share/pam-configs/mkhomedir
+      content: |-
+        Name: activate mkhomedir
+        Default: yes
+        Priority: 900
+        Session-Type: Additional
+        Session:
+                required                        pam_mkhomedir.so umask=0022 skel=/etc/skel
+    become: yes 
+  - name: enable universe
+    shell: "add-apt-repository universe && apt update"
+    become: yes
+  - name: install sssd
+    apt: 
+      name: "{{ pkg_list.split(' ') }}"
+      state: latest
+    vars:
+      # pkg_list: "realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit"
+      pkg_list: "sssd-ad sssd-tools realmd adcli"
+    become: yes
+    register: sssd_install
+  - name: Configure sssd.conf
+    copy: 
+      dest: /etc/sssd/sssd.conf 
+      content: |-
+        [sssd]
+        config_file_version = 2
+        domains = {{ ad_realm }}
+        services = nss, pam, ssh
+        [domain/{{ ad_realm }}]
+        id_provider = ad
+        auth_provider = ad
+        access_provider = ad
+        chpass_provider = ad
+        ldap_id_mapping = true
+        use_fully_qualified_names = false
+        ldap_schema = rfc2307bis
+        ad_server = {{ groups['ad_server'] | first }}
+        krb5_realm = {{ ad_realm }}
+        # no dynamic dns update
+        dyndns_update = false
+        dyndns_refresh_interval = 43200
+        dyndns_update_ptr = false
+        dyndns_ttl = 3600
+        ad_enable_gc = true
+        ldap_sasl_mech = GSSAPI
+        ldap_krb5_keytab = /etc/krb5.keytab
+        ldap_krb5_init_creds = true
+        ad_gpo_access_control = disabled
+        override_homedir = /home/%u
+        override_shell = /bin/bash
+        # Users and groups are not enumerated to reduce trafic
+        enumerate = false
+        ldap_access_order = expire
+        ldap_account_expire_policy = ad
+        ldap_force_upper_case_realm = true
+        case_sensitive = false
+        ldap_referrals = false
+        simple_allow_groups = Domain Users
+        # perf
+        cache_credentials = true
+      mode: 0600
+      owner: root
+      group: root
+    become: yes
+  - file: 
+      path: /etc/samba
+      state: directory
+      mode: 0755
+    become: yes
+  - name: Configure smb.conf
+    copy: dest=/etc/samba/smb.conf content={{ smb_file }}
+    vars:
+      mapr_workgroup: "SAMDOM"
+      smb_file: |-
+        [global]
+        security = ads
+        workgroup = {{ mapr_workgroup }}
+        realm = {{ ad_realm }}
+        kerberos method = secrets and keytab
+        passdb backend = tdbsam
+        unix extensions = yes
+        client signing = yes
+        client use spnego = yes
+    become: yes
+  - reboot: 
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    when: sssd_install.changed
+    become: yes
+  - shell: |-
+      pam-auth-update --enable mkhomedir
+      realm --install=/ discover {{ ad_realm }}
+      # echo {{ admin_password }} | sudo realm --install=/ join --unattended -U Administrator {{ ad_realm }}
+      # sudo realm permit -g 'Domain Users' || true
+      # echo 'debconf debconf/frontend select Dialog' | sudo debconf-set-selections
+    become: yes 
