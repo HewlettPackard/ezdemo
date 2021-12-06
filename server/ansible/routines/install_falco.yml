@@ -1,0 +1,44 @@
+- hosts: workers
+  # any_errors_fatal: yes
+  gather_facts: no
+
+  tasks:
+  - name: import falco key
+    rpm_key: 
+      state: present
+      key: https://falco.org/repo/falcosecurity-3672BA8F.asc
+    become: yes
+
+  - name: add falco repo
+    yum_repository:
+      name: falcosecurity-rpm
+      description: falcosecurity-rpm
+      baseurl: https://download.falco.org/packages/rpm
+    become: yes
+
+  - name: install falco
+    yum:
+      name: 
+        - kernel-devel
+        - dkms
+        - falco
+      state: latest
+    register: yum
+    become: yes
+
+  - name: reboot for falco
+    reboot:
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    when: yum.changed
+    ignore_errors: yes
+    become: yes
+
+  # - name: start falco
+  #   systemd:
+  #     state: started
+  #     enabled: yes
+  #     name: falco
+  #   become: yes

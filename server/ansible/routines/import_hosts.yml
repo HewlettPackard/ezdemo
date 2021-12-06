@@ -1,0 +1,94 @@
+### import K8S Nodes
+- hosts: localhost
+  vars:
+    worker_ips: "{{ groups['workers'] | list }}"
+    kubeworker_ips: "{{ worker_ips[:2] }}"
+    dfworker_ips: "{{ worker_ips[2:5] }}"
+    ssh_prv_key_path: "../../{{ ssh_prv_key }}"
+
+  tasks:
+  ### Get Datafabric tag
+  - shell: hpecp httpclient get /api/v2/tag
+    register: result
+    ignore_errors: yes
+  - set_fact:
+      df_tag: "{{ result.stdout | from_json }}"
+  - set_fact: 
+      df_tag_id: "{{ df_tag | json_query(jmesquery) }}"
+    vars:
+      jmesquery: "_embedded.tags[?label.name=='Datafabric']._links.self.href"
+
+  ### install df nodes with tag
+  - name: create df workers
+    shell: hpecp k8sworker create-with-ssh-key --ip "{{ item }}" --ssh-key-file "{{ ssh_prv_key_path }}" --tags "{{ df_tag_id | first }}":true
+    with_items: "{{ dfworker_ips }}"
+    ignore_errors: yes
+
+  ### install non-df nodes (untagged)
+  - name: create addon workers
+    shell: hpecp k8sworker create-with-ssh-key --ip "{{ item }}" --ssh-key-file "{{ ssh_prv_key_path }}"
+    with_items: "{{ kubeworker_ips }}"
+    ignore_errors: yes
+
+  - name: get df workers
+    shell: hpecp k8sworker get /api/v2/worker/k8shost/ -o json
+    register: output
+    ignore_errors: yes
+  - set_fact:
+      workers: "{{ output.stdout | from_json }}"
+  - set_fact:
+      dfworker_ids: "{{ workers | json_query(jmesquery) }}"
+    vars:
+      jmesquery: "_embedded.k8shosts[?datafabric]._links.self.href"
+  - set_fact:
+      kubeworkers: "{{ output.stdout | from_json }}"
+  - set_fact:
+      kubeworker_ids: "{{ workers | json_query(jmesquery) }}"
+    vars:
+      jmesquery: "_embedded.k8shosts[?!datafabric]._links.self.href"
+
+  - name: wait for storage_pending
+    shell: hpecp k8sworker wait-for-status "{{ item }}" --status  [''storage_pending'',''ready'',''configured''] --timeout-secs 1200
+    with_items: "{{ dfworker_ids + kubeworker_ids }}"
+    ignore_errors: yes
+
+  # - name: get worker disks
+  #   shell: hpecp k8sworker get "{{ dfworker_ids | first }}" -o json
+  #   register: output2
+  #   ignore_errors: yes
+  # - set_fact:
+  #     worker: "{{ output2.stdout | from_json }}"
+  # - set_fact:
+  #     persistent_disk: "{{ (worker | json_query('sysinfo.storage[?info.IsDisk].info.Name')) | first }}"
+  #     ephemeral_disk: "{{ (worker | json_query('sysinfo.storage[?info.IsDisk].info.ConsistentName')) | last }}"
+
+  - name: configure storage for df
+    shell: >
+      PERSISTENT_DISK=$(hpecp k8sworker get "{{ item }}" --output json \
+        | python3 -c 'import json,sys;obj=json.load(sys.stdin);print([storage["info"]["ConsistentName"] for storage in obj["sysinfo"]["storage"] if storage["info"]["Mountpoint"] == ""][0])')
+      EPHEMERAL_DISK=$(hpecp k8sworker get "{{ item }}" --output json \
+        | python3 -c 'import json,sys;obj=json.load(sys.stdin);print([storage["info"]["ConsistentName"] for storage in obj["sysinfo"]["storage"] if storage["info"]["Mountpoint"] == ""][1])')
+      hpecp k8sworker set-storage --id "{{ item }}" "${EPHEMERAL_DISK}" --persistent-disks="${PERSISTENT_DISK}"
+    with_items: "{{ dfworker_ids }}"
+    ignore_errors: yes
+
+  - name: configure storage for addon workers
+    shell: >
+      EPHEMERAL_DISK=$(hpecp k8sworker get "{{ item }}" --output json \
+        | python3 -c 'import json,sys;obj=json.load(sys.stdin);print([storage["info"]["ConsistentName"] for storage in obj["sysinfo"]["storage"] if storage["info"]["Mountpoint"] == ""][1])')
+      hpecp k8sworker set-storage --id "{{ item }}" "${EPHEMERAL_DISK}"
+    with_items: "{{ kubeworker_ids }}"
+    ignore_errors: yes
+
+  - name: wait for workers to be ready
+    shell: hpecp k8sworker wait-for-status "{{ item }}" --status  [''ready'',''configured''] --timeout-secs 1200
+    with_items: "{{ dfworker_ids + kubeworker_ids }}"
+    ignore_errors: yes
+
+# - name: find unconfigured workers
+#   command: 'hpecp k8sworker list --query "{{ jmespath }}" -o json'
+#   vars:
+#     jmespath: "[?status != 'configured'] | length(@)"
+#   register: unconfigured_workers
+
+#   when: unconfigured_workers.stdout|int > 0

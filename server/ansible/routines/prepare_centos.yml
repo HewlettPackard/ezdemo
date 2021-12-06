@@ -1,0 +1,56 @@
+- hosts: all:!mapr
+  # any_errors_fatal: true
+  # gather_facts: False
+  tasks:
+  - name: configure yum for ipv4
+    lineinfile:
+      dest: /etc/yum.conf
+      line: ip_resolve=4
+    become: True 
+
+  - name: enable epel repo
+    yum:
+      name: epel-release
+      state: latest
+    become: True
+
+  - name: update packages
+    yum:
+      name: '*'
+      state: latest
+    register: yum
+    become: True
+
+  - yum: name="bash-completion" state=latest
+    become: yes
+
+  - name: configure selinux
+    selinux:
+      state: permissive
+      policy: targeted
+    become: True
+    register: selinux
+
+- hosts: gateway
+  gather_facts: False
+  tasks:
+  - name: reboot gateway
+    reboot:
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    when: selinux.reboot_required or yum.changed
+    become: True
+
+- hosts: all:!gateway:!mapr
+  gather_facts: False
+  tasks:
+  - name: reboot others
+    reboot:
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    when: selinux.reboot_required or yum.changed
+    become: True

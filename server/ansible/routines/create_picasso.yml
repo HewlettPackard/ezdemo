@@ -1,0 +1,70 @@
+### create Picasso Server
+- hosts: localhost
+
+  tasks:
+    - name: get masters
+      shell: hpecp k8sworker get /api/v2/worker/k8shost/ -o json
+      register: output
+      ignore_errors: True
+    - set_fact:
+        workers: "{{ output.stdout | from_json }}"
+    - set_fact:
+        dfworker_ids: "{{ workers | json_query(dfquery) }}"
+        aoworker_ids: "{{ workers | json_query(aoquery) }}"
+      vars:
+        dfquery: "_embedded.k8shosts[?datafabric]._links.self.href"
+        aoquery: "_embedded.k8shosts[?!datafabric]._links.self.href"
+
+    - name: set picasso on masters
+      set_fact:
+        picasso_list: "{{ dfworker_ids | map('regex_replace', '$', ':master') | list }}"
+
+    - name: set addons on workers
+      set_fact:
+        worker_list: "{{ aoworker_ids | map('regex_replace', '$', ':worker') | list }}"
+
+    - name: create host list
+      set_fact:
+        k8shost_list: "{{ picasso_list + worker_list }}"
+
+    - name: creating picasso cluster
+      shell: "hpecp k8scluster create \
+      --name dfcluster \
+      --k8s_version 1.20.11 \
+      --k8shosts-config {{ k8shost_list | join(',')  }} \
+      --addons '{{ addons_list }}' \
+      --ext_id_svr_bind_pwd '5ambaPwd@' \
+      --ext_id_svr_user_attribute 'CN' \
+      --ext_id_svr_bind_type 'search_bind' \
+      --ext_id_svr_bind_dn 'cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com' \
+      --ext_id_svr_host '{{ (groups['ad_server'] | list)[0] }}' \
+      --ext_id_svr_group_attribute 'member' \
+      --ext_id_svr_security_protocol 'ldaps' \
+      --ext_id_svr_base_dn 'CN=Users,DC=samdom,DC=example,DC=com' \
+      --ext_id_svr_verify_peer 'false' \
+      --ext_id_svr_type 'Active Directory' \
+      --ext_id_svr_port '636' \
+      --external-groups '{{ external_groups_list }}' \
+      --datafabric true \
+      --datafabric-name=dfdemo"
+      vars: 
+        addons_list: '["spark-operator", "kubeflow", "istio"]'
+        external_groups_list: '["CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com","CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"]'
+      ignore_errors: True
+
+    - shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
+      register: cluster_id
+
+    - name: wait for cluster to stabilize
+      wait_for:
+        timeout: 120
+
+    # - shell: "hpecp k8scluster get {{ cluster_id.stdout }} -o json | jq -r '.label.name'"
+    #   register: cluster_name
+
+    - name: create local admin config
+      shell: "hpecp k8scluster admin_kube_config {{ cluster_id.stdout }} > ~/.kube/hpecp_admin.config"
+
+    - name: waiting Picasso cluster
+      shell: "hpecp k8scluster wait-for-status ''[ready]'' --id {{ cluster_id.stdout }} --timeout-secs 3600"
+

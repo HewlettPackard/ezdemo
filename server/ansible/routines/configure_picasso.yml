@@ -1,0 +1,65 @@
+### Configure Picasso
+- hosts: localhost
+  # gather_facts: True
+
+  tasks:
+    - name: read cluster id
+      shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
+      register: cluster_id
+
+    - name: get cluster
+      shell: "hpecp k8scluster get {{ cluster_id.stdout }} -o json"
+      register: cluster_json
+      ignore_errors: True
+
+    - set_fact:
+        cluster: "{{ cluster_json.stdout | from_json }}"
+    - set_fact:
+        firstmaster_id: "{{ (cluster | json_query(jmesquery)) | first }}"
+      vars:
+        jmesquery: "k8shosts_config[?role=='master'].node"
+
+    - shell: "hpecp k8sworker get {{ firstmaster_id }} -o json"
+      register: firstmaster_json
+    - set_fact:
+        firstmasterip: "{{ (firstmaster_json.stdout | from_json) | json_query('ipaddr') }}"
+
+- hosts: "{{ groups['controllers'] | first }}"
+  tasks:
+    - name: find ecp directory
+      find:
+        paths: /opt/bluedata/bundles
+        patterns: 'hpe-cp*'
+        file_type: directory
+      register: output_directory
+
+    - name: prepare tenants
+      shell: |-
+        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
+        export LOG_FILE_PATH=/tmp/register_k8s_prepare.log
+        {{ item.path }}/startscript.sh --action prepare_dftenants
+      with_items: "{{ output_directory.files }}"
+      register: output
+
+    - name: configure tenants
+      shell: |-
+        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
+        export LOG_FILE_PATH=/tmp/register_k8s_configure.log
+        echo yes | {{ item.path }}/startscript.sh --action configure_dftenants
+      with_items: "{{ output_directory.files }}"
+      register: output
+
+    - name: register tenants
+      shell: |-
+        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
+        export LOG_FILE_PATH=/tmp/register_k8s_register.log
+        expect <<EOF
+          set timeout 1800
+          spawn {{ item.path }}/startscript.sh --action register_dftenants
+          expect ".*Enter Site Admin username: " { send "admin\r" }
+          expect "admin\r\nEnter Site Admin password: " { send "{{ admin_password }}\r" }
+          expect eof
+        EOF
+      register: output
+      with_items: "{{ output_directory.files }}"
+      ignore_errors: True

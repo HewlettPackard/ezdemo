@@ -1,0 +1,564 @@
+##############################
+###### DemoTenantAdmins ######
+##############################
+
+dn: cn=DemoTenantAdmins,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixGroup
+-
+add: gidnumber
+gidnumber: 10001
+
+#######################
+###### ad_admin1 ######
+#######################
+
+# ad_admin1
+dn: cn=ad_admin1,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20001
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin1
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin1@example.com
+-
+add: givenName
+givenName: ADAdmin1
+
+#######################
+###### ad_admin2 ######
+#######################
+
+dn: cn=ad_admin2,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20002
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin2
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin2@example.com
+-
+add: givenName
+givenName: ADAdmin2
+
+#######################
+###### ad_admin3 ######
+#######################
+
+dn: cn=ad_admin3,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20003
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin3
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin3@example.com
+-
+add: givenName
+givenName: ADAdmin3
+
+#######################
+###### ad_admin4 ######
+#######################
+
+dn: cn=ad_admin4,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20004
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin4
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin4@example.com
+-
+add: givenName
+givenName: ADAdmin4
+
+#######################
+###### ad_admin5 ######
+#######################
+
+dn: cn=ad_admin5,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20005
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin5
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin5@example.com
+-
+add: givenName
+givenName: ADAdmin5
+
+#######################
+###### ad_admin6 ######
+#######################
+
+dn: cn=ad_admin6,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20006
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin6
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin6@example.com
+-
+add: givenName
+givenName: ADAdmin6
+
+#######################
+###### ad_admin7 ######
+#######################
+
+dn: cn=ad_admin7,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20007
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin7
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin7@example.com
+-
+add: givenName
+givenName: ADAdmin7
+
+#######################
+###### ad_admin8 ######
+#######################
+
+dn: cn=ad_admin8,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20008
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin8
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin8@example.com
+-
+add: givenName
+givenName: ADAdmin8
+
+#######################
+###### ad_admin9 ######
+#######################
+
+dn: cn=ad_admin9,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20009
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin9
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin9@example.com
+-
+add: givenName
+givenName: ADAdmin9
+
+#######################
+###### ad_admin10 ######
+#######################
+
+dn: cn=ad_admin10,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 20010
+-
+add: gidnumber
+gidnumber: 10001
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_admin10
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: adadmin10@example.com
+-
+add: givenName
+givenName: ADAdmin10
+
+#############################
+###### DemoTenantUsers ######
+#############################
+
+dn: cn=DemoTenantUsers,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixGroup
+-
+add: gidnumber
+gidnumber: 10002
+
+######################
+###### ad_user1 ######
+######################
+
+dn: cn=ad_user1,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30001
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user1
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser1@example.com
+-
+add: givenName
+givenName: ADUser1
+
+######################
+###### ad_user2 ######
+######################
+
+dn: cn=ad_user2,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30002
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user2
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser2@example.com
+-
+add: givenName
+givenName: ADUser2
+
+######################
+###### ad_user3 ######
+######################
+
+dn: cn=ad_user3,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30003
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user3
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser3@example.com
+-
+add: givenName
+givenName: ADUser3
+
+######################
+###### ad_user4 ######
+######################
+
+dn: cn=ad_user4,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30004
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user4
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser4@example.com
+-
+add: givenName
+givenName: ADUser4
+
+######################
+###### ad_user5 ######
+######################
+
+dn: cn=ad_user5,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30005
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user5
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser5@example.com
+-
+add: givenName
+givenName: ADUser5
+
+######################
+###### ad_user6 ######
+######################
+
+dn: cn=ad_user6,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30006
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user6
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser6@example.com
+-
+add: givenName
+givenName: ADUser6
+
+######################
+###### ad_user7 ######
+######################
+
+dn: cn=ad_user7,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30007
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user7
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser7@example.com
+-
+add: givenName
+givenName: ADUser7
+
+######################
+###### ad_user8 ######
+######################
+
+dn: cn=ad_user8,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30008
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user8
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser8@example.com
+-
+add: givenName
+givenName: ADUser8
+
+######################
+###### ad_user9 ######
+######################
+
+dn: cn=ad_user9,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30009
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user9
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser9@example.com
+-
+add: givenName
+givenName: ADUser9
+
+######################
+###### ad_user10 ######
+######################
+
+dn: cn=ad_user10,cn=Users,DC=samdom,DC=example,DC=com
+changetype: modify
+add:objectclass
+objectclass: posixAccount
+-
+add: uidNumber
+uidNumber: 30010
+-
+add: gidnumber
+gidnumber: 10002
+-
+add: unixHomeDirectory
+unixHomeDirectory: /home/ad_user10
+-
+add: loginShell
+loginShell: /bin/bash
+-
+add: mail
+mail: aduser10@example.com
+-
+add: givenName
+givenName: ADUser10

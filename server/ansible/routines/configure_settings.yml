@@ -1,0 +1,24 @@
+- hosts: localhost
+  tasks:
+  - name: configure hpecp
+    copy:
+      dest: ~/.hpecp.conf
+      content: |-
+        [default]
+        api_host = {{ gateway_pub_dns }}
+        api_port = 8080
+        use_ssl = True
+        verify_ssl = False
+        warn_ssl = False
+        username = admin
+        password = {{ admin_password }}
+      force: yes
+
+- hosts: controllers:workers
+  tasks:
+  - name: shell completion
+    lineinfile:
+      dest: ~/.bashrc
+      line: source <(kubectl completion bash)
+    become: yes
+    

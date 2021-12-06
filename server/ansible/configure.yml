@@ -1,0 +1,22 @@
+######################################################################################################
+# PICASSO INSTALLATION
+######################################################################################################
+
+- name: create simple Kubernetes cluster
+  import_playbook: routines/create_k8s.yml
+  when: not is_mlops | bool
+
+- name: create picasso cluster
+  import_playbook: routines/create_picasso.yml
+  when: is_mlops | bool
+
+- name: configure picasso
+  import_playbook: routines/configure_picasso.yml
+  when: is_mlops | bool
+
+######################################################################################################
+# MLOPS INSTALLATION
+######################################################################################################
+- name: configure MLOps tenant
+  import_playbook: routines/configure_mlops.yml
+  when: is_mlops | bool
