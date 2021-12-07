@@ -4,14 +4,57 @@
 
 Automated installation of Ezmeral Container Platform on AWS for demo purposes.
 
-## Utilities used in the container
-* AWS CLI 
-* Terraform - to deploy AWS EC2 nodes with CentOS 7.9 image (ami-09e5afc68eed60ef4)
-* Ansible - setup and configure ECP & DFK
-* python & jq & hpecp
+### Usage
+
+This is planned to run within a container, with all tools, utilities pre-packaged. It has two parts, web-UI for user friendly installation, and a server process running as API server to accept and run commands.
+
+==Not ready yet== ```docker run -P 3000:3000 -P 3001:3001 erdincka/ezmeraldemo``` 
+and connect to http://localhost:3000/
+
+
+You can also manually use the scripts through the UI or simply via CLI.
+
+#### Testing or manually running via UI:
+- ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
+
+- ```cd ezmeral-demo```
+
+- ```yarn start``` for webUI (not needed if you plan to use the CLI method)
+
+- Open another terminal run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
+
+#### Testing or using via CLI:
+- ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
+
+- edit `./server/aws/config.json-template` with your aws credentials and project tag details, and save it as `config.json` in the same directory
+
+  - enable/disable MLOps deployment with "is_mlops" key (if set to false, this will skip steps to create a tenant and configure it with kubeflow/mlflow)
+
+- ```./00-run_all.sh aws```
+
+- At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
+
+  - `./01-init.sh aws`
+  - `./02-apply.sh aws`
+  - `./03-install.sh aws`
+  - `./04-configure.sh aws`
+
+- Deployed resources will be available in ./server/ansible/inventory.ini file
+
+  - ssh access only through gateway
+  
+  - use `./generated/ssh_host.sh centos@10.1.0.xx` to access any host via their AWS internal IP address
+
+## Utilities used in the container (or you need if you are running locally)
+* AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* Terraform - Download from [Terraform](https://www.terraform.io/downloads.html)
+* Ansible - Install from [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) or simply via pip (sudo pip3 install ansible)
+* python3 (apt/yum/brew install python3)
+* jq (apt/yum/brew install jq)
+* hpecp (pip3 install hpecp)
 
 ## Settings
-You will need your credentials to configure in the web UI
+You will need your credentials to configure in the web UI or within ./server/<provider>/config.json (template file provided)
 
 ```
 aws_access_key_id=<your key>
@@ -28,15 +71,6 @@ aws_secret_access_key=<your secret>
 * 04-configure: Run Ansible scripts to configure ECP for demo
 
 * 99-destroy: Destroy all created resources on AWS
-
-## How to run?
-Run docker image, it should expose port 3000 (UI) and 3001 (API), then browse to http://localhost:3000.
-
-Click on the provider, enter configuration details and click on "Deploy" button. 
-
-Autoscroll doesn't work in console output, wait until spinner is gone, and retry if any errors are encountered.
-
-Failures will be highlighted at the bottom of the page.
 
 
 ## Ansible Scripts

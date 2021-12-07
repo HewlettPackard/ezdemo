@@ -22,8 +22,13 @@
       force: yes
 
   - set_fact:
-      tenant_profile: "PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig"
+      tenant_profile: "PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig"
       kubeattenant: "kubectl --kubeconfig ~/.kube/hpecp_tenant.config -n {{ tenant_ns.stdout }}"
+
+  - copy:
+      dest: ~/.kube/hpecp_tenant.config
+      content: "{{ tenant_profile }}"
+      force: yes
 
   - name: get ad user
     shell: "hpecp user list --query \"[?label.name=='{{ AD_USER_NAME }}'] | [0] | [_links.self.href]\" --output text | cut -d '/' -f 5 | sed '/^$/d'"
@@ -41,7 +46,7 @@
     ignore_errors: yes
 
   - name: create ad user secret
-    shell: "PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post {{ cluster_id.stdout }}/kubectl <(echo -n '{\"data\":\"'{{ DATA_BASE64 }}'\",\"o\p":\"create\"}')"
+    shell: "PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp httpclient post {{ cluster_id.stdout }}/kubectl <(echo -n '{\"data\":\"'{{ DATA_BASE64 }}'\",\"o\p":\"create\"}')"
     vars:
       DATA: |-
         {

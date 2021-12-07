@@ -26,7 +26,7 @@
     register: tenant_ns
 
   - set_fact:
-      kubeatns: "kubectl --kubeconfig ~/.kube/hpecp_admin.config -n {{ tenant_ns.stdout }}"
+      kubeatns: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/hpecp_admin.config -n {{ tenant_ns.stdout }}"
 
   - name: get admin role
     shell: "hpecp role list --query \"[?label.name=='Admin'][_links.self.href]\" --output text"
@@ -62,3 +62,35 @@
 
   # - name: verify kubeflow
   #   shell: "true" ## if needed
+
+  - name: setup gitea
+    shell: "./setup_gitea.sh '{{ kubeatns }}'"
+
+  - name: setup mlflow
+    shell: "./setup_mlflow.sh '{{ kubeatns }}'"
+    register: mlflow_out
+
+  - name: configure tenant hpecp
+    copy:
+      dest: ~/.hpecp_tenant.config
+      content: |-
+        [default]
+        api_host = {{ gateway_pub_dns }}
+        api_port = 8080
+        use_ssl = True
+        verify_ssl = False
+        warn_ssl = False
+        [tenant]
+        tenant = {{ tenant_id.stdout }}
+        username = {{ AD_USER_NAME }}
+        password = {{ AD_USER_PASS }}
+      force: yes
+    vars:
+      AD_USER_NAME: "ad_user1"
+      AD_USER_PASS: "pass123"
+
+  - name: setup notebook
+    shell: "./setup_notebook.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}'"
+
+  - name: setup minio
+    shell: "./setup_minio.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}'"
