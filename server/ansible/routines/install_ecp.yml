@@ -134,3 +134,8 @@
 
   - name: configure global AD
     shell: ~/.local/bin/hpecp httpclient post /api/v2/config/auth --json-file ~/adconf.json
+    register: result
+    retries: 5
+    delay: 60
+    until: result is not failed
+    

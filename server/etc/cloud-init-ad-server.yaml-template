@@ -3,22 +3,22 @@
 write_files:
 - encoding: b64
   content: |
-    ${AD_POSIX_CLASSES}
+    "${AD_POSIX_CLASSES}"
   path: /home/centos/ad_set_posix_classes.ldif
   permissions: '0644'
 - encoding: b64
   content: |
-    ${AD_USER_SETUP}
+    "${AD_USER_SETUP}"
   path: /home/centos/ad_user_setup.sh
   permissions: '0755'
 - encoding: b64
   content: |
-    ${LDIF_MODIFY}
+    "${LDIF_MODIFY}"
   path: /home/centos/ldif_modify.sh
   permissions: '0755'
 - encoding: b64
   content: |
-    ${RUN_AD}
+    "${RUN_AD}"
   path: /home/centos/run_ad.sh
   permissions: '0755'
 runcmd:
