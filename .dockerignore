@@ -38,3 +38,5 @@ public
 package.json
 yarn.lock
 **/hpecp-bash.sh
+**/.DS_Store
+**/*.img

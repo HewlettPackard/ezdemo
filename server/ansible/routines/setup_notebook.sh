@@ -27,8 +27,7 @@ ${KUBEATNS} delete secret $AD_USER_KC_SECRET || true
 # set -e
 
 export AD_USER_KUBECONFIG=$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig | sed 's/\n/\\\n/g')
-# export DATA_BASE64=$(base64 <<END
-DATA="
+export DATA_BASE64=$(base64 -w 0<<END
 {
   "stringData": {
     "config": "$AD_USER_KUBECONFIG"
@@ -45,239 +44,237 @@ DATA="
     "name": "$AD_USER_KC_SECRET"
   }
 }
-"
-echo "${DATA}" | sed 's/\n/\\\n/g'
-# END
-# )
+END
+)
 
 ### TODO - fix this (either by passing as parameter or directly running)
-# CLUSTER_ID="/api/v2/k8scluster/1"
-# PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
+CLUSTER_ID="/api/v2/k8scluster/1"
+PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
 
 ###
 ### Training Cluster
 ###
 
 echo "Launching Training Cluster"
-# cat <<EOF_YAML | ${KUBEATNS} apply -f -
-# apiVersion: "kubedirector.hpe.com/v1beta1"
-# kind: "KubeDirectorCluster"
-# metadata: 
-#   name: "${TRAINING_CLUSTER_NAME}"
-#   namespace: "${TENANT_NS}"
-#   labels: 
-#     description: ""
-# spec: 
-#   app: "training-engine"
-#   namingScheme: "CrNameRole"
-#   appCatalog: "local"
-#   connections: 
-#     secrets: 
-#       - ${AD_USER_KC_SECRET}
-#       - hpecp-ext-auth-secret
-#   roles: 
-#     - 
-#       id: "LoadBalancer"
-#       members: 1
-#       resources: 
-#         requests: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#         limits: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-#       podLabels: 
-#         hpecp.hpe.com/dtap: "hadoop2"
-#     - 
-#       id: "RESTServer"
-#       members: 1
-#       resources: 
-#         requests: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#         limits: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-#       podLabels: 
-#         hpecp.hpe.com/dtap: "hadoop2"
-#     - 
-#       id: "controller"
-#       members: 1
-#       resources: 
-#         requests: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#         limits: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-#       podLabels: 
-#         hpecp.hpe.com/dtap: "hadoop2"
-# EOF_YAML
+cat <<EOF_YAML | ${KUBEATNS} apply -f -
+apiVersion: "kubedirector.hpe.com/v1beta1"
+kind: "KubeDirectorCluster"
+metadata: 
+  name: "${TRAINING_CLUSTER_NAME}"
+  namespace: "${TENANT_NS}"
+  labels: 
+    description: ""
+spec: 
+  app: "training-engine"
+  namingScheme: "CrNameRole"
+  appCatalog: "local"
+  connections: 
+    secrets: 
+      - ${AD_USER_KC_SECRET}
+      - hpecp-ext-auth-secret
+  roles: 
+    - 
+      id: "LoadBalancer"
+      members: 1
+      resources: 
+        requests: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+        limits: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+      #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+      podLabels: 
+        hpecp.hpe.com/dtap: "hadoop2"
+    - 
+      id: "RESTServer"
+      members: 1
+      resources: 
+        requests: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+        limits: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+      #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+      podLabels: 
+        hpecp.hpe.com/dtap: "hadoop2"
+    - 
+      id: "controller"
+      members: 1
+      resources: 
+        requests: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+        limits: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+      #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+      podLabels: 
+        hpecp.hpe.com/dtap: "hadoop2"
+EOF_YAML
 
-# date
-# echo "Waiting for Training to have state==configured"
+date
+echo "Waiting for Training to have state==configured"
   
-# COUNTER=0
-# while [ $COUNTER -lt 30 ]; 
-# do
-#   STATE=$(${KUBEATNS} get kubedirectorcluster $TRAINING_CLUSTER_NAME -o 'jsonpath={.status.state}')
-#   echo STATE=$STATE
-#   [[ $STATE == "configured" ]] && break
-#   sleep 1m
-#   let COUNTER=COUNTER+1 
-# done
-# date
+COUNTER=0
+while [ $COUNTER -lt 30 ]; 
+do
+  STATE=$(${KUBEATNS} get kubedirectorcluster $TRAINING_CLUSTER_NAME -o 'jsonpath={.status.state}')
+  echo STATE=$STATE
+  [[ $STATE == "configured" ]] && break
+  sleep 1m
+  let COUNTER=COUNTER+1 
+done
+date
 
-# ###
-# ### Jupyter Notebook
-# ###
+###
+### Jupyter Notebook
+###
 
-# export AD_USER_ID=$AD_USER_ID
+export AD_USER_ID=$AD_USER_ID
 
-# echo "Launching Jupyter Notebook as '$AD_USER_NAME' user ($AD_USER_ID)"
-# cat <<EOF_YAML | ${KUBEATNS} apply -f -
-# apiVersion: "kubedirector.hpe.com/v1beta1"
-# kind: "KubeDirectorCluster"
-# metadata: 
-#   name: "$NB_CLUSTER_NAME"
-#   namespace: "$TENANT_NS"
-#   labels: 
-#     "kubedirector.hpe.com/createdBy": "$AD_USER_ID"
-# spec: 
-#   app: "jupyter-notebook"
-#   appCatalog: "local"
-#   connections:
-#     clusters:
-#       - $MLFLOW_CLUSTER_NAME
-#       - $TRAINING_CLUSTER_NAME
-#     secrets: 
-#       - hpecp-sc-secret-gitea-ad-user1-nb
-#       - hpecp-ext-auth-secret
-#       - mlflow-sc
-#       - $AD_USER_KC_SECRET
-#   roles: 
-#     - 
-#       id: "controller"
-#       members: 1
-#       serviceAccountName: "ecp-tenant-member-sa"
-#       resources: 
-#         requests: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#         limits: 
-#           cpu: "2"
-#           memory: "4Gi"
-#           nvidia.com/gpu: "0"
-#       storage: 
-#         # size: "20Gi"
-#         # storageClassName: "dfdemo"
+echo "Launching Jupyter Notebook as '$AD_USER_NAME' user ($AD_USER_ID)"
+cat <<EOF_YAML | ${KUBEATNS} apply -f -
+apiVersion: "kubedirector.hpe.com/v1beta1"
+kind: "KubeDirectorCluster"
+metadata: 
+  name: "$NB_CLUSTER_NAME"
+  namespace: "$TENANT_NS"
+  labels: 
+    "kubedirector.hpe.com/createdBy": "$AD_USER_ID"
+spec: 
+  app: "jupyter-notebook"
+  appCatalog: "local"
+  connections:
+    clusters:
+      - $MLFLOW_CLUSTER_NAME
+      - $TRAINING_CLUSTER_NAME
+    secrets: 
+      - hpecp-sc-secret-gitea-ad-user1-nb
+      - hpecp-ext-auth-secret
+      - mlflow-sc
+      - $AD_USER_KC_SECRET
+  roles: 
+    - 
+      id: "controller"
+      members: 1
+      serviceAccountName: "ecp-tenant-member-sa"
+      resources: 
+        requests: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+        limits: 
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+      storage: 
+        # size: "20Gi"
+        # storageClassName: "dfdemo"
 	  
-#       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-#       podLabels: 
-#         hpecp.hpe.com/dtap: "hadoop2"
-# EOF_YAML
+      #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+      podLabels: 
+        hpecp.hpe.com/dtap: "hadoop2"
+EOF_YAML
 
-# # ./bin/ssh_rdp_linux_server.sh rm -rf static/
-# # ./bin/ssh_rdp_linux_server.sh mkdir static/
+# ./bin/ssh_rdp_linux_server.sh rm -rf static/
+# ./bin/ssh_rdp_linux_server.sh mkdir static/
 
-# # for FILE in $(ls -1 static/*)
-# # do
-# #   cat $FILE | ./bin/ssh_rdp_linux_server.sh "cat > $FILE"
-# # done
-
-
-# date
-# echo "Waiting for Notebook to have state==configured"
-
-# COUNTER=0
-# while [ $COUNTER -lt 180 ]; 
+# for FILE in $(ls -1 static/*)
 # do
-#   STATE=$(${KUBEATNS} get kubedirectorcluster $NB_CLUSTER_NAME -o 'jsonpath={.status.state}')
-#   echo STATE=$STATE
-#   [[ $STATE == "configured" ]] && break
-#   sleep 1m
-#   let COUNTER=COUNTER+1 
+#   cat $FILE | ./bin/ssh_rdp_linux_server.sh "cat > $FILE"
 # done
-# date
-  
-# ###########
-# # Retrieve the notebook pod
-# ###########
 
-# POD=$(${KUBEATNS} get pod -l kubedirector.hpe.com/kdcluster=$NB_CLUSTER_NAME -o 'jsonpath={.items..metadata.name}')
-  
-# echo TENANT_NS=$TENANT_NS
-# echo POD=$POD
 
-# ###########
-# ## Setup notebook service-account-token
-# ###########
+date
+echo "Waiting for Notebook to have state==configured"
 
-# if [[ "$HPECP_VERSION" == *"5.4"*  ]]; then
+COUNTER=0
+while [ $COUNTER -lt 180 ]; 
+do
+  STATE=$(${KUBEATNS} get kubedirectorcluster $NB_CLUSTER_NAME -o 'jsonpath={.status.state}')
+  echo STATE=$STATE
+  [[ $STATE == "configured" ]] && break
+  sleep 1m
+  let COUNTER=COUNTER+1 
+done
+date
+  
+###########
+# Retrieve the notebook pod
+###########
 
-#   set -x
+POD=$(${KUBEATNS} get pod -l kubedirector.hpe.com/kdcluster=$NB_CLUSTER_NAME -o 'jsonpath={.items..metadata.name}')
   
-#   SECRET_NAME=$(${KUBEATNS} get secret --field-selector type=kubernetes.io/service-account-token | grep '\-sa\-' | cut -f 1 -d' ')
-#   echo SECRET_NAME=$SECRET_NAME
+echo TENANT_NS=$TENANT_NS
+echo POD=$POD
+
+###########
+## Setup notebook service-account-token
+###########
+
+if [[ "$HPECP_VERSION" == *"5.4"*  ]]; then
+
+  set -x
   
-#   # Extract and decode
-#   ${KUBEATNS} get secret $SECRET_NAME -o yaml | grep " token:" | awk '{print $2}' | base64 -d > token
+  SECRET_NAME=$(${KUBEATNS} get secret --field-selector type=kubernetes.io/service-account-token | grep '\-sa\-' | cut -f 1 -d' ')
+  echo SECRET_NAME=$SECRET_NAME
   
-#   # FIXME
+  # Extract and decode
+  ${KUBEATNS} get secret $SECRET_NAME -o yaml | grep " token:" | awk '{print $2}' | base64 -d > token
   
-#   # Put the token file in your nb pod
-#   # kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
-#   #   cp token -c app \$POD:/var/run/secrets/kubernetes.io/serviceaccount/token -n $TENANT_NS
+  # FIXME
+  
+  # Put the token file in your nb pod
+  # kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
+  #   cp token -c app \$POD:/var/run/secrets/kubernetes.io/serviceaccount/token -n $TENANT_NS
     
-# fi
+fi
 
-# ###########  
-# # create home folders
-# ###########
+###########  
+# create home folders
+###########
 
-# TENANT_USER=ad_user1
+TENANT_USER=ad_user1
 
-# echo "Login to notebook to create home folders for ${TENANT_USER}"
+echo "Login to notebook to create home folders for ${TENANT_USER}"
   
-# ${KUBEATNS} exec -c app $POD -- sudo su - ${TENANT_USER}
+${KUBEATNS} exec -c app $POD -- sudo su - ${TENANT_USER}
 
-# echo "Copying example files to notebook pods"
+echo "Copying example files to notebook pods"
 
-# # for FILE in \$(ls -1 ./static/*)
-# # do
-# #   BASEFILE=\$(basename \$FILE)
-# #   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
-# #     cp --container app \$FILE $TENANT_NS/\$POD:/home/\${TENANT_USER}/\${BASEFILE}
+# for FILE in \$(ls -1 ./static/*)
+# do
+#   BASEFILE=\$(basename \$FILE)
+#   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
+#     cp --container app \$FILE $TENANT_NS/\$POD:/home/\${TENANT_USER}/\${BASEFILE}
     
-# #   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
-# #     exec -c app -n $TENANT_NS \$POD -- chown ad_user1:domain\\ users /home/\${TENANT_USER}/\${BASEFILE}
+#   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
+#     exec -c app -n $TENANT_NS \$POD -- chown ad_user1:domain\\ users /home/\${TENANT_USER}/\${BASEFILE}
   
-# #   if [[ "\${BASEFILE##*.}" == ".sh" ]]; then
-# #     kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
-# #       exec -c app -n $TENANT_NS \$POD -- chmod +x /home/\${TENANT_USER}/\${BASEFILE}
-# #   fi
-# # done
+#   if [[ "\${BASEFILE##*.}" == ".sh" ]]; then
+#     kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
+#       exec -c app -n $TENANT_NS \$POD -- chmod +x /home/\${TENANT_USER}/\${BASEFILE}
+#   fi
+# done
   
-# echo "Adding pytest and nbval python libraries for testing"
+echo "Adding pytest and nbval python libraries for testing"
 
-# ${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip3 install --user --quiet --no-warn-script-location pytest nbval
+${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip3 install --user --quiet --no-warn-script-location pytest nbval
 
-# echo "Setup HPECP CLI as admin user"
+echo "Setup HPECP CLI as admin user"
     
-# ${KUBEATNS} cp --container app ~/.hpecp_tenant.config $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
+${KUBEATNS} cp --container app ~/.hpecp_tenant.config $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
 
-# ${KUBEATNS} exec -c app $POD -- chown ad_user1:root /home/${TENANT_USER}/.hpecp.conf
+${KUBEATNS} exec -c app $POD -- chown ad_user1:root /home/${TENANT_USER}/.hpecp.conf
 
-# ${KUBEATNS} exec -c app $POD -- chmod 600 /home/${TENANT_USER}/.hpecp.conf
+${KUBEATNS} exec -c app $POD -- chmod 600 /home/${TENANT_USER}/.hpecp.conf
 
-# ${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip3 install --user --quiet --no-warn-script-location hpecp
+${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip3 install --user --quiet --no-warn-script-location hpecp

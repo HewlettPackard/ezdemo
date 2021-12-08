@@ -44,7 +44,7 @@ async def init(target: str):
   with open(conf_file, 'w') as f:
     json.dump(request.get_json(force=True, silent=True), f)
   def inner():
-    process = subprocess.Popen(['./01-init.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(['./00-run_all.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline,''):
       yield line
   return flask.Response(inner(), mimetype='html/text')
