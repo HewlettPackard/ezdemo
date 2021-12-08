@@ -45,7 +45,7 @@
             CLUSTER_NAME="{{ ad_realm }}"
             # REST_URL="<REST_API_URL_as_hostname:port>"
             # EXT_MAPR_MOUNT_DIR="<directory_in_mount_path_for_volumes>"
-            # TICKET_FILE_LOCATION="<path_to_ticket_for_HCP_admin>"
+            # TICKET_FILE_LOCATION="<path_to_ticket_for_ECP_admin>"
             # SSL_TRUSTSTORE_LOCATION="<path_to_ssl_truststore>"
             # EXT_SECRETS_FILE_LOCATION="<path_to_external_secrets_file_for_Spark_cluster>"
             # FORCE_ERASE="<true_or_false" (Default is true)

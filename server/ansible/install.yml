@@ -8,7 +8,7 @@
 ######################################################################################################
 # PREPARE
 ######################################################################################################
-- name: Prepare HCP Hosts
+- name: Prepare ECP Hosts
   import_playbook: routines/prepare_centos.yml 
   # when: skip_preparation is not defined
 
@@ -20,10 +20,10 @@
   when: is_runtime | bool
 
 ######################################################################################################
-# INSTALL HCP
+# INSTALL ECP
 ######################################################################################################
-- name: Install HCP
-  import_playbook: routines/install_hcp.yml
+- name: Install ECP
+  import_playbook: routines/install_ecp.yml
   when: is_runtime | bool
 
 ######################################################################################################

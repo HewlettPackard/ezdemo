@@ -1,10 +1,21 @@
-### Ezmeral Container Platform Demo
+# Ezmeral Container Platform Demo
 
-#### on AWS (Azure and Vmware to follow)
+## on AWS (Azure and Vmware to follow)
 
-Automated installation of Ezmeral Container Platform on AWS for demo purposes.
+Automated installation for Ezmeral Container Platform and MLOps on AWS for demo purposes.
 
-### Usage
+# Settings
+You will need your credentials to configure in the web UI or within ./server/**provider**/config.json (template file provided)
+
+```
+"aws_access_key_id": "<your key>",
+"aws_secret_access_key": "<your secret>",
+"is_mlops": true,
+"project_id": "myuser-demo",
+"user": "myuser"
+```
+
+# Usage
 
 This is planned to run within a container, with all tools, utilities pre-packaged. It has two parts, web-UI for user friendly installation, and a server process running as API server to accept and run commands.
 
@@ -13,21 +24,25 @@ This is planned to run within a container, with all tools, utilities pre-package
 
 You can also manually use the scripts through the UI or simply via CLI.
 
-#### Testing or manually running via UI:
+## Testing or manually running via UI:
 - ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
 
 - ```cd ezmeral-demo```
 
 - ```yarn start``` for webUI (not needed if you plan to use the CLI method)
 
-- Open another terminal run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
+- Open another terminal and run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
 
-#### Testing or using via CLI:
+## Testing or using via CLI:
 - ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
 
-- edit `./server/aws/config.json-template` with your aws credentials and project tag details, and save it as `config.json` in the same directory
+- edit `./server/aws/config.json-template`
+  - add your aws credentials (*aws_access_key* and *aws_secret_key*)
+  - project tag details (*project_id* and *user*)
+  - is_mlops (*true* or *false*, without quotes)
+  and save it as `config.json` in the same directory
 
-  - enable/disable MLOps deployment with "is_mlops" key (if set to false, this will skip steps to create a tenant and configure it with kubeflow/mlflow)
+** Enable/disable MLOps deployment with "is_mlops" key (if set to false, this will skip steps to create a tenant and configure it with kubeflow/mlflow)
 
 - ```./00-run_all.sh aws```
 
@@ -52,44 +67,37 @@ You can also manually use the scripts through the UI or simply via CLI.
 * jq (apt/yum/brew install jq)
 * hpecp (pip3 install hpecp)
 
-## Settings
-You will need your credentials to configure in the web UI or within ./server/<provider>/config.json (template file provided)
-
-```
-aws_access_key_id=<your key>
-
-aws_secret_access_key=<your secret>
-```
-
 ## Scripts
+* 00-run_all.sh: Runs all scripts at once (unattended install)
+* 01-init.sh: Initialize Terraform, create SSH keys & certificates
+* 02-apply.sh: Runs `terraform apply` to deploy resources
+* 03-install.sh: Run Ansible scripts to install ECP
+* 04-configure.sh: Run Ansible scripts to configure ECP for demo
 
-* 01-init: Initialize Terraform, create SSH keys & certificates
-* 02-apply: Terraform apply to deploy resources, using cloud-init
-  - Active Directory node deployment within cloud-init
-* 03-install: Run Ansible scripts to install ECP
-* 04-configure: Run Ansible scripts to configure ECP for demo
-
-* 99-destroy: Destroy all created resources on AWS
+* 99-destroy.sh: Destroy all created resources on AWS (** DANGER **: All resources will be destroyed, except the generated keys and certificates)
 
 
 ## Ansible Scripts
-Thanks to Dirk(https://github.com/dderichswei)
 
-prepare_centos: Update packages and requirements for HCP installation
+Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
-install_falco: Update kernel and install falco service
+  - prepare_centos: Updates packages and requirements for ECP installation
 
-install_hcp: Initial installation and setup for ECP
+  - install_falco: Updates kernel and install falco service
 
-import_hosts: Collect node information and update them for K8s and Picasso clusters
+  - install_ecp: Initial installation and setup for ECP
 
-create_picasso: Install Picasso (DF on Kubernetes) on selected nodes (min 4 required - 3 masters and 1 worker for addo-ns)
+  - import_hosts: Collects node information and update them as ECP worker nodes
 
-configure_picasso: Enable Picasso/DF for all tenants
+  - create_k8s: Installs Kubernetes Cluster (if MLOps is not selected)
 
-configure_mlops: Deploy MLOps life-cycle tools
+  - create_picasso: Installs Kubernetes Cluster and Picasso (Data Fabric on Kubernetes)
 
-## TO-DO
+  - configure_picasso: Enables Picasso (Data Fabric on Kubernetes) for all tenants
+
+  - configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
+
+# TO-DO
 [ ] External DF deployment
 
 [ ] Use GPU workers
@@ -98,6 +106,7 @@ configure_mlops: Deploy MLOps life-cycle tools
 
 [ ] Add Azure/KVM/VMWare deployment capability
 
-### Notes
+
+## Notes
 
 Deployment uses EU-WEST-2 (London) region on AWS
