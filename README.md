@@ -8,7 +8,7 @@ Automated installation of Ezmeral Container Platform on AWS for demo purposes.
 
 This is planned to run within a container, with all tools, utilities pre-packaged. It has two parts, web-UI for user friendly installation, and a server process running as API server to accept and run commands.
 
-```docker run -d -p 3000:3000 -p 3001:3001 erdincka/ezmeraldemo:latest``` and connect to http://localhost:3000/
+```docker run -d -p 3000:3000 -p 3001:3001 erdincka/ezdemo:latest``` and connect to http://localhost:3000/
 
 
 You can also manually use the scripts through the UI or simply via CLI.
