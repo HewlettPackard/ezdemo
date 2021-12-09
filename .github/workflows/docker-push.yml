@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ezdemo:${{ steps.date.outputs.date }},ezdemo:latest
+          tags: erdincka/ezdemo:${{ steps.date.outputs.date }},erdincka/ezdemo:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
