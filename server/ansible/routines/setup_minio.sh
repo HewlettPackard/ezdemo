@@ -24,7 +24,7 @@ fi
 
 ## Minio get host/port
 
-HOST_AND_PORT=$(${KUBEATNS} get service -l kubedirector.hpe.com/kdcluster=$MLFLOW_CLUSTER_NAME \
+HOST=$(${KUBEATNS} get service -l kubedirector.hpe.com/kdcluster=$MLFLOW_CLUSTER_NAME \
 -o jsonpath={.items[0].metadata.annotations.'hpecp-internal-gateway/9000'})
 
 echo $HOST_AND_PORT

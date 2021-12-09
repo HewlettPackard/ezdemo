@@ -65,17 +65,19 @@
 
   - name: setup gitea
     shell: "./setup_gitea.sh '{{ kubeatns }}'"
+    ignore_errors: yes
 
   - name: setup mlflow
     shell: "./setup_mlflow.sh '{{ kubeatns }}'"
     register: mlflow_out
+    ignore_errors: yes
 
   - name: configure tenant hpecp
     copy:
       dest: ~/.hpecp_tenant.config
       content: |-
         [default]
-        api_host = {{ gateway_pub_dns }}
+        api_host = {{ groups['gateway'] | first }}
         api_port = 8080
         use_ssl = True
         verify_ssl = False
@@ -91,6 +93,8 @@
 
   - name: setup notebook
     shell: "./setup_notebook.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}'"
+    ignore_errors: yes
 
   - name: setup minio
     shell: "./setup_minio.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}'"
+    ignore_errors: yes

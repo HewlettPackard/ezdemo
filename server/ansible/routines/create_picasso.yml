@@ -57,10 +57,13 @@
 
     - name: wait for cluster to stabilize
       wait_for:
-        timeout: 120
+        timeout: 300
 
     # - shell: "hpecp k8scluster get {{ cluster_id.stdout }} -o json | jq -r '.label.name'"
     #   register: cluster_name
+
+    # ensure folder exist
+    - file: path=~/.kube state=directory mode='0755'
 
     - name: create local admin config
       shell: "hpecp k8scluster admin_kube_config {{ cluster_id.stdout }} > ~/.kube/hpecp_admin.config"

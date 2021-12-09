@@ -1,22 +1,23 @@
-FROM python:3.8-slim-buster
-LABEL Name=ezdemo Version=0.0.1
-RUN apt update -y && apt install -y curl unzip openssh-client jq
-RUN python3 -m pip install --upgrade pip
+FROM --platform=amd64 python:3-slim
+LABEL Name=ezdemo Version=0.0.2
+RUN apt update -y && apt install -y curl unzip openssh-client jq vim
+# RUN python -m pip install --upgrade pip
 ENV PATH /root/.local/bin:$PATH
 
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install
 RUN curl "https://releases.hashicorp.com/terraform/1.0.4/terraform_1.0.4_linux_amd64.zip" -o terraform.zip && unzip terraform.zip && mv terraform /usr/bin
-RUN rm -rf /tmp/aws* /tmp/terraform.zip
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+## clean temp files
+RUN rm -rf aws* terraform.zip kubectl
 
 COPY . /app
 
 WORKDIR /app/server
-RUN pip3 install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 RUN chmod +x *.sh */*.sh
 
 EXPOSE 3000
 EXPOSE 3001
 
-WORKDIR /app/server
 CMD nohup python3 ./main.py & python3 -m http.server 3000 -d ../build

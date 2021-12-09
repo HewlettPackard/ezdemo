@@ -26,10 +26,10 @@ ${KUBEATNS} delete secret $AD_USER_KC_SECRET || true
 # fi
 # set -e
 
-export AD_USER_KUBECONFIG=$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig | sed 's/\n/\\\n/g')
-export DATA_BASE64=$(base64 -w 0<<END
+export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig | base64 -w 0)"
+export DATA_BASE64=$(base64 -w 0 <<END
 {
-  "stringData": {
+  "data": {
     "config": "$AD_USER_KUBECONFIG"
   },
   "kind": "Secret",
@@ -178,7 +178,6 @@ spec:
       storage: 
         # size: "20Gi"
         # storageClassName: "dfdemo"
-	  
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
       podLabels: 
         hpecp.hpe.com/dtap: "hadoop2"
@@ -219,6 +218,8 @@ echo POD=$POD
 ###########
 ## Setup notebook service-account-token
 ###########
+
+HPECP_VERSION=$(hpecp config get --query 'objects.[bds_global_version]' --output text)
 
 if [[ "$HPECP_VERSION" == *"5.4"*  ]]; then
 
