@@ -24,12 +24,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
+        name: set tag with datetime
+        run: echo "NOW::$(date +'%Y%m%dT%H%M')" >> $GITHUB_ENV
+      -
         name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: erdincka/ezdemo:latest
+          tags: erdincka/ezdemo:${{ $NOW }},erdincka:ezdemo:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
