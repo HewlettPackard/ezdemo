@@ -6,6 +6,47 @@
 #######################################################################################################
 
 ###
+### Configure AD Server
+- hosts: "{{ groups['ad_server'] | first }}"
+  tasks:
+  - name: copy ldif file
+    copy:
+      src: "../../files/ad_set_posix_classes.ldif"
+      dest: "/home/centos/ad_set_posix_classes.ldif"
+      owner: "centos"
+      group: "centos"
+      mode: 0644
+
+  - name: copy user setup script
+    copy:
+      src: "../../files/ad_user_setup.sh"
+      dest: "/home/centos/ad_user_setup.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: copy ldif script
+    copy:
+      src: "../../files/ldif_modify.sh"
+      dest: "/home/centos/ldif_modify.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: copy ad run script
+    copy:
+      src: "../../files/run_ad.sh"
+      dest: "/home/centos/run_ad.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: run samba
+    shell: "/home/centos/run_ad.sh && sleep 120 && /home/centos/ldif_modify.sh"
+    async: 600 ## wait for 10 minutes before time out
+    poll: 0 ## don't wait it to finish
+    register: samba_run
+
 - hosts: "{{ groups['controllers'] | first }}"
   gather_facts: yes
   vars:
@@ -131,6 +172,14 @@
           }
         }
       force: yes
+
+  # - name: Check the AD server
+  #   async_status:
+  #     jid: "{{ hostvars[groups['ad_server'] | first]['samba_run'].ansible_job_id }}"
+  #   register: job_result
+  #   until: job_result.finished
+  #   retries: 100
+  #   delay: 10
 
   - name: configure global AD
     shell: ~/.local/bin/hpecp httpclient post /api/v2/config/auth --json-file ~/adconf.json

@@ -1,7 +1,7 @@
 {
   "aws_access_key": "",
   "aws_secret_key": "",
-  "is_mlops": true,
+  "is_mlops": false,
   "user": "",
   "project_id": ""
 }
