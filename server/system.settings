@@ -1,5 +1,6 @@
 {
-  "epic_latest" : "https://ezmeral-platform-releases.s3.amazonaws.com/5.4/rc2/hpe-cp-rhel-release-5.4-42.bin",
+  "epic_latest" : "https://ezmeral-platform-releases.s3.amazonaws.com/5.4/rc2/hpe-cp-rhel-release-5.4-49.bin",
+  "epic_latest_rc" : "https://ezmeral-platform-releases.s3.amazonaws.com/5.4/rc2/hpe-cp-rhel-release-5.4-42.bin",
   "epic_stable" : "https://ezmeral-platform-releases.s3.amazonaws.com/5.3.6/3060/hpe-cp-rhel-release-5.3.6-3060.bin",
   "is_ha" : false,
   "is_runtime" : true,

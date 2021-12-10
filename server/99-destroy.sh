@@ -16,12 +16,13 @@ rm -f generated/output.json
 rm -f generated/ssh_host.sh
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
-rm -f "${1}/run.log"
+rm -f "${1}/*run.log"
 ## Clean user environment
 rm -f ~/.hpecp.conf
 rm -f ~/.kube/hpecp_admin.config
 rm -f ~/.hpecp_tenant.config
 
+echo "Environment destroyed"
 echo "SSH key-pair, certificates and cloud-init files are not removed!"
 
 exit 0

@@ -1,0 +1,20 @@
+- hosts: ad_server
+  # any_errors_fatal: yes
+  gather_facts: yes
+
+  tasks:
+  - name: install docker
+    yum:
+      name: 
+        - docker
+        - openldap-clients
+      state: latest
+    register: yum
+    become: yes
+
+  - name: enable docker
+    systemd:
+      state: started
+      enabled: yes
+      name: docker
+    become: yes

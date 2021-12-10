@@ -25,7 +25,7 @@ This is planned to run within a container, with all tools, utilities pre-package
 You can also manually use the scripts through the UI or simply via CLI.
 
 ## Testing or manually running via UI:
-- ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
+- ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
 - ```cd ezmeral-demo```
 

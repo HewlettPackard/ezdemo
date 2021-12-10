@@ -9,8 +9,7 @@ resource "aws_instance" "ad_server" {
     aws_security_group.main.id
   ])
   subnet_id        = aws_subnet.main.id
-  user_data_base64 = data.template_cloudinit_config.ad_cloud_config.rendered
-
+  
   root_block_device {
     volume_type = "gp2"
     volume_size = 400

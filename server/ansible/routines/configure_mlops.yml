@@ -65,7 +65,9 @@
 
   - name: setup gitea
     shell: "./setup_gitea.sh '{{ kubeatns }}'"
-    ignore_errors: yes
+    register: result
+    failed_when: ( result.rc not in [ 0, 7 ] )
+    # ignore_errors: yes
 
   - name: setup mlflow
     shell: "./setup_mlflow.sh '{{ kubeatns }}'"
@@ -77,7 +79,7 @@
       dest: ~/.hpecp_tenant.config
       content: |-
         [default]
-        api_host = {{ groups['gateway'] | first }}
+        api_host = {{ gateway_pub_dns }}
         api_port = 8080
         use_ssl = True
         verify_ssl = False

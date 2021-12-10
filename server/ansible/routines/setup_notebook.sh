@@ -229,7 +229,7 @@ if [[ "$HPECP_VERSION" == *"5.4"*  ]]; then
   echo SECRET_NAME=$SECRET_NAME
   
   # Extract and decode
-  ${KUBEATNS} get secret $SECRET_NAME -o yaml | grep " token:" | awk '{print $2}' | base64 -d > token
+  # ${KUBEATNS} get secret $SECRET_NAME -o yaml | grep " token:" | awk '{print $2}' | base64 -d > token
   
   # FIXME
   

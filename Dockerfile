@@ -7,7 +7,8 @@ ENV PATH /root/.local/bin:$PATH
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && ./aws/install
 RUN curl "https://releases.hashicorp.com/terraform/1.0.4/terraform_1.0.4_linux_amd64.zip" -o terraform.zip && unzip terraform.zip && mv terraform /usr/bin
-RUN curl -LO "https://dl.k8s.io/release/v1.20.13/bin/linux/amd64/kubectl" && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+### For 5.4 we have ['1.19.15', '1.20.11', '1.21.5'] for K8s versions
+RUN curl -LO "https://dl.k8s.io/release/v1.20.11/bin/linux/amd64/kubectl" && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 ## clean temp files
 RUN rm -rf aws* terraform.zip kubectl
 

@@ -33,25 +33,32 @@
         file_type: directory
       register: output_directory
 
+    ### Losing connection here, wait for it to come back
+    - wait_for_connection:
+
     - name: prepare tenants
       shell: |-
+        function retry {
+          local n=1
+          local max=20
+          local delay=30
+          while true; do
+            "$@" && break || {
+              if [[ $n -lt $max ]]; then
+                ((n++))
+                echo "Command failed. Attempt $n/$max:"
+                sleep $delay;
+              else
+                fail "The command has failed after $n attempts."
+              fi
+          }
+          done
+        }
         export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
         export LOG_FILE_PATH=/tmp/register_k8s_prepare.log
-        {{ item.path }}/startscript.sh --action prepare_dftenants
-      with_items: "{{ output_directory.files }}"
-      register: output
-
-    - name: configure tenants
-      shell: |-
-        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
+        retry {{ item.path }}/startscript.sh --action prepare_dftenants
         export LOG_FILE_PATH=/tmp/register_k8s_configure.log
         echo yes | {{ item.path }}/startscript.sh --action configure_dftenants
-      with_items: "{{ output_directory.files }}"
-      register: output
-
-    - name: register tenants
-      shell: |-
-        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
         export LOG_FILE_PATH=/tmp/register_k8s_register.log
         expect <<EOF
           set timeout 1800
@@ -60,6 +67,8 @@
           expect "admin\r\nEnter Site Admin password: " { send "{{ admin_password }}\r" }
           expect eof
         EOF
-      register: output
       with_items: "{{ output_directory.files }}"
-      ignore_errors: True
+      register: result
+      retries: 20  ## REST API is not always available immediately so we retry for 15 minutes
+      delay: 60
+      until: result is not failed
