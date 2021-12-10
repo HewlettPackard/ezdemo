@@ -27,11 +27,11 @@ fi
 HOST=$(${KUBEATNS} get service -l kubedirector.hpe.com/kdcluster=$MLFLOW_CLUSTER_NAME \
 -o jsonpath={.items[0].metadata.annotations.'hpecp-internal-gateway/9000'})
 
-echo $HOST_AND_PORT
+echo $HOST
 
 ## Minio create bucket
 
-export PYTHONPATH=$PYTHONPATH:~/.local/lib/python3.6/site-packages/
+export PYTHONPATH=~/.local/lib/python3.6/site-packages/
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 pip3 install minio --user --quiet

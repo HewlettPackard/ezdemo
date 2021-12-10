@@ -37,7 +37,8 @@ src
 public
 package.json
 yarn.lock
-docker-push.yml
 **/hpecp-bash.sh
 **/.DS_Store
 **/*.img
+.github
+docker-*.sh

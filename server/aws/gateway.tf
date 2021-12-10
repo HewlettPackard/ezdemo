@@ -42,8 +42,8 @@ output "gateway_private_dns" {
 output "gateway_public_ips" {
   value = [aws_instance.gateway.*.public_ip]
 }
-output "gateway_public_dns" {
-  value = [aws_instance.gateway.*.public_dns]
+output "gateway_public_dns" { // Only the first public DNS name is needed
+  value = aws_instance.gateway.0.public_dns
 }
 output "gateway_ssh_command" {
   value = "ssh -o StrictHostKeyChecking=no -i ./generated/controller.prv_key centos@${aws_instance.gateway.0.public_ip}"

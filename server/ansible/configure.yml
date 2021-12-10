@@ -1,21 +1,24 @@
 ######################################################################################################
-# PICASSO INSTALLATION
+# CLUSTER INSTALLATION
 ######################################################################################################
 
+# Install simple K8s cluster if no MLOps is selected
 - name: create simple Kubernetes cluster
   import_playbook: routines/create_k8s.yml
   when: not is_mlops | bool
 
+# Install K8s cluster with Picasso if MLOps is selected
 - name: create picasso cluster
   import_playbook: routines/create_picasso.yml
   when: is_mlops | bool
 
+# Picasso registration for all tenants
 - name: configure picasso
   import_playbook: routines/configure_picasso.yml
   when: is_mlops | bool
 
 ######################################################################################################
-# MLOPS INSTALLATION
+# MLOPS INSTALLATION (setup spark & kubeflow addons)
 ######################################################################################################
 - name: configure MLOps tenant
   import_playbook: routines/configure_mlops.yml

@@ -95,6 +95,7 @@ EXTERNAL_HOSTNAME=$(echo $EXTERNAL_URL | cut -d ':' -f 1)
 
 URL_DATA="db_type=SQLite3&db_host=localhost%3A3306&db_user=root&db_passwd=&db_name=gitea&ssl_mode=disable&db_schema=&charset=utf8&db_path=%2Fdata%2Fgitea%2Fgitea.db&app_name=Gitea%3A+Git+with+a+cup+of+tea&repo_root_path=%2Fdata%2Fgit%2Frepositories&lfs_root_path=%2Fdata%2Fgit%2Flfs&run_user=git&domain=$EXTERNAL_HOSTNAME&ssh_port=22&http_port=3000&app_url=$EXTERNAL_URL_ESC&log_root_path=%2Fdata%2Fgitea%2Flog&smtp_host=&smtp_from=&smtp_user=&smtp_passwd=&enable_federated_avatar=on&no_reply_address=&password_algorithm=pbkdf2&admin_name=&admin_passwd=&admin_confirm_passwd=&admin_email="
 # echo URL_DATA=$URL_DATA
+echo "stage 2"
 
 ${KUBEATNS} exec $POD -- \
   curl -s -d $URL_DATA http://localhost:3000

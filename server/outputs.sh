@@ -55,7 +55,8 @@ CTRL_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys
 GATW_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_ips"]["value"][0], sep=" ")')
 GATW_PUB_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_ips"]["value"][0], sep=" ")')
 GATW_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_dns"]["value"][0], sep=" ")')
-GATW_PUB_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_dns"]["value"][0], sep=" ")')
+### getting only the first dns name for gateway
+GATW_PUB_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["gateway_public_dns"]["value"][0])')
 # GATW_PUB_HOST=$(echo $GATW_PUB_DNS | cut -d"." -f1)
 # GATW_PRV_HOST=$(echo $GATW_PRV_DNS | cut -d"." -f1)
 

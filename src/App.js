@@ -81,6 +81,9 @@ function App() {
     setError(undefined); // clear up errors
     setShowconfig(false); // automatically close config form
     setShowoutput(true); // show output
+    // const gw_output_line = 'gateway_ssh_command = "ssh -o StrictHostKeyChecking=no -i ./generated/controller.prv_key centos@'
+    const gw_output_line = 'gateway_public_dns = "'
+    // gateway_public_dns = "ec2-35-178-92-139.eu-west-2.compute.amazonaws.com"
     const reader = responseBody.getReader();
     return new ReadableStream({
       start(controller) {
@@ -98,13 +101,19 @@ function App() {
             // Capture fatal errors
             if (reg.test(textVal)) setError(textVal);
             // Capture the gateway dns name
-            if (textVal.includes('gateway_public_dns = "')) {
-              setGwurl(textVal.split('gateway_public_dns = ')[1].split('"')[1]);
+            if (textVal.includes(gw_output_line)) {
+              console.dir(textVal); // debug
+              setGwurl(textVal.split('"')[1]); // extract the IP
               setTfstate(true);
             }
             // when gateway installation is complete
-            if (textVal.includes('TASK [keep ad config]'))
+            if (textVal.includes('TASK [AD config]'))
               setGwready(true);
+            if (textVal.includes('Environment destroyed'))
+            {
+              setPrvkey(false);
+              setError(undefined);
+            }
             // capture errors in output
             if (textVal.includes('Terraform has been successfully initialized!'))
               setPrvkey(true);

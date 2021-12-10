@@ -6,42 +6,45 @@
 # modified by Erdinc Kaya <kaya@hpe.com>
 
 ######################################################################################################
-# PREPARE
+# PREPARE HOSTS (updates, selinux etc that is common to all hosts)
 ######################################################################################################
 - name: Prepare ECP Hosts
   import_playbook: routines/prepare_centos.yml 
   # when: skip_preparation is not defined
 
+### Install AD
+- name: Install AD server
+  import_playbook: routines/install_ad.yml 
 ######################################################################################################
-# INSTALL FALCO
+# INSTALL FALCO (for workers)
 ######################################################################################################
 - name: Install falco
   import_playbook: routines/install_falco.yml
   when: is_runtime | bool
 
 ######################################################################################################
-# INSTALL ECP
+# INSTALL ECP (on controller)
 ######################################################################################################
 - name: Install ECP
   import_playbook: routines/install_ecp.yml
   when: is_runtime | bool
 
 ######################################################################################################
-# SETUP LOCAL CLIENT
+# SETUP LOCAL CLIENT (update hpecp and kubectl configurations and autocomplete settings)
 ######################################################################################################
 - name: Configure hosts for env
   import_playbook: routines/configure_settings.yml
   when: is_runtime | bool
 
 ######################################################################################################
-# IMPORT HOSTS
+# IMPORT HOSTS (bring workers into ECP)
 ######################################################################################################
 - name: Import Hosts
   import_playbook: routines/import_hosts.yml
   when: is_runtime | bool
 
 ######################################################################################################
-# INSTALL MAPR
+# INSTALL MAPR (only for External Data Fabric)
 ######################################################################################################
 - name: Prepare MapR Hosts
   import_playbook: routines/prepare_ubuntu.yml

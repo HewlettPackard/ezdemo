@@ -9,6 +9,10 @@ if [ ${IS_VERBOSE} ]; then
   ANSIBLE_CMD="${ANSIBLE_CMD} -v"
 fi
 
+if [[ -f "${1}/run.log" ]]; then 
+  mv "${1}/run.log" "${1}/$(date +'%Y%m%d%H%M')-run.log"
+fi
+
 ${ANSIBLE_CMD} -f 10 \
   -i ./ansible/inventory.ini \
   ./ansible/configure.yml | tee -a "${1}/run.log"
