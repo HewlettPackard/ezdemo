@@ -1,12 +1,11 @@
 import React, { Fragment } from 'react';
 import { Grommet, Box, CheckBox, Button, Text, TextInput, Form, FormField, 
-  Footer, Anchor, RadioButtonGroup, Spinner, TextArea } from 'grommet';
+  Footer, Anchor, RadioButtonGroup, TextArea } from 'grommet';
 import { hpe } from "grommet-theme-hpe";
 import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Trash } from 'grommet-icons';
 
 function App() {
   const [theme, setTheme] = React.useState('light');
-  const [debug, setDebug] = React.useState(false);
   const [output, setOutput] = React.useState([]);
   const [showoutput, setShowoutput] = React.useState(false);
   const [error, setError] = React.useState(undefined);
@@ -104,6 +103,7 @@ function App() {
             if (textVal.includes(gw_output_line)) {
               console.dir(textVal); // debug
               setGwurl(textVal.split('"')[1]); // extract the IP
+              console.dir('set gateway url completed') // debug
               setTfstate(true);
             }
             // when gateway installation is complete
@@ -175,23 +175,18 @@ function App() {
           />}
         </Box>
         <Box direction='row' justify='end'>
-          { prvkey && <Button label='Destroy'
-            icon={ <Trash color="status-critical" /> } 
-            tip='Destroy the environment' 
-            onClick={ () => window.confirm('All will be deleted') && destroy() } 
-           /> }
           <CheckBox
             toggle reverse
             label={ theme === 'dark' ? <Moon /> : <Sun /> }
             checked={ theme === 'dark' ? false : true }
             onChange={ () => setTheme(theme === 'dark' ? 'light' : 'dark')}
           />
-          <CheckBox 
+          { output.length > 0 && <CheckBox 
             toggle reverse
-            label={ debug ? <Console /> : <Desktop /> }
-            checked={ debug ? true : false }
-            onChange={ () => setDebug(!debug)}
-          />
+            label={ showoutput ? <Console /> : <Desktop /> }
+            checked={ showoutput ? true : false }
+            onChange={ () => setShowoutput(!showoutput) }
+          /> }
         </Box>
       </Box>
       {/* Configure */}
@@ -235,16 +230,10 @@ function App() {
           onClick={ () => window.confirm('Installation will start') && deploy() } 
           margin='none' 
         />
-        { spin && <Spinner margin='small' /> }
+        { spin && <Text>Please wait...</Text> }
       </Box>}
 
       <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
-        { output.length > 0 && <Button 
-          alignSelf='end' 
-          plain 
-          label={ showoutput ? 'Hide output' : 'Show output' } 
-          onClick={ () => setShowoutput(!showoutput) } /> 
-        }
         { showoutput && 
           <TextArea 
             readOnly 
@@ -270,6 +259,11 @@ function App() {
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } /> }
             { logfile && <Anchor label="Logs" href={`${apiURL}/file/${provider.toLowerCase()}/run.log`} /> }
             { prvkey && <Anchor label="Private Key" href={`${apiURL}/file/generated/controller.prv_key`} /> }
+            { prvkey && <Button label='Destroy'
+              icon={ <Trash color="status-critical" /> } 
+              tip='Destroy the environment' 
+              onClick={ () => window.confirm('All will be deleted') && destroy() } 
+            /> }
             { tfstate && <Anchor label="TF State" href={`${apiURL}/file/${provider.toLowerCase()}/terraform.tfstate`} /> }
           </Fragment>
           <Box direction='row'>
