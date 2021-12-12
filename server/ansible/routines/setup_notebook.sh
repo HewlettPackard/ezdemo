@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -10,7 +10,7 @@ export TRAINING_CLUSTER_NAME=trainingengineinstance
 export AD_USER_NAME=ad_user1
 export AD_USER_PASS=pass123
 
-# PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig
+# PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig
 
 export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
 export AD_USER_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_USER_ID-$AD_USER_NAME'.encode('utf-8')).hexdigest())")
@@ -26,7 +26,7 @@ ${KUBEATNS} delete secret $AD_USER_KC_SECRET || true
 # fi
 # set -e
 
-export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp tenant k8skubeconfig | base64 -w 0)"
+export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
 export DATA_BASE64=$(base64 -w 0 <<END
 {
   "data": {
@@ -49,7 +49,7 @@ END
 
 ### TODO - fix this (either by passing as parameter or directly running)
 CLUSTER_ID="/api/v2/k8scluster/1"
-PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.config hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
+PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
 
 ###
 ### Training Cluster
@@ -272,7 +272,7 @@ ${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip
 
 echo "Setup HPECP CLI as admin user"
     
-${KUBEATNS} cp --container app ~/.hpecp_tenant.config $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
+${KUBEATNS} cp --container app ~/.hpecp_tenant.conf $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
 
 ${KUBEATNS} exec -c app $POD -- chown ad_user1:root /home/${TENANT_USER}/.hpecp.conf
 

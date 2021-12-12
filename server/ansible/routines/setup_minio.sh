@@ -1,4 +1,4 @@
-## Minio wait-for mlflow
+#!/usr/bin/env bash
 
 set -euo pipefail
 

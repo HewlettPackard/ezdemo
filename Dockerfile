@@ -18,7 +18,10 @@ WORKDIR /app/server
 RUN pip install --no-cache-dir -r requirements.txt
 RUN chmod +x *.sh */*.sh
 
-EXPOSE 3000
-EXPOSE 3001
+EXPOSE 4000
+# EXPOSE 3000
+# EXPOSE 3001
 
-CMD nohup python3 ./main.py & python3 -m http.server 3000 -d ../build
+# CMD nohup python3 ./main.py & python3 -m http.server 3000 -d ../build
+CMD python3 ./main.py 
+# & python3 -m http.server 3000 -d ../build

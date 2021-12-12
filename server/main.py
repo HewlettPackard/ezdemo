@@ -12,7 +12,7 @@ from werkzeug.wrappers import response
 
 base_path = os.path.dirname(__file__)
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, static_url_path='', static_folder=os.path.join(base_path, '..', 'build'))
 CORS(app)
 
 class ProviderName(str, Enum):
@@ -23,8 +23,8 @@ class ProviderName(str, Enum):
 
 @app.route('/')
 @cross_origin()
-def hello():
-  return 'Hello world'
+def home():
+  return app.send_static_file('index.html')
 
 @app.route('/<target>/config')
 def get_config(target):
@@ -73,8 +73,9 @@ allowed_files = ['aws/run.log', 'aws/terraform.tfstate', 'generated/controller.p
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):
+  print(logfile)
   if logfile not in allowed_files or not os.path.exists(logfile):
-    return abort(404)
+    return flask.Response(status=HTTPStatus.NO_CONTENT)
   else:
     return flask.Response(status=HTTPStatus.OK)
 
@@ -90,8 +91,9 @@ def get_log(logfile: str):
 if __name__ == '__main__':
   if "DEV" in os.environ:
    app.run(
+     host="0.0.0.0",
      debug = True,
-     port=3001
+     port=4000
     )
   else:
-    serve(app, host="0.0.0.0", port=3001)
+    serve(app, host="0.0.0.0", port=4000)

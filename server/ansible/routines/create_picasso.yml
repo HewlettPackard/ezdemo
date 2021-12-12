@@ -62,8 +62,8 @@
       shell: |-
         while : ; do
           sleep 10
-          hpecp k8scluster admin_kube_config {{ cluster_id.stdout }} > ~/.kube/hpecp_admin.config
-          [ $(wc -l ~/.kube/hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
+          hpecp k8scluster admin_kube_config {{ cluster_id.stdout }} > ~/.hpecp_admin.config
+          [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
         done
 
     - name: waiting Picasso cluster
