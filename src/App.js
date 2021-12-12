@@ -20,12 +20,11 @@ function App() {
   const [gwready, setGwready] = React.useState(false);
   const [prvkey, setPrvkey] = React.useState(false);
   const [tfstate, setTfstate] = React.useState(false);
-  const apiURL = 'http://localhost:3001';
   const outputRef = React.useRef(undefined);
 
   React.useEffect(() => {
     const fetchData = async () => {
-      fetch(`${apiURL}/providers`)
+      fetch(`/providers`)
       .then(res => res.json())
       .then(
         (result) => {
@@ -45,7 +44,7 @@ function App() {
     return await fetch(url, {})
   }
   
-  const postData = async (url = apiURL, data = {}) => {
+  const postData = async (url = '', data = {}) => {
     const fetchParams = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json'},
@@ -56,15 +55,15 @@ function App() {
   }
 
   const checkExistingRun = async (provider) => {
-    const response = await fetchData(`${apiURL}/isfile/${provider.toLowerCase()}/run.log`);
+    const response = await fetchData(`/isfile/${provider.toLowerCase()}/run.log`);
     return response.ok;
   }
   
   const configureProvider = (val) => {
     setProvider(val);
     setShowconfig(true);
-    console.dir(checkExistingRun(val));
-    fetchData(`${apiURL}/${val.toLowerCase()}/config`)
+    checkExistingRun(val).then(res => { if (res.result) setLogfile(true) } );
+    fetchData(`/${val.toLowerCase()}/config`)
       .then(response => {
         if (! response.ok) setError(response.statusText)
         return response.json();
@@ -80,9 +79,6 @@ function App() {
     setError(undefined); // clear up errors
     setShowconfig(false); // automatically close config form
     setShowoutput(true); // show output
-    // const gw_output_line = 'gateway_ssh_command = "ssh -o StrictHostKeyChecking=no -i ./generated/controller.prv_key centos@'
-    const gw_output_line = 'gateway_public_dns = "'
-    // gateway_public_dns = "ec2-35-178-92-139.eu-west-2.compute.amazonaws.com"
     const reader = responseBody.getReader();
     return new ReadableStream({
       start(controller) {
@@ -100,10 +96,8 @@ function App() {
             // Capture fatal errors
             if (reg.test(textVal)) setError(textVal);
             // Capture the gateway dns name
-            if (textVal.includes(gw_output_line)) {
-              console.dir(textVal); // debug
-              setGwurl(textVal.split('"')[1]); // extract the IP
-              console.dir('set gateway url completed') // debug
+            if (textVal.includes('gateway_public_dns = "')) {
+              setGwurl(textVal.split('gateway_public_dns = "')[1].split('"')[0]); // extract the IP
               setTfstate(true);
             }
             // when gateway installation is complete
@@ -129,21 +123,21 @@ function App() {
   }
 
   const deploy = () =>
-    postData(`${apiURL}/${provider.toLowerCase()}/deploy`, config)
+    postData(`/${provider.toLowerCase()}/deploy`, config)
     .then(response => response.body)
     .then(rb => processResponse(rb))
     .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
     .then(result => setLogfile(result));
 
   const destroy = () =>
-    postData(`${apiURL}/${provider.toLowerCase()}/destroy`, config)
+    postData(`/${provider.toLowerCase()}/destroy`, config)
     .then(response => response.body)
     .then(rb => processResponse(rb))
     .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
     .then(result => console.dir(result) && setGwurl(undefined) );
 
   const log = () =>
-    fetchData(`${apiURL}/${provider.toLowerCase()}/log`)
+    fetchData(`/${provider.toLowerCase()}/log`)
     .then(response => response.body)
     .then(rb => processResponse(rb))
     .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
@@ -181,7 +175,7 @@ function App() {
             checked={ theme === 'dark' ? false : true }
             onChange={ () => setTheme(theme === 'dark' ? 'light' : 'dark')}
           />
-          { output.length > 0 && <CheckBox 
+          { <CheckBox 
             toggle reverse
             label={ showoutput ? <Console /> : <Desktop /> }
             checked={ showoutput ? true : false }
@@ -223,14 +217,14 @@ function App() {
       </Box> }
       {/* Run */}
       { provider && (! Object.values(config).some(v => v===""))
-        && <Box animation='zoomIn' direction='row' justify='center' margin='none'>
+        && <Box animation='zoomIn' direction='row' justify='between' margin='none'>
         <Button 
           label={ 'Deploy on ' + provider } 
           icon={ <Run /> } 
           onClick={ () => window.confirm('Installation will start') && deploy() } 
           margin='none' 
         />
-        { spin && <Text>Please wait...</Text> }
+        { spin && <Text color='status-warning'>Please wait...</Text> }
       </Box>}
 
       <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
@@ -246,25 +240,22 @@ function App() {
         }
       </Box>
 
-      {/* Debug mode */}
-        { debug && <pre> Provider: { JSON.stringify(provider, undefined, 2) } </pre> }
-        { debug && <pre> Config: { JSON.stringify(config, undefined, 2) } </pre>}
-        { debug && <pre> Ref: { JSON.stringify(outputRef?.current?.scrollHeight, undefined, 2) } </pre>}
       {/* Footer */}
       <Box justify='end'>
         <Footer background='brand' pad='medium'>
           <Fragment>
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
-            { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } /> }
-            { logfile && <Anchor label="Logs" href={`${apiURL}/file/${provider.toLowerCase()}/run.log`} /> }
-            { prvkey && <Anchor label="Private Key" href={`${apiURL}/file/generated/controller.prv_key`} /> }
+            { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
+            { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} target='_blank' rel='noreferrer' /> }
+            { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
+            { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }
             { prvkey && <Button label='Destroy'
+              alignSelf='end' margin='xsmall'
               icon={ <Trash color="status-critical" /> } 
               tip='Destroy the environment' 
               onClick={ () => window.confirm('All will be deleted') && destroy() } 
             /> }
-            { tfstate && <Anchor label="TF State" href={`${apiURL}/file/${provider.toLowerCase()}/terraform.tfstate`} /> }
           </Fragment>
           <Box direction='row'>
             <Text margin={ { right: 'small' } }>Copyright HPE @2021 </Text>

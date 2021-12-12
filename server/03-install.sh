@@ -39,23 +39,19 @@ ansible_user=ubuntu"
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 
-SSH_OPTS="-i generated/controller.prv_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -i generated/controller.prv_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
+SSH_OPTS="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
 echo "ansible_ssh_common_args: ${SSH_OPTS}" > ./ansible/group_vars/all.yml
 echo "ssh ${SSH_OPTS} centos@\$1" > ./generated/ssh_host.sh
 chmod +x ./generated/ssh_host.sh
 
-if [[ -f "${1}/run.log" ]]; then 
-  mv "${1}/run.log" "${1}/$(date +'%Y%m%d%H%M')-run.log"
-fi
-
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then
-  ANSIBLE_CMD="${ANSIBLE_CMD} -v"
+  ANSIBLE_CMD="${ANSIBLE_CMD} -vv"
 fi
 
-${ANSIBLE_CMD} -f 10 \
+ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
   -i ./ansible/inventory.ini \
-  ./ansible/install.yml | tee "${1}/run.log"
+  ./ansible/install.yml
 
 echo "Platform installion complete, gateway should be accessible at https://${GATW_PUB_DNS}/"
 

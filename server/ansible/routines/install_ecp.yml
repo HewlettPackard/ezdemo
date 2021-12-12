@@ -134,7 +134,10 @@
 
   - name: install hpecp client
     shell: pip3 install --user hpecp pexpect
-    # become: yes
+
+  - name: system-wide hpecp
+    shell: "ln -sf /home/centos/.local/bin/hpecp /usr/local/bin"
+    become: yes
 
   - name: check ecp gateway
     shell: ~/.local/bin/hpecp gateway list --output text

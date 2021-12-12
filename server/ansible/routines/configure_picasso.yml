@@ -1,7 +1,5 @@
 ### Configure Picasso
-- hosts: localhost
-  # gather_facts: True
-
+- hosts: "{{ groups['controllers'] | first }}"
   tasks:
     - name: read cluster id
       shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
@@ -24,18 +22,6 @@
     - set_fact:
         firstmasterip: "{{ (firstmaster_json.stdout | from_json) | json_query('ipaddr') }}"
 
-- hosts: "{{ groups['controllers'] | first }}"
-  tasks:
-    - name: find ecp directory
-      find:
-        paths: /opt/bluedata/bundles
-        patterns: 'hpe-cp*'
-        file_type: directory
-      register: output_directory
-
-    ### Losing connection here, wait for it to come back
-    - wait_for_connection:
-
     - name: prepare tenants
       shell: |-
         function retry {
@@ -54,21 +40,21 @@
           }
           done
         }
-        export MASTER_NODE_IP={{ hostvars.localhost.firstmasterip }}
+        export SCRIPTPATH="/opt/bluedata/bundles/hpe-cp*"
+        export MASTER_NODE_IP={{ firstmasterip }}
         export LOG_FILE_PATH=/tmp/register_k8s_prepare.log
-        retry {{ item.path }}/startscript.sh --action prepare_dftenants
+        retry ${SCRIPTPATH}/startscript.sh --action prepare_dftenants
         export LOG_FILE_PATH=/tmp/register_k8s_configure.log
-        echo yes | {{ item.path }}/startscript.sh --action configure_dftenants
+        [[ $(tail -1 ${LOG_FILE_PATH}) == "The action configure_dftenants completed successfully." ]] || echo yes | ${SCRIPTPATH}/startscript.sh --action configure_dftenants
         export LOG_FILE_PATH=/tmp/register_k8s_register.log
         expect <<EOF
           set timeout 1800
-          spawn {{ item.path }}/startscript.sh --action register_dftenants
+          spawn $(realpath ${SCRIPTPATH}/startscript.sh) --action register_dftenants
           expect ".*Enter Site Admin username: " { send "admin\r" }
           expect "admin\r\nEnter Site Admin password: " { send "{{ admin_password }}\r" }
           expect eof
         EOF
-      with_items: "{{ output_directory.files }}"
       register: result
-      retries: 20  ## REST API is not always available immediately so we retry for 15 minutes
-      delay: 60
-      until: result is not failed
+      # retries: 15
+      # delay: 60
+      # until: result is not failed
