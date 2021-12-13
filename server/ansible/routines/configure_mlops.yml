@@ -15,7 +15,7 @@
     ignore_errors: True
 
   - name: get tenant id
-    shell: "hpecp tenant list -o text | grep MLtenant | cut -d' ' -f1"
+    shell: "hpecp tenant list -o text | grep 'k8s-tenant-1' | cut -d' ' -f1"
     register: tenant_id
 
   - name: wait for tenant
