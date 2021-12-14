@@ -6,7 +6,7 @@ source ./outputs.sh "${1}"
 
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then
-  ANSIBLE_CMD="${ANSIBLE_CMD} -vv"
+  ANSIBLE_CMD="${ANSIBLE_CMD} -v"
 fi
 
 ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
