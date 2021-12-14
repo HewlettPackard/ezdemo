@@ -16,20 +16,20 @@ variable "ubuntu_ami" { default = "ami-0f9124f7452cdb2a6" }
 variable "ssh_prv_key_path" { default = "./generated/controller.prv_key" }
 variable "ssh_pub_key_path" { default = "./generated/controller.pub_key" }
 
-variable "gtw_instance_type" { default = "m5.xlarge" } ## 4 cores 16GB memory
-variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8 cores 64GB memory
+variable "gtw_instance_type" { default = "m5.xlarge" } ## 4c16
+variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 
 variable "worker_count" { default = 2 }
 
 variable "mapr_count" { default = 3 }
-variable "mapr_instance_type" { default = "m4.4xlarge" }
+variable "mapr_instance_type" { default = "m4.4xlarge" } // c5a.8xlarge (32c64)
 variable "wkr_instance_type" {
-  default = "m4.4xlarge" ## 16 vcores 64GB memory
-  # "m5.8xlarge" ## 32 vcores 128GB memory
+  default = "m4.4xlarge" ## 16c64
+  # "m5.8xlarge" ## 32c128
   # MLOPS worker
-  # "r5.2xlarge" ## 8 vcores 64GB memory
+  # "r5.2xlarge" ## 8c64
   ## GPU Worker
-  # "p4d.24xlarge" ## 96 vcores 1152GB memory + 8 A100 GPU
+  # "p4d.24xlarge" ## 96c1152 + 8 A100 GPU
 }
 variable "ad_instance_type" { default = "t2.small" }
 

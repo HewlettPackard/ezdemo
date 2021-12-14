@@ -41,12 +41,30 @@ echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 
 SSH_OPTS="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
 echo "ansible_ssh_common_args: ${SSH_OPTS}" > ./ansible/group_vars/all.yml
+
+### TODO: Move to ansible task
+SSH_CONFIG="
+Host *
+  StrictHostKeyChecking no
+Host hpecp_gateway
+  Hostname ${gateway_pub_dns}
+  IdentityFile generated/controller.prv_key
+  ServerAliveInterval 30
+  User centos
+Host 10.1.0.*
+    Hostname %h
+    ConnectionAttempts 3
+    IdentityFile generated/controller.prv_key
+    ProxyJump hpecp_gateway
+ 
+"
+echo "${SSH_CONFIG}" > /etc/ssh/ssh_config ## TODO: don't override system config
 echo "ssh ${SSH_OPTS} centos@\$1" > ./generated/ssh_host.sh
 chmod +x ./generated/ssh_host.sh
 
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then
-  ANSIBLE_CMD="${ANSIBLE_CMD} -vv"
+  ANSIBLE_CMD="${ANSIBLE_CMD} -v"
 fi
 
 ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
