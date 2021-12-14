@@ -28,6 +28,15 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
 
+      - uses: DamianReeves/write-file-action@latest
+        with:
+          path: ./src/.eslintrc
+          contents: |
+            rules: {
+              'no-unused-vars': 'off',
+              '@typescript-eslint/no-unused-vars': 'error',
+            }
+          write-mode: append
       - uses: borales/actions-yarn@v2.3.0
         with:
           cmd: install # will run `yarn install` command
