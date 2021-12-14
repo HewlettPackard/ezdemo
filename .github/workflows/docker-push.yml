@@ -33,23 +33,16 @@ jobs:
           path: ./src/.eslintrc.json
           contents: |
             {
-                "plugins": [
-                    "react"
-                ],
-                "extends": [
-                    "eslint:recommended",
-                    "plugin:react/recommended"
-                ],
                 "rules": {
                     "no-unused-vars": [
                         "error",
                         {
-                            "varsIgnorePattern": "React"
+                            "varsIgnorePattern": "log"
                         }
                    ]
                 }
             }
-          write-mode: append
+          write-mode: overwrite
           
       - uses: borales/actions-yarn@v2.3.0
         with:
