@@ -30,11 +30,20 @@ jobs:
 
       - uses: DamianReeves/write-file-action@v1.0
         with:
-          path: ./src/.eslintrc
+          path: ./src/.eslintrc.json
           contents: |
-            rules: {
-              'no-unused-vars': 'off',
-              '@typescript-eslint/no-unused-vars': 'error',
+            {
+                "plugins": [
+                    "react"
+                ],
+                "extends": [
+                    "eslint:recommended",
+                    "plugin:react/recommended"
+                ],
+                "rules": {
+                  'no-unused-vars': 'off',
+                  '@typescript-eslint/no-unused-vars': 'error',
+                }
             }
           write-mode: append
           
