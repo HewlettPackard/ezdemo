@@ -19,7 +19,7 @@ You will need your credentials to configure in the web UI or within ./server/**p
 
 This is planned to run within a container, with all tools, utilities pre-packaged. It has two parts, web-UI for user friendly installation, and a server process running as API server to accept and run commands.
 
-```docker run -d -p 3000:3000 -p 3001:3001 erdincka/ezdemo:latest``` and connect to http://localhost:3000/
+```docker run -d -p 4000:4000 erdincka/ezdemo:latest``` and connect to http://localhost:4000/
 
 
 You can also manually use the scripts through the UI or simply via CLI.
@@ -27,14 +27,12 @@ You can also manually use the scripts through the UI or simply via CLI.
 ## Testing or manually running via UI:
 - ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
-- ```cd ezmeral-demo```
+- ```cd ezdemo```
 
-- ```yarn start``` for webUI (not needed if you plan to use the CLI method)
-
-- Open another terminal and run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
+- Run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
 
 ## Testing or using via CLI:
-- ```git clone https://github.com/hpe-container-platform-community/ezmeral-demo```
+- ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
 - edit `./server/aws/config.json-template`
   - add your aws credentials (*aws_access_key* and *aws_secret_key*)
@@ -57,7 +55,7 @@ You can also manually use the scripts through the UI or simply via CLI.
 
   - ssh access only through gateway
   
-  - use `./generated/ssh_host.sh centos@10.1.0.xx` to access any host via their AWS internal IP address
+  - use `ssh centos@10.1.0.xx` to access any host via their AWS internal IP address (/etc/ssh/ssh_config setup for jump host via gateway)
 
 ## Utilities used in the container (or you need if you are running locally)
 * AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
@@ -66,6 +64,7 @@ You can also manually use the scripts through the UI or simply via CLI.
 * python3 (apt/yum/brew install python3)
 * jq (apt/yum/brew install jq)
 * hpecp (pip3 install hpecp)
+* kubectl from [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
 ## Scripts
 * 00-run_all.sh: Runs all scripts at once (unattended install)
@@ -102,7 +101,7 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
 [ ] Use GPU workers
 
-[ ] Dockerfile to containerise this tool
+[x] Dockerfile to containerise this tool
 
 [ ] Add Azure/KVM/VMWare deployment capability
 
