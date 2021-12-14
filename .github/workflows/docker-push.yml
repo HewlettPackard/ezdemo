@@ -41,8 +41,8 @@ jobs:
                     "plugin:react/recommended"
                 ],
                 "rules": {
-                  'no-unused-vars': 'off',
-                  '@typescript-eslint/no-unused-vars': 'error',
+                  "no-unused-vars": "off",
+                  "@typescript-eslint/no-unused-vars": "error",
                 }
             }
           write-mode: append
