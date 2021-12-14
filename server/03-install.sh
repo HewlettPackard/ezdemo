@@ -58,9 +58,9 @@ Host 10.1.0.*
     ProxyJump hpecp_gateway
  
 "
-echo "${SSH_CONFIG}" > /etc/ssh/ssh_config ## TODO: don't override system config
-echo "ssh ${SSH_OPTS} centos@\$1" > ./generated/ssh_host.sh
-chmod +x ./generated/ssh_host.sh
+echo "${SSH_CONFIG}" > ~/.ssh/ssh_config ## TODO: move to ansible, delete on destroy
+# echo "ssh ${SSH_OPTS} centos@\$1" > ./generated/ssh_host.sh
+# chmod +x ./generated/ssh_host.sh
 
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then
