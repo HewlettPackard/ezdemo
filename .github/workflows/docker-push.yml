@@ -28,7 +28,7 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y%m%d%H%M')"
 
-      - uses: DamianReeves/write-file-action@latest
+      - uses: DamianReeves/write-file-action@v1.0
         with:
           path: ./src/.eslintrc
           contents: |
