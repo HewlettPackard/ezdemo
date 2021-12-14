@@ -1,0 +1,15 @@
+- hosts: workers:mapr:ad_server
+  tasks:
+    - name: Shutdown workers
+      shell: "nohup sudo halt -n </dev/null &"
+      become: yes
+- hosts: controllers
+  tasks:
+    - name: Shutdown workers
+      shell: "nohup sudo halt -n </dev/null &"
+      become: yes
+- hosts: gateway
+  tasks:
+    - name: Shutdown gateway
+      shell: "nohup sudo halt -n </dev/null &"
+      become: yes
