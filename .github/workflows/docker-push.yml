@@ -40,10 +40,14 @@ jobs:
                     "eslint:recommended",
                     "plugin:react/recommended"
                 ],
-                "rules": [
-                  "no-unused-vars:off",
-                  "@typescript-eslint/no-unused-vars:error"
-                ]
+                "rules": {
+                    "no-unused-vars": [
+                        "error",
+                        {
+                            "varsIgnorePattern": "React"
+                        }
+                   ]
+                }
             }
           write-mode: append
           
