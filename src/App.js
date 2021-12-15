@@ -136,12 +136,12 @@ function App() {
     .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
     .then(result => console.dir(result) && setGwurl(undefined) );
 
-  const log = () =>
-    fetchData(`/${provider.toLowerCase()}/log`)
-    .then(response => response.body)
-    .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
-    .then(result => console.dir(result) && setGwurl(undefined) );
+  // const log = () =>
+  //   fetchData(`/${provider.toLowerCase()}/log`)
+  //   .then(response => response.body)
+  //   .then(rb => processResponse(rb))
+  //   .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
+  //   .then(result => console.dir(result) && setGwurl(undefined) );
 
   const reset = () => {
     configureProvider(providers[0]);

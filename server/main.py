@@ -1,14 +1,15 @@
 from enum import Enum
 from http import HTTPStatus
+from posixpath import split
 import flask
 from flask import jsonify, request, send_from_directory, abort
-from werkzeug.utils import safe_join
+# from werkzeug.utils import safe_join
 from flask_cors import CORS, cross_origin
 from waitress import serve
 import subprocess
 import os, json
 
-from werkzeug.wrappers import response
+# from werkzeug.wrappers import response
 
 base_path = os.path.dirname(__file__)
 
@@ -73,7 +74,6 @@ allowed_files = ['aws/run.log', 'aws/terraform.tfstate', 'generated/controller.p
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):
-  print(logfile)
   if logfile not in allowed_files or not os.path.exists(logfile):
     return flask.Response(status=HTTPStatus.NO_CONTENT)
   else:
@@ -84,7 +84,8 @@ def get_log(logfile: str):
   if logfile not in allowed_files:
     return abort(400)
   try:
-    return 
+    target, filename = logfile.split('/', 1)
+    return send_from_directory(directory=base_path + '/' + target, filename=filename)
   except FileNotFoundError:
     return abort(400)
 
