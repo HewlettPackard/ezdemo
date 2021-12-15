@@ -1,13 +1,15 @@
+FROM node:17 AS builder
+WORKDIR /app
+COPY package.json ./
+RUN npm install 
+COPY . ./
+RUN npm run build
+
 FROM --platform=amd64 python:3-slim
 LABEL Name=ezdemo Version=0.0.2
-
-RUN curl -fsSL https://deb.nodesource.com/setup_17.x | bash -
-RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null
-RUN echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list
+ENV PATH /root/.local/bin:$PATH
 
 RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn 
-# RUN python -m pip install --upgrade pip
-ENV PATH /root/.local/bin:$PATH
 
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -23,10 +25,9 @@ RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/
 ## clean temp files
 RUN rm -rf aws* terraform.zip kubectl minica /usr/local/aws-cli/v2/current/dist/awscli/examples
 
-COPY . /app
 WORKDIR /app
-RUN yarn && yarn build
-RUN apt remove -y yarn nodejs
+COPY --from=builder /app/build .
+COPY server .
 
 WORKDIR /app/server
 RUN pip install --no-cache-dir -r requirements.txt
