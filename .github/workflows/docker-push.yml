@@ -45,7 +45,7 @@ jobs:
           write-mode: overwrite
           
       - uses: actions/setup-node@v2
-      - run: yarn install
+      - run: yarn
       - run: yarn build
       - name: Build and push
         id: docker_build
