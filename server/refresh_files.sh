@@ -64,6 +64,7 @@ Host 10.1.0.*
 echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible, delete on destroy
 
 pushd ./generated/ > /dev/null
+  rm -rf "${GATW_PUB_DNS}"
   minica -domains "${GATW_PUB_DNS},${GATW_PRV_DNS},${CTRL_PRV_DNS},${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_PRV_DNS%%.*},localhost" -ip-addresses "${GATW_PUB_IPS},$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),$(echo ${CTRL_PRV_IPS[@]} | sed 's/ /,/g'),127.0.0.1"
 popd > /dev/null 
 

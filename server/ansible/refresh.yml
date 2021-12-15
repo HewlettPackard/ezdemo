@@ -25,12 +25,11 @@
   - name: update kubeadmin config
     shell: |-
       while : ; do
-        ADMINCONF=$(hpecp k8scluster admin_kube_config {{ item }} || echo "")
-        [[ "${ADMINCONF}" == "" ]] || break
+        hpecp k8scluster admin_kube_config {{ item }} > ~/.hpecp_admin.config
+        [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
         sleep 10
       done
     with_items: "{{ cluster_ids }}"
-    register: kubeadminconfig
 
 - hosts: controllers
   tasks:
@@ -48,7 +47,7 @@
         password = {{ admin_password }}
       force: yes
 
-  - name: update admin config
+  - name: update kubeadmin config
     shell: |-
       while : ; do
         hpecp k8scluster admin_kube_config {{ item }} > ~/.hpecp_admin.config

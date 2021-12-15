@@ -26,7 +26,7 @@
     register: tenant_ns
 
   - set_fact:
-      kubeatns: "kubectl --kubeconfig {{ ansible_env.HOME }}/.hpecp_admin.config -n {{ tenant_ns.stdout }}"
+      kubeatns: "kubectl --kubeconfig /root/.hpecp_admin.config -n {{ tenant_ns.stdout }}"
 
   - name: get admin role
     shell: "hpecp role list --query \"[?label.name=='Admin'][_links.self.href]\" --output text"
