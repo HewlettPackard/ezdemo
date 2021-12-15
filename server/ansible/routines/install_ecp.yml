@@ -165,7 +165,7 @@
   - name: system-wide hpecp
     file: 
       src: "/home/centos/.local/bin/hpecp"
-      dest: "/usr/local/bin"
+      dest: "/usr/local/bin/hpecp"
       owner: root
       group: root
       state: link

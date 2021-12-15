@@ -12,6 +12,10 @@
   import_playbook: routines/create_picasso.yml
   when: is_mlops | bool
 
+# Update config files
+- name: update configuration files
+  import_playbook: refresh.yml
+
 # Picasso registration for all tenants
 - name: configure picasso
   import_playbook: routines/configure_picasso.yml
