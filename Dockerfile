@@ -1,6 +1,11 @@
 FROM --platform=amd64 python:3-slim
 LABEL Name=ezdemo Version=0.0.2
-RUN apt update -y && apt install -y curl unzip openssh-client jq vim git
+
+RUN curl -fsSL https://deb.nodesource.com/setup_17.x | bash -
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn 
 # RUN python -m pip install --upgrade pip
 ENV PATH /root/.local/bin:$PATH
 
