@@ -5,7 +5,6 @@
 # Tested with HPECP 5.3
 #######################################################################################################
 
-###
 ### Configure AD Server
 - hosts: "{{ groups['ad_server'] | first }}"
   tasks:
@@ -47,12 +46,22 @@
     poll: 0 ## don't wait it to finish
     register: samba_run
 
+  # ### Collect hostnames for CA Certificate
+  # - name: get hostnames
+  #   shell: getent hosts "{{ item }}" | awk '{ print $2 }'
+  #   with_items: "{{ groups['controllers'] + groups['gateway'] }}"
+  #   register: hostnames
+
+  # - name: get hostlist
+  #   set_fact:
+  #     all_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
+
 - hosts: "{{ groups['controllers'] | first }}"
   gather_facts: yes
-  vars:
-    gateway_ips : "{{ groups['gateway'] | list }}"
+  # vars:
+    # gateway_ips : "{{ groups['gateway'] | list }}"
 
-  tasks:
+  tasks:  
   - name: configure hpecp
     copy:
       dest: ~/.hpecp.conf
@@ -97,7 +106,7 @@
   - name: copy certificate
     copy:
       src: "../../generated/ca-cert.pem"
-      dest: "/home/centos/ca-cert.pem"
+      dest: "/home/centos/minica.pem"
       owner: "centos"
       group: "centos"
       mode: 0644
@@ -106,14 +115,32 @@
   - name: copy certificate key
     copy:
       src: "../../generated/ca-key.pem"
-      dest: "/home/centos/ca-key.pem"
+      dest: "/home/centos/minica-key.pem"
+      owner: "centos"
+      group: "centos"
+      mode: 0600
+    when: not cert_file.stat.exists
+  
+  - name: copy minica certificate
+    copy:
+      src: "../../generated/{{ gateway_pub_dns }}/cert.pem"
+      dest: "/home/centos/cert.pem"
+      owner: "centos"
+      group: "centos"
+      mode: 0600
+    when: not cert_file.stat.exists
+  
+  - name: copy minica certificate key
+    copy:
+      src: "../../generated/{{ gateway_pub_dns }}/key.pem"
+      dest: "/home/centos/key.pem"
       owner: "centos"
       group: "centos"
       mode: 0600
     when: not cert_file.stat.exists
   
   - name: install ecp
-    shell: "/home/centos/{{ install_file }} --skipeula --default-password {{ admin_password }} --ssl-cert /home/centos/ca-cert.pem --ssl-priv-key /home/centos/ca-key.pem"
+    shell: "/home/centos/{{ install_file }} --skipeula --default-password {{ admin_password }} --ssl-cert /home/centos/cert.pem --ssl-priv-key /home/centos/key.pem"
     when: not hpecp_installed.stat.exists
     # become: yes
 
@@ -136,7 +163,13 @@
     shell: pip3 install --user hpecp pexpect
 
   - name: system-wide hpecp
-    shell: "ln -sf /home/centos/.local/bin/hpecp /usr/local/bin"
+    file: 
+      src: "/home/centos/.local/bin/hpecp"
+      dest: "/usr/local/bin"
+      owner: root
+      group: root
+      state: link
+      mode: 0755
     become: yes
 
   - name: check ecp gateway

@@ -1,0 +1,58 @@
+### Refresh hpecp and kube config files
+- hosts: localhost
+  tasks:
+  - name: configure hpecp
+    copy:
+      dest: ~/.hpecp.conf
+      content: |-
+        [default]
+        api_host = {{ gateway_pub_dns }}
+        api_port = 8080
+        use_ssl = True
+        verify_ssl = False
+        warn_ssl = False
+        username = admin
+        password = {{ admin_password }}
+      force: yes
+
+  - name: get clusters
+    shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
+    register: clusters
+
+  - set_fact:
+      cluster_ids: "{{ clusters.stdout_lines }}"
+
+  - name: update kubeadmin config
+    shell: |-
+      while : ; do
+        ADMINCONF=$(hpecp k8scluster admin_kube_config {{ item }} || echo "")
+        [[ "${ADMINCONF}" == "" ]] || break
+        sleep 10
+      done
+    with_items: "{{ cluster_ids }}"
+    register: kubeadminconfig
+
+- hosts: controllers
+  tasks:
+  - name: configure hpecp
+    copy:
+      dest: ~/.hpecp.conf
+      content: |-
+        [default]
+        api_host = {{ groups['controllers'] | first }}
+        api_port = 8080
+        use_ssl = True
+        verify_ssl = False
+        warn_ssl = False
+        username = admin
+        password = {{ admin_password }}
+      force: yes
+
+  - name: update admin config
+    shell: |-
+      while : ; do
+        hpecp k8scluster admin_kube_config {{ item }} > ~/.hpecp_admin.config
+        [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
+        sleep 10
+      done
+    with_items: "{{ hostvars['localhost'].cluster_ids }}"

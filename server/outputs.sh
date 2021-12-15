@@ -84,3 +84,7 @@ EPIC_OPTIONS="--skipeula --default-password ${ADMIN_PASS}"
 IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)
 IS_MLOPS=$(jq '.is_mlops // false' "${1}"/config.json)
 
+ANSIBLE_CMD="ansible-playbook"
+if [ ${IS_VERBOSE} ]; then
+  ANSIBLE_CMD="${ANSIBLE_CMD} -v"
+fi

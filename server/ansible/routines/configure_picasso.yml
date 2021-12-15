@@ -45,11 +45,11 @@
         export LOG_FILE_PATH=/tmp/register_k8s_prepare.log
         retry ${SCRIPTPATH}/startscript.sh --action prepare_dftenants
         export LOG_FILE_PATH=/tmp/register_k8s_configure.log
-        [[ $(tail -1 ${LOG_FILE_PATH}) == "The action configure_dftenants completed successfully." ]] || echo yes | ${SCRIPTPATH}/startscript.sh --action configure_dftenants
+        [[ $(tail -1 ${LOG_FILE_PATH} 2> /dev/null ) == "The action configure_dftenants completed successfully." ]] || echo yes | ${SCRIPTPATH}/startscript.sh --action configure_dftenants
         export LOG_FILE_PATH=/tmp/register_k8s_register.log
-        expect <<EOF
+        [[ $(tail -1 ${LOG_FILE_PATH} 2> /dev/null ) == "The action register_dftenants completed successfully." ]] || expect <<EOF
           set timeout 1800
-          spawn $(realpath ${SCRIPTPATH}/startscript.sh) --action register_dftenants
+          spawn $(realpath ${SCRIPTPATH})/startscript.sh --action register_dftenants
           expect ".*Enter Site Admin username: " { send "admin\r" }
           expect "admin\r\nEnter Site Admin password: " { send "{{ admin_password }}\r" }
           expect eof

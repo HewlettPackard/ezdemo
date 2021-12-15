@@ -55,7 +55,7 @@ You can also manually use the scripts through the UI or simply via CLI.
 
   - ssh access only through gateway
   
-  - use `ssh centos@10.1.0.xx` to access any host via their AWS internal IP address (~/.ssh/ssh_config setup for jump host via gateway)
+  - use `ssh centos@10.1.0.xx` to access any host via their AWS internal IP address (~/.ssh/config setup for jump host via gateway)
 
 ## Utilities used in the container (or you need if you are running locally)
 * AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)

@@ -55,17 +55,6 @@
     - shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
       register: cluster_id
 
-    # ensure folder exist
-    - file: path=~/.kube state=directory mode='0755'
-
-    - name: create local admin config
-      shell: |-
-        while : ; do
-          sleep 10
-          hpecp k8scluster admin_kube_config {{ cluster_id.stdout }} > ~/.hpecp_admin.config
-          [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
-        done
-
     - name: waiting Picasso cluster
       shell: "hpecp k8scluster wait-for-status ''[ready]'' --id {{ cluster_id.stdout }} --timeout-secs 3600"
 
