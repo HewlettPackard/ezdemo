@@ -25,7 +25,7 @@ variable "mapr_count" { default = 3 }
 variable "mapr_instance_type" { default = "m4.4xlarge" }
 
 # for Picasso worker (as K8s master)
-# "c6g.8xlarge" ## 32c64 - 1.29$
+# "c5a.8xlarge" ## 32c64 - 1.456$
 # for K8s worker
 # "m4.4xlarge" ## 16c64 - 0.928$
 # for MLOPS worker
@@ -34,7 +34,7 @@ variable "mapr_instance_type" { default = "m4.4xlarge" }
 ## GPU Worker
 # "p4d.24xlarge" ## 96c1152 + 8 A100 GPU 
 variable "wkr_instance_type" {
-  default = "c6g.8xlarge"
+  default = "c5a.8xlarge"
 }
 variable "ad_instance_type" { default = "t2.small" }
 
