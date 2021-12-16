@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
+   echo Usage: "${0} aws|azure|kvm|vmware"
+   exit 1
+fi
+
 if [[ -f "${1}/run.log" ]]; then 
   mv "${1}/run.log" "${1}/$(date +'%Y%m%d%H%M')-run.log"
 fi

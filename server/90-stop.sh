@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
+if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
+   echo Usage: "${0} aws|azure|kvm|vmware"
+   exit 1
+fi
+
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then
   ANSIBLE_CMD="${ANSIBLE_CMD} -v"
