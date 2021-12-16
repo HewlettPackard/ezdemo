@@ -22,14 +22,17 @@ variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 variable "worker_count" { default = 2 }
 
 variable "mapr_count" { default = 3 }
-variable "mapr_instance_type" { default = "m4.4xlarge" } // c5a.8xlarge (32c64)
+variable "mapr_instance_type" { default = "m4.4xlarge" }
+
+# "c5a.8xlarge" ## 32c64
+# "m4.4xlarge" ## 16c64
+# "m5.8xlarge" ## 32c128
+# for MLOPS worker
+# "r5.2xlarge" ## 8c64
+## GPU Worker
+# "p4d.24xlarge" ## 96c1152 + 8 A100 GPU
 variable "wkr_instance_type" {
-  default = "m4.4xlarge" ## 16c64
-  # "m5.8xlarge" ## 32c128
-  # MLOPS worker
-  # "r5.2xlarge" ## 8c64
-  ## GPU Worker
-  # "p4d.24xlarge" ## 96c1152 + 8 A100 GPU
+  default = "c5a.8xlarge"
 }
 variable "ad_instance_type" { default = "t2.small" }
 
