@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
+   echo Usage: "${0} aws|azure|kvm|vmware"
+   exit 1
+fi
+
 pushd "${1}" > /dev/null
   TF_IN_AUTOMATION=1 terraform destroy \
     -no-color \
