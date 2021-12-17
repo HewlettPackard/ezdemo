@@ -9,7 +9,7 @@ variable "is_ha" { default = false }
 variable "region" { default = "eu-west-2" }
 variable "az" { default = "eu-west-2a" }
 variable "az_id" { default = "euw2-az2" }
-variable "centos7_ami" { default = "ami-09e5afc68eed60ef4" }
+variable "centos7_ami" { default = "ami-0bab5c8be0975423b" }
 variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
 variable "ubuntu_ami" { default = "ami-0f9124f7452cdb2a6" }
 
@@ -22,19 +22,16 @@ variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 variable "worker_count" { default = 2 }
 
 variable "mapr_count" { default = 3 }
-variable "mapr_instance_type" { default = "m4.4xlarge" }
+variable "mapr_instance_type" { default = "m4.4xlarge" } 
 
-# for Picasso worker (as K8s master)
-# "c5a.8xlarge" ## 32c64 - 1.456$
-# for K8s worker
-# "m4.4xlarge" ## 16c64 - 0.928$
-# for MLOPS worker
-# "m5.8xlarge" ## 32c128 - 1.60$
-# "r5.2xlarge" ## 8c64 - 0.592$
+# c5.8xlarge (32c64)
+# "m5.8xlarge" ## 32c128
+# MLOPS worker
+# "r5.2xlarge" ## 8c64
 ## GPU Worker
-# "p4d.24xlarge" ## 96c1152 + 8 A100 GPU 
+# "p4d.24xlarge" ## 96c1152 + 8 A100 GPU
 variable "wkr_instance_type" {
-  default = "c5a.8xlarge"
+  default = "c5a.8xlarge" ## 32c64
 }
 variable "ad_instance_type" { default = "t2.small" }
 
