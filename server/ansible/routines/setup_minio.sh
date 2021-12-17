@@ -45,7 +45,7 @@ httpClient = urllib3.PoolManager(cert_reqs = 'CERT_NONE')
 client = Minio(
   "$HOST",
   access_key="admin",
-  secret_key="admin123",
+  secret_key="{{ admin_pass }}",
   secure=True,
   http_client = httpClient
 )

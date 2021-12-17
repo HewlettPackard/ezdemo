@@ -135,3 +135,4 @@ yarn.lock
 **/vms/
 **/.DS_Store
 **/run.log
+**/my.tfvars

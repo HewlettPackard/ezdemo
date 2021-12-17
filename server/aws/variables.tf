@@ -1,5 +1,6 @@
 variable "user" {}
 variable "project_id" {}
+variable "admin_pass" {}
 variable "is_mlops" { default = true }
 variable "is_mapr" { default = false }
 variable "is_runtime" { default = false }

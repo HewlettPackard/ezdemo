@@ -73,7 +73,7 @@
         verify_ssl = False
         warn_ssl = False
         username = admin
-        password = {{ admin_password }}
+        password = {{ admin_pass }}
       force: yes
 
   - name: copy private key
@@ -140,12 +140,12 @@
     when: not cert_file.stat.exists
   
   - name: install ecp
-    shell: "/home/centos/{{ install_file }} --skipeula --default-password {{ admin_password }} --ssl-cert /home/centos/cert.pem --ssl-priv-key /home/centos/key.pem"
+    shell: "/home/centos/{{ install_file }} --skipeula --default-password {{ admin_pass }} --ssl-cert /home/centos/cert.pem --ssl-priv-key /home/centos/key.pem"
     when: not hpecp_installed.stat.exists
     # become: yes
 
   - name: configure ecp
-    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ item }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin ecp-demo -k no --no-local-tenant-storage --routable no
+    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ item }}" -p "{{ admin_pass }}" -t 60 -s docker -d hpecplocal --cin ecp-demo -k no --no-local-tenant-storage --routable no
     when: not hpecp_installed.stat.exists
     with_items: "{{ groups['controllers'] }}"
 
