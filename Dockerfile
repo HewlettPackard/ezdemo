@@ -26,7 +26,7 @@ RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/
 RUN rm -rf aws* terraform.zip kubectl minica /usr/local/aws-cli/v2/current/dist/awscli/examples
 
 COPY server/requirements.txt /app/server/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r server/requirements.txt
 
 WORKDIR /app
 COPY --from=builder /app/build /app/build
