@@ -30,6 +30,6 @@ COPY --from=builder /app/build /app/build
 COPY server /app/server
 
 WORKDIR /app/server
-RUN pip install --no-cache-dir -r server/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 4000
 CMD python3 ./main.py 
