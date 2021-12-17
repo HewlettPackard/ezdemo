@@ -43,7 +43,7 @@ EPIC_DL_URL="${HOME}/Downloads/hpe-cp-rhel-release-5.4-32.bin"
 # EPIC_DL_URL="${HOME}/Downloads/hpe-cp-rhel-release-5.3.6-3060.bin"
 EPIC_FILENAME="hpe-cp-rhel-release-5.4-32.bin"
 # EPIC_FILENAME="hpe-cp-rhel-release-5.3.6-3060.bin"
-ADMIN_PASS=admin123
+ADMIN_PASS=${ADMIN_PASS}
 GATW_PUB_DNS=${GATW_PRV_IP}
 IS_MLOPS=false
 
@@ -75,7 +75,7 @@ ansible_connection=ssh
 ansible_user=${USER}
 install_file=${EPIC_FILENAME}
 download_url=${EPIC_DL_URL}
-admin_password=${ADMIN_PASS}
+admin_pass=${ADMIN_PASS}
 gateway_pub_dns=${GATW_PUB_DNS}
 ssh_prv_key=${SSH_PRV_KEY_PATH}
 is_mlops=${IS_MLOPS}"

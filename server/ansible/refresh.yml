@@ -12,7 +12,7 @@
         verify_ssl = False
         warn_ssl = False
         username = admin
-        password = {{ admin_password }}
+        password = {{ admin_pass }}
       force: yes
 
   - name: get clusters
@@ -44,7 +44,7 @@
         verify_ssl = False
         warn_ssl = False
         username = admin
-        password = {{ admin_password }}
+        password = {{ admin_pass }}
       force: yes
 
   - name: update kubeadmin config

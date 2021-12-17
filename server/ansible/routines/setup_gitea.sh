@@ -101,7 +101,7 @@ ${KUBEATNS} exec $POD -- \
   curl -s -d $URL_DATA http://localhost:3000
 
 ${KUBEATNS} exec $POD -- \
-  su git -c 'gitea admin user create --username "administrator" --password "admin123" --email "admin@samdom.example.com" --admin --must-change-password=false' || true
+  su git -c 'gitea admin user create --username "administrator" --password "{{ admin_pass }}" --email "admin@samdom.example.com" --admin --must-change-password=false' || true
 
 ${KUBEATNS} exec $POD -- \
   su git -c 'gitea admin user create --username "ad_admin1" --password "pass123" --email "ad_admin1@samdom.example.com" --must-change-password=false' || true

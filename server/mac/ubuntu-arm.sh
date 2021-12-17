@@ -89,15 +89,3 @@ pushd "${VMDIR}" > /dev/null
 popd > /dev/null
 
 exit 0
-  # wget https://ezmeral-platform-releases.s3.amazonaws.com/5.3.6/3060/hpe-cp-rhel-release-5.3.6-3060.bin
-  # ./hpe-cp-rhel-release-5.3.6-3060.bin --skipeula --default-password admin123 --ssl-cert /home/centos/ca-cert.pem --ssl-priv-key /home/centos/ca-key.pem
-
-  # sudo qemu-system-aarch64 -nographic -machine virt,gic-version=max -m 32G -cpu max -smp 4 \
-  #   -netdev vmnet-macos,id=vnet0,mode=host -device e1000,netdev=vnet0 \
-  #   -drive file="${DISK0}",if=none,id=drive0,cache=writeback -device virtio-blk,drive=drive0,bootindex=0 \
-  #   -drive file="${DISK1}",if=none,id=drive1,cache=writeback -device virtio-blk,drive=drive1,bootindex=1 \
-  #   -drive file="${DISK2}",if=none,id=drive2,cache=writeback -device virtio-blk,drive=drive2,bootindex=2 \
-  #   -drive file=ci.iso,format=raw \
-  #   -drive file="${BASEDIR}/pflash0.img",format=raw,if=pflash -drive file="${BASEDIR}/pflash1.img",format=raw,if=pflash 
-
-    # -netdev user,id=vnet"${NETOPTS}" -device virtio-net-pci,netdev=vnet \
