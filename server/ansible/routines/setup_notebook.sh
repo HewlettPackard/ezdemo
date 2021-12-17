@@ -4,6 +4,7 @@ set -euo pipefail
 
 export KUBEATNS=${1}
 export TENANT_NS=${KUBEATNS##* }
+export K8SCLUSTER="dfcluster"
 export NB_CLUSTER_NAME=nb
 export MLFLOW_CLUSTER_NAME=mlflow
 export TRAINING_CLUSTER_NAME=trainingengineinstance
@@ -47,8 +48,7 @@ export DATA_BASE64=$(base64 -w 0 <<END
 END
 )
 
-### TODO - fix this (either by passing as parameter or directly running)
-CLUSTER_ID="/api/v2/k8scluster/1"
+CLUSTER_ID=$("hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1")
 PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
 
 ###
