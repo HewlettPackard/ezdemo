@@ -74,6 +74,10 @@
     register: mlflow_out
     ignore_errors: yes
 
+  - name: setup spark
+    shell: "./setup_spark.sh '{{ kubeatns }}'"
+    ignore_errors: yes
+
   - name: configure tenant hpecp
     copy:
       dest: ~/.hpecp_tenant.conf
