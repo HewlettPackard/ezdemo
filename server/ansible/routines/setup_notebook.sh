@@ -48,7 +48,7 @@ export DATA_BASE64=$(base64 -w 0 <<END
 END
 )
 
-CLUSTER_ID=$("hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1")
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
 PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
 
 ###
