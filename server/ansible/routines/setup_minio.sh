@@ -4,6 +4,7 @@ set -euo pipefail
 
 KUBEATNS=${1}
 MLFLOW_CLUSTER_NAME=${2}
+MLFLOW_ADMIN_PASS=${3}
 
 # echo Waiting for Notebook to have state==configured
 COUNTER=0
@@ -31,7 +32,7 @@ echo $HOST
 
 ## Minio create bucket
 
-export PYTHONPATH=~/.local/lib/python3.6/site-packages/
+# export PYTHONPATH=~/.local/lib/python3.8/site-packages/
 export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 
 pip3 install minio --user --quiet
@@ -45,7 +46,7 @@ httpClient = urllib3.PoolManager(cert_reqs = 'CERT_NONE')
 client = Minio(
   "$HOST",
   access_key="admin",
-  secret_key="{{ admin_pass }}",
+  secret_key="${MLFLOW_ADMIN_PASS}",
   secure=True,
   http_client = httpClient
 )
