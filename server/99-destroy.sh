@@ -17,10 +17,19 @@ pushd "${1}" > /dev/null
     
 popd > /dev/null
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> c94c4174d220e4dbda8614e6d389d996348ca6d2
 # Tear down ssh port forwarding (if exist) for MapR MCS
 source outputs.sh ${1}
 ssh -S /tmp/MCS-socket -O exit centos@${GATW_PRV_DNS} || true
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 6dd04bfd97728f229064cbf03e734c072ada5136
+>>>>>>> c94c4174d220e4dbda8614e6d389d996348ca6d2
 rm -f generated/output.json
 rm -f generated/ssh_host.sh
 rm -f ansible/group_vars/all.yml
