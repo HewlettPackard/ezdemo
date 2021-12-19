@@ -18,6 +18,7 @@ function App() {
   const [spin, setSpin] = React.useState(false);
   const [gwurl, setGwurl] = React.useState(undefined);
   const [gwready, setGwready] = React.useState(false);
+  const [MCSready, setMCSready] = React.useState(false);
   const [prvkey, setPrvkey] = React.useState(false);
   const [tfstate, setTfstate] = React.useState(false);
   const outputRef = React.useRef(undefined);
@@ -101,8 +102,11 @@ function App() {
               setTfstate(true);
             }
             // when gateway installation is complete
-            if (textVal.includes('TASK [AD config]'))
+            if (textVal.includes('TASK [exit site lockdown]'))
               setGwready(true);
+            // if External Data Fabric console ready
+            if (textVal.includes('TASK [MCS tunnel]'))
+              setMCSready(true);
             if (textVal.includes('Environment destroyed'))
             {
               setPrvkey(false);
@@ -147,6 +151,7 @@ function App() {
     configureProvider(providers[0]);
     setOutput([]);
     setGwurl(undefined);
+    setMCSready(false);
     setLogfile(undefined);
     setError(undefined);
   }
@@ -248,6 +253,7 @@ function App() {
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
+            { MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
             { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} target='_blank' rel='noreferrer' /> }
             { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
             { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }

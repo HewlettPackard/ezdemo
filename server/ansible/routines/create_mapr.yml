@@ -117,7 +117,7 @@
 
 - hosts: localhost
   tasks:
-  - name: open an ssh connection for MCS
+  - name: MCS tunnel
     shell: "cd ../..; ssh -M -S /tmp/MCS-socket -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
 
   #### NOT WORKING !!!
