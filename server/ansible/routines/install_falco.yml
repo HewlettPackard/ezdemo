@@ -17,13 +17,13 @@
     become: yes
 
   - name: install falco
-    yum:
+    package:
       name: 
         - kernel-devel
         - dkms
         - falco
       state: latest
-    register: yum
+    register: package
     become: yes
 
   - name: reboot for falco
@@ -32,7 +32,7 @@
       connect_timeout: 5
       pre_reboot_delay: 0
       post_reboot_delay: 30
-    when: yum.changed
+    when: package.changed
     ignore_errors: yes
     become: yes
 

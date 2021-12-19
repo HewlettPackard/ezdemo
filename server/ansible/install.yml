@@ -47,7 +47,7 @@
 # INSTALL MAPR (only for External Data Fabric)
 ######################################################################################################
 - name: Prepare MapR Hosts
-  import_playbook: routines/prepare_ubuntu.yml
+  import_playbook: routines/prepare_centos_mapr.yml
   when: is_mapr | bool
 
 - name: Install External MapR Hosts

@@ -4,12 +4,11 @@
 
   tasks:
   - name: install docker
-    yum:
+    package:
       name: 
         - docker
         - openldap-clients
       state: latest
-    register: yum
     become: yes
 
   - name: enable docker
