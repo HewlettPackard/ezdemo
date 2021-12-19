@@ -1,4 +1,4 @@
-- hosts: all:!mapr
+- hosts: all
   # any_errors_fatal: true
   # gather_facts: False
   tasks:
@@ -9,20 +9,19 @@
     become: True 
 
   - name: enable epel repo
-    yum:
-      name: epel-release
+    package:
+      name: 
+        - epel-release
+        - bash-completion
       state: latest
     become: True
 
   - name: update packages
-    yum:
+    package:
       name: '*'
       state: latest
-    register: yum
+    register: package
     become: True
-
-  - yum: name="bash-completion" state=latest
-    become: yes
 
   - name: configure selinux
     selinux:
@@ -40,10 +39,10 @@
       connect_timeout: 5
       pre_reboot_delay: 0
       post_reboot_delay: 30
-    when: selinux.reboot_required or yum.changed
+    when: selinux.reboot_required or package.changed
     become: True
 
-- hosts: all:!gateway:!mapr
+- hosts: all:!gateway
   gather_facts: False
   tasks:
   - name: reboot others
@@ -52,5 +51,5 @@
       connect_timeout: 5
       pre_reboot_delay: 0
       post_reboot_delay: 30
-    when: selinux.reboot_required or yum.changed
+    when: selinux.reboot_required or package.changed
     become: True

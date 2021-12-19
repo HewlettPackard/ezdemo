@@ -34,8 +34,7 @@ is_mlops=${IS_MLOPS}
 is_mapr=${IS_MAPR}
 is_runtime=${IS_RUNTIME}
 ad_realm=SAMDOM.EXAMPLE.COM
-[mapr:vars]
-ansible_user=ubuntu"
+"
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 
@@ -65,7 +64,8 @@ echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible, delete on destroy
 
 pushd ./generated/ > /dev/null
   rm -rf "${GATW_PUB_DNS}"
-  minica -domains "${GATW_PUB_DNS},${GATW_PRV_DNS},${CTRL_PRV_DNS},${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_PRV_DNS%%.*},localhost" -ip-addresses "${GATW_PUB_IPS},$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),$(echo ${CTRL_PRV_IPS[@]} | sed 's/ /,/g'),127.0.0.1"
+  minica -domains "$(echo ${GATW_PUB_DNS},${GATW_PRV_DNS},${CTRL_PRV_DNS},${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_PRV_DNS%%.*},localhost | sed 's/,,/,/g')" \
+    -ip-addresses "$(echo ${GATW_PUB_IPS},$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),$(echo ${CTRL_PRV_IPS[@]} | sed 's/ /,/g'),127.0.0.1 | sed 's/,,/,/g')"
 popd > /dev/null 
 
 exit 0

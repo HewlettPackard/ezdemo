@@ -1,0 +1,486 @@
+### Start MapR installation on first DF node
+- hosts: "{{ (groups['mapr'] | first) | default([]) }}"
+  tasks:
+  # - name: get mapr installer
+  #   get_url:
+  #     url: https://package.mapr.hpe.com/releases/installer/mapr-setup.sh
+  #     dest: /tmp/mapr-setup.sh
+  #     mode: '0755'
+
+  # - name: setup mapr installer
+  #   command: /tmp/mapr-setup.sh -y
+  #   become: yes
+  #   register: install
+  
+  # - name: copy private key
+  #   copy:
+  #     src: "../../generated/controller.prv_key"
+  #     dest: "~/controller.prv_key"
+  #     mode: 0600
+
+  # - name: get hostnames
+  #   shell: getent hosts "{{ item }}" | awk '{ print $2 }'
+  #   with_items: "{{ groups['mapr'] }}"
+  #   register: hostnames
+
+  # - name: get hostlist
+  #   set_fact:
+  #     mapr_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
+
+  - name: mapr repo key
+    rpm_key:
+      state: present
+      key: https://package.mapr.hpe.com/releases/pub/maprgpg.key
+
+  - name: mapr repo
+    yum_repository:
+      name: mapr
+      description: MapR Repo
+      file: mapr
+      baseurl: https://package.mapr.com/releases/v6.2.0/redhat/
+      enabled: yes
+      gpgcheck: yes
+    become: yes
+
+  - name: mapr ecosystem repo
+    yum_repository:
+      name: mapr-ecosystem
+      description: MapR Ecosystem Pack Repo
+      file: mapr
+      baseurl: https://package.mapr.com/releases/MEP/MEP-8.0/redhat
+      enabled: yes
+      gpgcheck: yes
+    become: yes
+
+  - name: create mapr group
+    group:
+      name: mapr
+      state: present
+      gid: 5000
+    become: yes
+
+  - name: create mapr user
+    user: 
+      name: mapr
+      password: "{{ 'mapr' | password_hash('sha512', 'mysecretsalt') }}"
+      comment: Data Fabric Admin
+      uid: 5000
+      group: mapr
+      groups: wheel
+      shell: /bin/bash
+      home: /home/mapr
+    become: yes
+
+  - name: install mapr packages
+    package:
+      name:
+        - mapr-librdkafka
+        - mapr-hadoop-util
+        - mapr-client
+        - mapr-core-internal
+        - mapr-core
+        - mapr-fileserver
+        - mapr-cldb
+        - mapr-zk-internal
+        - mapr-zookeeper
+        - mapr-apiserver
+        - mapr-webserver
+        - mapr-loopbacknfs
+        - mapr-nfs
+      state: latest
+    become: yes
+
+  - shell: "fdisk -l | grep '500 GiB' | cut -d' ' -f2 | tr -d ':'"
+    register: disks
+    become: yes 
+
+  - name: disks.txt
+    shell: echo "{{ disks.stdout }}" > /tmp/disks.txt
+
+  - name: install mapr
+    shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'] | first }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
+    become: yes
+
+  - name: configure mapr
+    shell: /opt/mapr/server/configure.sh -R
+    become: yes
+
+  - name: register demo licence
+    shell: maprcli license add -license '{{ mapr_license }}' -is_file false
+    become: yes
+    vars:
+      mapr_license: |-
+        -----BEGIN SIGNED MESSAGE-----
+        version: "4.0"
+        issuer: "MapR Technologies, Inc."
+        licType: Demo
+        description: "MapR Enterprise Trial Edition"
+        enforcement: HARD
+        gracePeriod: 2592000
+        issuedate: 1638475201
+        expirationdate: 1641067201
+        issuedateStr: "Thu Dec 02 20:00:01 UTC 2021"
+        expdateStr: "Sat Jan 01 20:00:01 UTC 2022"
+        capabilities {
+          feature: MULTI_CLUSTER
+          name: "Multiple Clusters Support"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAXNODES
+          name: "Max Nodes in Cluster"
+          permission: ALLOW
+          featureData {
+            maxNodes: "unlimited"
+          }
+        }
+        capabilities {
+          feature: CLDB_HA
+          name: "CLDB HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: SNAPSHOT
+          name: "Snapshots"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MIRRORING
+          name: "Mirroring"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: DATA_PLACEMENT
+          name: "Data placement"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: POSIX_CLIENT
+          name: "Posix Client"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: POSIX_CLIENT_GOLD
+          name: "MapR POSIX Client for Containerized Apps"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: POSIX_CLIENT_PLATINUM
+          name: "MapR POSIX Platinum Client"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: NFS
+          name: "NFS"
+          permission: ALLOW
+          featureData {
+            maxNfsNodes: "unlimited"
+          }
+        }
+        capabilities {
+          feature: NFS_MULTINODE
+          name: "NFS Multiple Nodes"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: NFS_HA
+          name: "NFS HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JOBTRACKER_HA
+          name: "JobTracker HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: OPTIMIZED_SHUFFLE
+          name: "Optimized Shuffle"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JM_CHARTS
+          name: "Job Management Charts"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JM_HISTOGRAMS
+          name: "Job Management Histograms"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_TABLES
+          name: "MapR Tables"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_TABLES_FULL
+          name: "MapR Tables Full"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_STREAMS
+          name: "MapR Streams"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_STREAMS_FULL
+          name: "MapR Streams Full"
+          permission: ALLOW
+        }
+        modules: "hadoop,database,streams"
+        -----BEGIN DATA-----
+        EgM0LjAqF01hcFIgVGVjaG5vbG9naWVzLCBJbmMuMAQ6HU1hcFIgRW50ZXJwcmlzZSBUcmlhbCBF
+        ZGl0aW9uQAJIgJqeAVDBy6SNBljB5cKOBmIcVGh1IERlYyAwMiAyMDowMDowMSBVVEMgMjAyMWoc
+        U2F0IEphbiAwMSAyMDowMDowMSBVVEMgMjAyMqIBHwgEEhlNdWx0aXBsZSBDbHVzdGVycyBTdXBw
+        b3J0GAOiAScIChIUTWF4IE5vZGVzIGluIENsdXN0ZXIYA1ILEgl1bmxpbWl0ZWSiAQ0IBRIHQ0xE
+        QiBIQRgDogEPCAcSCVNuYXBzaG90cxgDogEPCAgSCU1pcnJvcmluZxgDogEUCAkSDkRhdGEgcGxh
+        Y2VtZW50GAOiARsIExIMUG9zaXggQ2xpZW50GANSBxoFMTAwMDCiATcIFRIoTWFwUiBQT1NJWCBD
+        bGllbnQgZm9yIENvbnRhaW5lcml6ZWQgQXBwcxgDUgcaBTEwMDAwogEpCBYSGk1hcFIgUE9TSVgg
+        UGxhdGludW0gQ2xpZW50GANSBxoFMTAwMDCiARYIARIDTkZTGANSCwoJdW5saW1pdGVkogEYCAIS
+        Ek5GUyBNdWx0aXBsZSBOb2RlcxgDogEMCAMSBk5GUyBIQRgDogETCAYSDUpvYlRyYWNrZXIgSEEY
+        A6IBFwgLEhFPcHRpbWl6ZWQgU2h1ZmZsZRgDogEbCAwSFUpvYiBNYW5hZ2VtZW50IENoYXJ0cxgD
+        ogEfCA0SGUpvYiBNYW5hZ2VtZW50IEhpc3RvZ3JhbXMYA6IBEQgOEgtNYXBSIFRhYmxlcxgDogEW
+        CA8SEE1hcFIgVGFibGVzIEZ1bGwYA6IBEggXEgxNYXBSIFN0cmVhbXMYA6IBFwgYEhFNYXBSIFN0
+        cmVhbXMgRnVsbBgDsgEXaGFkb29wLGRhdGFiYXNlLHN0cmVhbXM=
+        -----BEGIN SIGNATURE-----
+        oj9Qeg/mkdBtRSf60ILOsOeVVZWg0MMru9XmTescYR6dGW7ZQ65HhYYo6Z4GUglLNCLukmOQISTb
+        UIiVzdYJU0PC2UY5n/2rwxWmmmHyXGtoAWOsl3Xa3jCiUGmyoIeoA8k7XdvHgG+Mp4rhNHiL7ElX
+        +j6q6B/id5cCZzrn/B9tt7NEtufQA31vZn6vDratE8mghgR4Ns5zCfXdv8Q7KonK25MUjW576ofk
+        rxnGXIsJo3hmBHkfb+LCXwK6uxyAfSeyAM51PJivaHHjtRwg2NNXz7xBwRBalnDF4r1F0pHxzN6F
+        kJCI33LPR2cCzMGL4mle6W5FEkPPjEIk1rL8siRGp63H334Ef9DlAeTPW1aaQ2v/fKLTcsVPyxTD
+        oxDhL+S4HSlCbYTNCUPLP23SXRGJvGpoB50pymgE4qY26tYczyLuANkh6GIRMXkOLW/IMGANgUOB
+        4dfXQWrECr7w9jpOwpq5kkFXbolvHw08j3F/52UUsKjVnjw9epCdFNpygcymszHvpVbglQ5PctbZ
+        nKGKRM+vpUYRrxWQYJpFwE2u00GFXAQuIdiP3lybncZvnsxWcCSaWhUPM86Eurqm5Sr8cTRaHcEs
+        QLnqlpDjxM8nLnER3QiQ0qacrmVWj+mGYWB7mLmV0RI1mJjYabbhdBGUNbardgwlWYQKgVzddH2Y
+        gJD9WQn4ozAYu08HO+rYbNOlmND1XqyH2sFmrWcVLPC5CJtmiVW/ACyahRuAJkh+jPV1VIgGtyfR
+        XsYaow0oeTBJJxzH7U9EqXvafchUxzC5vsL1Jq1TLkIKqmkyDtmzdyDkbvVkomdoDgND3D6bQSyd
+        sWs0Fm4NavNUcLPkbxjxS6AuOME59+ZXRD8m7kqVmgjJDkxnRQD7m61cQ5F1KQmrvhhUPeS7Kp9v
+        j2HkYOsLEqYq6Ze+aTy0i76ZCSlsdCDgHe84eo6bwcNNuk2VNRbUXq16CCgqT+nPx+rx7G339rOT
+        7hpqUriVDibxXnuOvinDgS8SaxWOx7EpukWLtgvevNl5fB5b9NLce1781LDPOsz+HGygzbq8cpoF
+        BU6oZQN/dyUI6qZiik9MDeoWbF3lihMaFEKyxvjtrCybeGJQVxqbTQUXlrrv8U+dmPXM36TtMNuz
+        ntYvM56qA8JfCYfiXExk6m28Q/coNanjMqEZOEpdFHB9Mgk/zPMKm6QZgzhsJBNOvPBd6wRv0y3K
+        XM+PqB6S1880G0kq/xxzjN+YUFrUc9b/jXX+covPHXqrXWrux9e/VcuZEPuXgHnW8M9YH8ZlPVUl
+        S4diFNEkS1xhEnn9FtQ8SMi9AYk+2TSrFe41+qVzQgOFeXPMgIA9sWucTWh2RDcSXFRep37vFw==
+        -----END SIGNATURE-----
+        hZ/ZLjQDnAUIXO2lIRH0NwGcxto=
+        -----END MESSAGE HASH-----
+        -----BEGIN SIGNED MESSAGE-----
+        version: "4.0"
+        issuer: "MapR Technologies, Inc."
+        licType: Demo
+        description: "MapR Enterprise Trial Edition"
+        enforcement: HARD
+        gracePeriod: 2592000
+        issuedate: 1638475201
+        expirationdate: 1641067201
+        issuedateStr: "Thu Dec 02 20:00:01 UTC 2021"
+        expdateStr: "Sat Jan 01 20:00:01 UTC 2022"
+        capabilities {
+          feature: MULTI_CLUSTER
+          name: "Multiple Clusters Support"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAXNODES
+          name: "Max Nodes in Cluster"
+          permission: ALLOW
+          featureData {
+            maxNodes: "unlimited"
+          }
+        }
+        capabilities {
+          feature: CLDB_HA
+          name: "CLDB HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: SNAPSHOT
+          name: "Snapshots"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MIRRORING
+          name: "Mirroring"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: DATA_PLACEMENT
+          name: "Data placement"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: POSIX_CLIENT
+          name: "Posix Client"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: POSIX_CLIENT_GOLD
+          name: "MapR POSIX Client for Containerized Apps"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: POSIX_CLIENT_PLATINUM
+          name: "MapR POSIX Platinum Client"
+          permission: ALLOW
+          featureData {
+            maxNfsClientNodes: "10000"
+          }
+        }
+        capabilities {
+          feature: NFS
+          name: "NFS"
+          permission: ALLOW
+          featureData {
+            maxNfsNodes: "unlimited"
+          }
+        }
+        capabilities {
+          feature: NFS_MULTINODE
+          name: "NFS Multiple Nodes"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: NFS_HA
+          name: "NFS HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JOBTRACKER_HA
+          name: "JobTracker HA"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: OPTIMIZED_SHUFFLE
+          name: "Optimized Shuffle"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JM_CHARTS
+          name: "Job Management Charts"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: JM_HISTOGRAMS
+          name: "Job Management Histograms"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_TABLES
+          name: "MapR Tables"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_TABLES_FULL
+          name: "MapR Tables Full"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_STREAMS
+          name: "MapR Streams"
+          permission: ALLOW
+        }
+        capabilities {
+          feature: MAPR_STREAMS_FULL
+          name: "MapR Streams Full"
+          permission: ALLOW
+        }
+        modules: "hadoop,database,streams"
+        -----BEGIN DATA-----
+        EgM0LjAqF01hcFIgVGVjaG5vbG9naWVzLCBJbmMuMAQ6HU1hcFIgRW50ZXJwcmlzZSBUcmlhbCBF
+        ZGl0aW9uQAJIgJqeAVDBy6SNBljB5cKOBmIcVGh1IERlYyAwMiAyMDowMDowMSBVVEMgMjAyMWoc
+        U2F0IEphbiAwMSAyMDowMDowMSBVVEMgMjAyMqIBHwgEEhlNdWx0aXBsZSBDbHVzdGVycyBTdXBw
+        b3J0GAOiAScIChIUTWF4IE5vZGVzIGluIENsdXN0ZXIYA1ILEgl1bmxpbWl0ZWSiAQ0IBRIHQ0xE
+        QiBIQRgDogEPCAcSCVNuYXBzaG90cxgDogEPCAgSCU1pcnJvcmluZxgDogEUCAkSDkRhdGEgcGxh
+        Y2VtZW50GAOiARsIExIMUG9zaXggQ2xpZW50GANSBxoFMTAwMDCiATcIFRIoTWFwUiBQT1NJWCBD
+        bGllbnQgZm9yIENvbnRhaW5lcml6ZWQgQXBwcxgDUgcaBTEwMDAwogEpCBYSGk1hcFIgUE9TSVgg
+        UGxhdGludW0gQ2xpZW50GANSBxoFMTAwMDCiARYIARIDTkZTGANSCwoJdW5saW1pdGVkogEYCAIS
+        Ek5GUyBNdWx0aXBsZSBOb2RlcxgDogEMCAMSBk5GUyBIQRgDogETCAYSDUpvYlRyYWNrZXIgSEEY
+        A6IBFwgLEhFPcHRpbWl6ZWQgU2h1ZmZsZRgDogEbCAwSFUpvYiBNYW5hZ2VtZW50IENoYXJ0cxgD
+        ogEfCA0SGUpvYiBNYW5hZ2VtZW50IEhpc3RvZ3JhbXMYA6IBEQgOEgtNYXBSIFRhYmxlcxgDogEW
+        CA8SEE1hcFIgVGFibGVzIEZ1bGwYA6IBEggXEgxNYXBSIFN0cmVhbXMYA6IBFwgYEhFNYXBSIFN0
+        cmVhbXMgRnVsbBgDsgEXaGFkb29wLGRhdGFiYXNlLHN0cmVhbXM=
+        -----BEGIN SIGNATURE-----
+        pjLV7QmyFFdh/3BM49yCZTeKTfp2hd2fI8F9CqS5zkXoZ/Njg6Ey98y3maGWH9JSna+sQFXojTJ0
+        eXEMrgVRMFty7aQY3Hi0XZUMBCJ0dnDVgtr+fVdpuRS7lnW8G3al87GYUNViURU9Np5gGMOxyTHl
+        D2eQghDQ4LrrEzPzOMoXnmSTAfg7KUhzvOkdsR/LZuFZksyEq1LlGp7OeI+Uauk5mO+Ute8dfnSV
+        DAfA/Gu66mWvzFngivehrILZLYdQW3qLEzHdsPS0fN2fmvlmtg7IG0CKxwN6L+OLGRZDTceuoEG6
+        oiIdpSq8UWwWaCG4BVjc9jujYAaW6zf0nFZh1UMqTRc5Y/guJ9s81whMx163rFnzREDDicPVbPTW
+        vycgQ1FWKabf00taeBh7sdQnBNiRZA9RyUrpHHGK5UNXVK5ndae9z7wxx2FGKCYmZnsVdZdsxevS
+        PCaE3cpDZPyf6hp2g8c0oeFOGaaE7lsE9ViNCj8mM1cT0gHYdMXKv0TKQ6MUBsZehTMceVhm+Qff
+        YFtzkGcXtizaE3TbMVUlrvLWhu//aerPtT/exUHTZ7vrIHZMlZyeGeCnt7FwVPtUbg9qS2F2mCxW
+        gtgaGWKN8epxi2B4RJdjsqOGU7P8FaaR2b2l0jNhyWqcz9p7mp7OMkQJLUeYATKFvqZvIkq+IYjH
+        oOZqMRiGQpglmHXEru6vGDM8Lx/GKD3jV+AVpgrIBBcZtQ8byrZ8xfv8KtCcYpXOP5v03lnuUuYB
+        VoBXf9qBDvgDfktwuLL1id2Fy6Kd2AhTRGGTa7bjPXcvnjUinOzISa0jeUbO4xUs+lWCfts/6Yxd
+        h1l6aqhFB8ViMnQdfyYuTNX+exDtNunFOCqjDNde8sB6py11gsM7FSuxp4ix/aQ/dszViGvKOrDX
+        UgPPms2DjX9AP3jaa6QpjtFZpe3LTbuS4slz7zSxmq87EUB1Sybhu2nJnphNQcJDowmYZ4eYwHCr
+        zdceUpcHRaDe/NDuTlOrPkxN48XGBpuwJ6MJLD+Q8iC86L1RrOyceHXsxmcjdRLoQXIHJRsb/web
+        Hp5tdQxxYkoTnhZI9xom+XSMkuIWkIJEsSQyH7o6TQBdS1MGmUQIxNcdsN6S4anhM2h2fjUjTsFK
+        z4ZY2TE0hIW2kCxL7xhYy4W3MOfULjLpMFH52ny5XF7QoQRueuK03360VzZQtHofmQ/GQqPUDrCt
+        P3RHBNwg6ST0RRlQCkR7wDtEhCIT+8ls7ypsxmZa1UDAqF/8e5hZDcT7ci2D0ziP5E70qZ8nCWP7
+        EtUUyiZ7ruILPd7m2qpk2dQn+vWM2Xg//0nvXQv/5lyAXBQIzI2973gEGKOJBtjvmqEypQSq4A==
+        -----END SIGNATURE-----
+        pl/Q9ejYH4WXmV8KILpzWOLaDONeh2DzLEFAddYx+lQ=
+        -----END MESSAGE HASH-----
+
+- hosts: localhost
+  tasks:
+  - name: open an ssh connection for MCS
+    shell: "ssh -L 8443:{{ groups['mapr'] | first }}:8443 centos@{{ gateway_pub_dns }}"
+
+  #### NOT WORKING !!!
+  # - debug: msg="{{ ansible_devices }}"
+  # - set_fact: 
+  #     disks: "{{ ansible_devices.keys() | reject('match', '^loop(.*)$') | list }}"
+  # - set_fact: 
+  #     mapr_disks: "{{ ansible_devices[item] | json_query(jmesquery) }}"
+  #   loop: "{{ disks }}"
+  #   vars:
+  #     jmesquery: "[?size=='500.00 GB']"
+
+  # - name: update stanza
+  #   copy:
+  #     dest: /tmp/mapr.stanza
+  #     content: |-
+  #       environment:
+  #         mapr_core_version: 6.2.0
+  #       config:
+  #         hosts:
+  #           - "{{ mapr_hosts[0] }}"
+  #           - "{{ mapr_hosts[1] }}"
+  #           - "{{ mapr_hosts[2] }}"
+  #         ssh_id: {{ ansible_user_id }}
+  #         ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
+  #         metrics_ui_admin_password: admin
+  #         license_type: M5
+  #         mep_version: 8.0.0
+  #         disks:
+  #           - "{{ mapr_disks[0] }}"
+  #           - "{{ mapr_disks[1] }}"
+  #         cluster_name: dfdemo.local
+  #         services:
+  #           mapr-hivemetastore:
+  #             database:
+  #               name: hive
+  #               user: hive
+  #               password: mapr
+
+  #     force: yes
+
+  # - name: configure mapr
+  #   command: "echo 'y' | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
+

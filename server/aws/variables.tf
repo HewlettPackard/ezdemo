@@ -22,7 +22,7 @@ variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 
 variable "worker_count" { default = 2 }
 
-variable "mapr_count" { default = 3 }
+variable "mapr_count" { default = 1 }
 variable "mapr_instance_type" { default = "m4.4xlarge" } 
 
 # c5.8xlarge (32c64)
