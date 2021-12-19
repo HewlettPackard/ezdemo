@@ -1,7 +1,7 @@
 # Worker instances
 resource "aws_instance" "mapr" {
   count         = var.is_mapr ? var.mapr_count : 0
-  ami           = var.ubuntu_ami
+  ami           = var.centos8_ami
   instance_type = var.mapr_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([
@@ -30,7 +30,7 @@ resource "aws_instance" "mapr" {
   }
 }
 
-# /dev/sdb
+# /dev/xvdb
 resource "aws_ebs_volume" "mapr-ebs-volumes-sdb" {
   count             = var.is_mapr ? var.mapr_count : 0
   availability_zone = var.az
@@ -54,7 +54,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
   force_detach = true
 }
 
-# /dev/sdc
+# /dev/xvdc
 resource "aws_ebs_volume" "mapr-ebs-volumes-sdc" {
   count             = var.is_mapr ? var.mapr_count : 0
   availability_zone = var.az
@@ -71,6 +71,27 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdc" {
   count       = var.is_mapr ? var.mapr_count : 0
   device_name = "/dev/xvdc"
   volume_id   = aws_ebs_volume.mapr-ebs-volumes-sdc.*.id[count.index]
+  instance_id = aws_instance.mapr.*.id[count.index]
+  # hack to allow `terraform destroy ...` to work: https://github.com/hashicorp/terraform/issues/2957
+  force_detach = true
+}
+# /dev/xvdd
+resource "aws_ebs_volume" "mapr-ebs-volumes-sdd" {
+  count             = var.is_mapr ? var.mapr_count : 0
+  availability_zone = var.az
+  size              = 500
+  type              = "gp2"
+  tags = {
+    Name            = "${var.project_id}-mapr-${count.index + 1}-ebs-sdd"
+    Project         = var.project_id
+    user            = var.user
+    deployment_uuid = random_uuid.deployment_uuid.result
+  }
+}
+resource "aws_volume_attachment" "mapr-volume-attachment-sdd" {
+  count       = var.is_mapr ? var.mapr_count : 0
+  device_name = "/dev/xvdd"
+  volume_id   = aws_ebs_volume.mapr-ebs-volumes-sdd.*.id[count.index]
   instance_id = aws_instance.mapr.*.id[count.index]
   # hack to allow `terraform destroy ...` to work: https://github.com/hashicorp/terraform/issues/2957
   force_detach = true
