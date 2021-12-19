@@ -4,6 +4,9 @@
   "is_mlops": false,
   "user": "",
   "admin_pass": "ChangeMe!",
+<<<<<<< HEAD
   "is_mapr": false,
+=======
+>>>>>>> 6dd04bfd97728f229064cbf03e734c072ada5136
   "project_id": ""
 }

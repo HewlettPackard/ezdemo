@@ -33,5 +33,8 @@ WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 4000
+<<<<<<< HEAD
 EXPOSE 8443
+=======
+>>>>>>> 6dd04bfd97728f229064cbf03e734c072ada5136
 CMD python3 ./main.py 
