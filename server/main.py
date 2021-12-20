@@ -85,7 +85,7 @@ def get_log(logfile: str):
     return abort(400)
   try:
     target, filename = logfile.split('/', 1)
-    return send_from_directory(directory=base_path + '/' + target, filename=filename)
+    return send_from_directory(directory=base_path + '/' + target, path=filename)
   except FileNotFoundError:
     return abort(400)
 

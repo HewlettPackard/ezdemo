@@ -24,23 +24,24 @@ This is planned to run within a container, with all tools, utilities pre-package
 
 You can also manually use the scripts through the UI or simply via CLI.
 
-## Testing or manually running via UI:
+## Manually running via UI:
 - ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
 - ```cd ezdemo```
 
 - Run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
 
-## Testing or using via CLI:
+## Using via CLI:
 - ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
 - edit `./server/aws/config.json-template`
+  - set admin password (*admin_pass*), used for ECP admin user and Minio admin user (where deployed)
   - add your aws credentials (*aws_access_key* and *aws_secret_key*)
   - project tag details (*project_id* and *user*)
   - is_mlops (*true* or *false*, without quotes)
   and save it as `config.json` in the same directory
 
-** Enable/disable MLOps deployment with "is_mlops" key (if set to false, this will skip steps to create a tenant and configure it with kubeflow/mlflow)
+** Enable/disable MLOps deployment with "is_mlops" key (when set to true, this will create a tenant and configure it with kubeflow/mlflow)
 
 - ```./00-run_all.sh aws```
 
@@ -97,11 +98,11 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
   - configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
 
 # TO-DO
-[ ] External DF deployment
+[X] External DF deployment
 
 [ ] Use GPU workers
 
-[x] Dockerfile to containerise this tool
+[X] Dockerfile to containerise this tool
 
 [ ] Add Azure/KVM/VMWare deployment capability
 
