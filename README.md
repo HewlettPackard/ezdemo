@@ -4,60 +4,81 @@
 
 Automated installation for Ezmeral Container Platform and MLOps on AWS for demo purposes.
 
-# Settings
-You will need your credentials to configure in the web UI or within ./server/**provider**/config.json (template file provided)
-
-```
-"aws_access_key_id": "<your key>",
-"aws_secret_access_key": "<your secret>",
-"is_mlops": true,
-"project_id": "myuser-demo",
-"user": "myuser"
-"admin_pass": "ChangeMe!"
-```
+You need docker to run the container. It should work on any docker runtime.
 
 # Usage
 
-This is planned to run within a container, with all tools, utilities pre-packaged. It has two parts, web-UI for user friendly installation, and a server process running as API server to accept and run commands.
+Download the [start script](https://raw.githubusercontent.com/hpe-container-platform-community/ezdemo/main/docker-run.sh), or copy/paste below to start the container.
 
-```docker run -d -p 4000:4000 erdincka/ezdemo:latest``` and connect to http://localhost:4000/
+```
+#!/usr/bin/env bash
 
+VOLUMES=()
+CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json")
+for file in "${CONFIG_FILES[@]}"
+do
+  target="${file%_*}"
+  # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
+  [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
+done
 
-You can also manually use the scripts through the UI or simply via CLI.
+# echo "${VOLUMES[*]}"
+printf -v joined ' -v %s' "${VOLUMES[@]}"
+# echo "${joined}"
+## run at the background with web service exposed at 4000
+docker run -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
+```
 
-## Manually running via UI:
-- ```git clone https://github.com/hpe-container-platform-community/ezdemo```
+Create "aws_config.json" in the same folder with your settings and credentials. Template provided below:
 
-- ```cd ezdemo```
+AWS Template;
+```
+{
+  "aws_access_key": "",
+  "aws_secret_key": "",
+  "is_mlops": false,
+  "user": "",
+  "admin_password": "ChangeMe!",
+  "is_mapr": false,
+  "project_id": ""
+}
 
-- Run the server ```python3 server/main.py``` (not needed if you plan to use the CLI method)
+```
 
-## Using via CLI:
-- ```git clone https://github.com/hpe-container-platform-community/ezdemo```
+Once the container starts, you can either use the WebUI on http://localhost:4000/ or run scripts manually within the container.
 
-- edit `./server/aws/config.json-template`
-  - set admin password (*admin_password*), used for ECP admin user and Minio admin user (where deployed)
-  - add your aws credentials (*aws_access_key* and *aws_secret_key*)
-  - project tag details (*project_id* and *user*)
-  - is_mlops (*true* or *false*, without quotes)
-  and save it as `config.json` in the same directory
+# Advanced Usage
 
-** Enable/disable MLOps deployment with "is_mlops" key (when set to true, this will create a tenant and configure it with kubeflow/mlflow)
+Exec into the container and use scripts provided.
 
-- ```./00-run_all.sh aws```
+```
+docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q)" /bin/bash
+```
 
-- At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
+### Run all
 
-  - `./01-init.sh aws`
-  - `./02-apply.sh aws`
-  - `./03-install.sh aws`
-  - `./04-configure.sh aws`
+```./00-run_all.sh aws```
 
-- Deployed resources will be available in ./server/ansible/inventory.ini file
+### Run Individaully
 
-  - ssh access only through gateway
-  
-  - use `ssh centos@10.1.0.xx` to access any host via their AWS internal IP address (~/.ssh/config setup for jump host via gateway)
+At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
+
+- `./01-init.sh aws`
+- `./02-apply.sh aws`
+- `./03-install.sh aws`
+- `./04-configure.sh aws`
+
+Deployed resources will be available in ./server/ansible/inventory.ini file
+
+- All access to the environment is possible only through the gateway
+
+- Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config setup for jump host via gateway)
+
+- You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your host to use them to access hosts directly
+
+- Copy "./generated/minica.pem" 
+
+# Reference
 
 ## Utilities used in the container (or you need if you are running locally)
 * AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
@@ -105,7 +126,11 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
 [X] Dockerfile to containerise this tool
 
-[ ] Add Azure/KVM/VMWare deployment capability
+[ ] Add Azure deployment capability
+
+[ ] Add Vmware deployment capability
+
+[ ] Add KVM deployment capability
 
 
 ## Notes
