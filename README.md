@@ -76,7 +76,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 - You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your host to use them to access hosts directly
 
-- Copy "./generated/minica.pem" 
+- Copy "./generated/*/minica.pem" to local folder and install into your browser to prevent SSL certificate errors
 
 # Reference
 

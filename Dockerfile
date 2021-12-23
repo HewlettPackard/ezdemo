@@ -23,7 +23,7 @@ RUN curl -LO "https://dl.google.com/go/go1.13.linux-amd64.tar.gz" && tar -C /usr
 RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/bin/go build &&\
   mv minica /usr/local/bin
 RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bullseye main" | tee /etc/apt/sources.list.d/azure-cli.list
-RUN apt update -y azure-cli
+RUN apt update -y && apt install -y azure-cli
 ## clean temp files
 RUN rm -rf aws* terraform.zip kubectl minica /usr/local/aws-cli/v2/current/dist/awscli/examples
 
