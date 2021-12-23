@@ -51,7 +51,7 @@
           set timeout 1800
           spawn $(realpath ${SCRIPTPATH})/startscript.sh --action register_dftenants
           expect ".*Enter Site Admin username: " { send "admin\r" }
-          expect "admin\r\nEnter Site Admin password: " { send "{{ admin_pass }}\r" }
+          expect "admin\r\nEnter Site Admin password: " { send "{{ admin_password }}\r" }
           expect eof
         EOF
       register: result

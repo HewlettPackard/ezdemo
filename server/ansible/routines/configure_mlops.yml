@@ -70,7 +70,7 @@
     # ignore_errors: yes
 
   - name: setup mlflow
-    shell: "./setup_mlflow.sh '{{ kubeatns }}' '{{ admin_pass }}'"
+    shell: "./setup_mlflow.sh '{{ kubeatns }}' '{{ admin_password }}'"
     register: mlflow_out
     ignore_errors: yes
 
@@ -102,5 +102,5 @@
     ignore_errors: yes
 
   - name: setup minio
-    shell: "./setup_minio.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}' '{{ admin_pass }}'"
+    shell: "./setup_minio.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}' '{{ admin_password }}'"
     ignore_errors: yes

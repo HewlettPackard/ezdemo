@@ -35,7 +35,7 @@ You can also manually use the scripts through the UI or simply via CLI.
 - ```git clone https://github.com/hpe-container-platform-community/ezdemo```
 
 - edit `./server/aws/config.json-template`
-  - set admin password (*admin_pass*), used for ECP admin user and Minio admin user (where deployed)
+  - set admin password (*admin_password*), used for ECP admin user and Minio admin user (where deployed)
   - add your aws credentials (*aws_access_key* and *aws_secret_key*)
   - project tag details (*project_id* and *user*)
   - is_mlops (*true* or *false*, without quotes)

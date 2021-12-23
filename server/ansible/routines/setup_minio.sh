@@ -4,7 +4,7 @@ set -euo pipefail
 
 KUBEATNS=${1}
 MLFLOW_CLUSTER_NAME=${2}
-MLFLOW_ADMIN_PASS=${3}
+MLFLOW_ADMIN_PASSWORD=${3}
 
 # echo Waiting for Notebook to have state==configured
 COUNTER=0
@@ -46,7 +46,7 @@ httpClient = urllib3.PoolManager(cert_reqs = 'CERT_NONE')
 client = Minio(
   "$HOST",
   access_key="admin",
-  secret_key="${MLFLOW_ADMIN_PASS}",
+  secret_key="${MLFLOW_ADMIN_PASSWORD}",
   secure=True,
   http_client = httpClient
 )

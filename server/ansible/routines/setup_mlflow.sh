@@ -3,7 +3,7 @@
 set -euo pipefail
 
 KUBEATNS=${1}
-MLFLOW_ADMIN_PASS=$(echo ${2} | base64)
+MLFLOW_ADMIN_PASSWORD=$(echo ${2} | base64)
 
 export MLFLOW_CLUSTER_NAME=mlflow
 
@@ -15,7 +15,7 @@ apiVersion: v1
 data: 
   MLFLOW_ARTIFACT_ROOT: czM6Ly9tbGZsb3c= #s3://mlflow 
   AWS_ACCESS_KEY_ID: YWRtaW4= #admin 
-  AWS_SECRET_ACCESS_KEY: ${MLFLOW_ADMIN_PASS}
+  AWS_SECRET_ACCESS_KEY: ${MLFLOW_ADMIN_PASSWORD}
 kind: Secret
 metadata: 
   name: mlflow-sc 

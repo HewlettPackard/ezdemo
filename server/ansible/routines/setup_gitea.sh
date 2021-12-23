@@ -93,7 +93,7 @@ EXTERNAL_URL_ESC=$(echo "http://$EXTERNAL_URL" | python3 -c "import urllib.parse
 EXTERNAL_HOSTNAME=$(echo $EXTERNAL_URL | cut -d ':' -f 1)
 # echo EXTERNAL_HOSTNAME=$EXTERNAL_HOSTNAME
 
-URL_DATA="db_type=SQLite3&db_host=localhost%3A3306&db_user=root&db_passwd=&db_name=gitea&ssl_mode=disable&db_schema=&charset=utf8&db_path=%2Fdata%2Fgitea%2Fgitea.db&app_name=Gitea%3A+Git+with+a+cup+of+tea&repo_root_path=%2Fdata%2Fgit%2Frepositories&lfs_root_path=%2Fdata%2Fgit%2Flfs&run_user=git&domain=$EXTERNAL_HOSTNAME&ssh_port=22&http_port=3000&app_url=$EXTERNAL_URL_ESC&log_root_path=%2Fdata%2Fgitea%2Flog&smtp_host=&smtp_from=&smtp_user=&smtp_passwd=&enable_federated_avatar=on&no_reply_address=&password_algorithm=pbkdf2&admin_name=&admin_passwd=&admin_confirm_passwd=&admin_email="
+URL_DATA="db_type=SQLite3&db_host=localhost%3A3306&db_user=root&db_passwd=&db_name=gitea&ssl_mode=disable&db_schema=&charset=utf8&db_path=%2Fdata%2Fgitea%2Fgitea.db&app_name=Gitea%3A+Git+with+a+cup+of+tea&repo_root_path=%2Fdata%2Fgit%2Frepositories&lfs_root_path=%2Fdata%2Fgit%2Flfs&run_user=git&domain=$EXTERNAL_HOSTNAME&ssh_port=22&http_port=3000&app_url=$EXTERNAL_URL_ESC&log_root_path=%2Fdata%2Fgitea%2Flog&smtp_host=&smtp_from=&smtp_user=&smtp_passwd=&enable_federated_avatar=on&no_reply_address=&password_algorithm=pbkdf2&admin_name=&admin_passwordwd=&admin_confirm_passwd=&admin_email="
 # echo URL_DATA=$URL_DATA
 echo "stage 2"
 
@@ -101,7 +101,7 @@ ${KUBEATNS} exec $POD -- \
   curl -s -d $URL_DATA http://localhost:3000
 
 ${KUBEATNS} exec $POD -- \
-  su git -c 'gitea admin user create --username "administrator" --password "{{ admin_pass }}" --email "admin@samdom.example.com" --admin --must-change-password=false' || true
+  su git -c 'gitea admin user create --username "administrator" --password "{{ admin_password }}" --email "admin@samdom.example.com" --admin --must-change-password=false' || true
 
 ${KUBEATNS} exec $POD -- \
   su git -c 'gitea admin user create --username "ad_admin1" --password "pass123" --email "ad_admin1@samdom.example.com" --must-change-password=false' || true

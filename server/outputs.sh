@@ -40,7 +40,7 @@ ____HERE
 # [ "$USER_TAG" ] || ( echo "ERROR: USER_TAG is empty" && exit 1 )
 
 # USER=$USER_TAG
-# ADMIN_PASS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["admin_pass"]["value"])')
+# ADMIN_PASSWORD=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["admin_password"]["value"])')
 
 # PROJECT_ID=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["project_id"]["value"])')
 # [ "PROJECT_ID" ] || ( echo "ERROR: PROJECT_ID is empty" && exit 1 )
@@ -79,12 +79,12 @@ source ./settings.sh
 ### USER SETTINGS
 IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)
 IS_MLOPS=$(jq '.is_mlops // false' "${1}"/config.json)
-ADMIN_PASS=$(jq '.admin_pass' "${1}"/config.json)
+ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
 
 # echo "${EPIC_DL_URL}"
 EPIC_FILENAME="$(echo ${EPIC_DL_URL##*/})"
 # echo ${EPIC_FILENAME}
-EPIC_OPTIONS="--skipeula --default-password ${ADMIN_PASS}"
+EPIC_OPTIONS="--skipeula --default-password ${ADMIN_PASSWORD}"
 
 ANSIBLE_CMD="ansible-playbook"
 if [ ${IS_VERBOSE} ]; then

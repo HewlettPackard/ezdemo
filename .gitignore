@@ -136,3 +136,5 @@ yarn.lock
 **/.DS_Store
 **/run.log
 **/my.tfvars
+**/azure_config.json
+**/aws_config.json

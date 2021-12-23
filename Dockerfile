@@ -12,6 +12,7 @@ ENV PATH /root/.local/bin:$PATH
 RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn 
 
 WORKDIR /tmp
+RUN curl -L https://aka.ms/InstallAzureCli | bash
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
   && unzip awscliv2.zip && ./aws/install
 RUN curl "https://releases.hashicorp.com/terraform/1.0.4/terraform_1.0.4_linux_amd64.zip" -o terraform.zip \

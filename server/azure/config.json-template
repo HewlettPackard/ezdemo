@@ -1,6 +1,11 @@
 {
-  "az_subscription": "",
-  "az_appId": "",
-  "az_password": "",
-  "az_tenantId": ""
+  "subscription": "",
+  "appId": "",
+  "password": "",
+  "tenant": "",
+  "is_mlops": false,
+  "user": "",
+  "admin_password": "ChangeMe!",
+  "is_mapr": false,
+  "project_id": ""
 }

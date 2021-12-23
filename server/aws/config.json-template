@@ -3,7 +3,7 @@
   "aws_secret_key": "",
   "is_mlops": false,
   "user": "",
-  "admin_pass": "ChangeMe!",
+  "admin_password": "ChangeMe!",
   "is_mapr": false,
   "project_id": ""
 }
