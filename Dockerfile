@@ -9,7 +9,7 @@ FROM --platform=amd64 python:3-slim
 LABEL Name=ezdemo Version=0.0.2
 ENV PATH /root/.local/bin:$PATH
 
-RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn
+RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn gnupg
 
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -23,6 +23,7 @@ RUN curl -LO "https://dl.google.com/go/go1.13.linux-amd64.tar.gz" && tar -C /usr
 RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/bin/go build &&\
   mv minica /usr/local/bin
 RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ bullseye main" | tee /etc/apt/sources.list.d/azure-cli.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EB3E94ADBE1229CF
 RUN apt update -y && apt install -y azure-cli
 ## clean temp files
 RUN rm -rf aws* terraform.zip kubectl minica /usr/local/aws-cli/v2/current/dist/awscli/examples
