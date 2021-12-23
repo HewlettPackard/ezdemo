@@ -13,6 +13,7 @@ You will need your credentials to configure in the web UI or within ./server/**p
 "is_mlops": true,
 "project_id": "myuser-demo",
 "user": "myuser"
+"admin_pass": "ChangeMe!"
 ```
 
 # Usage
