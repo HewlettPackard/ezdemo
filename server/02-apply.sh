@@ -16,11 +16,11 @@ pushd "${1}" > /dev/null
       -parallelism 10 \
       -auto-approve=true \
       -var-file=<(cat ./*.tfvars) \
-      -var="epic_dl_url=${EPIC_DL_URL}" \
       -var="is_ha=${IS_HA}" \
       -var="is_runtime=${IS_RUNTIME}" \
       -var="is_mapr=${IS_MAPR}"
       # -var="client_cidr_block=$(curl -s http://ipinfo.io/ip)/32"
+      # -var="epic_dl_url=${EPIC_DL_URL}" \
    # Save output
    TF_IN_AUTOMATION=1 terraform output -json > ../generated/output.json
 popd > /dev/null

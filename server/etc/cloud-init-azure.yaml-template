@@ -1,0 +1,27 @@
+#cloud-config
+
+package_upgrade: true
+
+packages:
+ - epel-release
+
+repo_update: true
+
+repo_upgrade: all
+
+runcmd:
+ - "yum update -y -q"
+ - "yum install -y cloud-utils-growpart"
+ - "growpart /dev/sda 2"
+ - "xfs_growfs /"
+
+disk_setup:
+ ephemeral0:
+  table_type: gpt
+  layout: [[100,82]]
+  overwrite: true
+  fs_setup:
+   - device: ephemeral0.1
+     filesystem: swap
+  mounts:
+   - ["ephemeral0.1", "none", "swap", "sw", "0", "0"]

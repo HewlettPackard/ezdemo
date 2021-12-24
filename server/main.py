@@ -18,7 +18,7 @@ CORS(app)
 
 class ProviderName(str, Enum):
   aws = "AWS"
-  # azure = "Azure"
+  azure = "Azure"
   # vmware = "VMWare"
   # kvm = "KVM"
 

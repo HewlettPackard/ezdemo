@@ -211,7 +211,7 @@ function App() {
               )} */}
             { Object.keys(config).filter(k => !k.includes('is_')).map( key => 
                 <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
-                      <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('pass') || key.includes('secret') ? 'password' : 'text' } />
+                      <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
                 </FormField>
               )}
               <Box direction='row' justify='center'>

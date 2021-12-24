@@ -14,11 +14,11 @@ PROJECT_ID=$(jq '.project_id' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
 
-cat > ./credentials <<EOF
-[default]
-EOF
-
 cat > ./my.tfvars <<EOF
+subscription_id = ${SUBSCRIPTION}
+client_id = ${APPID}
+client_secret = ${PASSWORD}
+tenant_id = ${TENANT}
 user = ${USER_ID}
 project_id = ${PROJECT_ID}
 is_mlops = ${IS_MLOPS}

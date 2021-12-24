@@ -25,7 +25,7 @@
     --k8shosts-config {{ k8shost_list | join(',')  }} \
     --addons '{{ addons_list }}' \
     --ext_id_svr_bind_pwd '5ambaPwd@' \
-    --ext_id_svr_user_attribute 'CN' \
+    --ext_id_svr_user_attribute 'sAMAccountName' \
     --ext_id_svr_bind_type 'search_bind' \
     --ext_id_svr_bind_dn 'cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com' \
     --ext_id_svr_host '{{ (groups['ad_server'] | list)[0] }}' \
@@ -38,7 +38,7 @@
     --external-groups '{{ external_groups_list }}'"
     ignore_errors: True
     vars:
-      addons_list: '["istio", "kubeflow"]'
+      addons_list: '["spark-operator", "kubeflow", "istio"]'
       external_groups_list: '["CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com","CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"]'
     register: cluster_id
 

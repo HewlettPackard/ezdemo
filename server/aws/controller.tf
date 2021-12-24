@@ -1,7 +1,7 @@
 ### Controller Instance
 
 resource "aws_instance" "controllers" {
-  count = ( var.is_runtime ? ( var.is_ha ? 3 : 1) : 0)
+  count         = ( var.is_runtime ? ( var.is_ha ? 3 : 1) : 0)
   ami           = var.centos7_ami
   instance_type = var.ctr_instance_type
   key_name      = aws_key_pair.main.key_name

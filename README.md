@@ -1,8 +1,8 @@
 # Ezmeral Container Platform Demo
 
-## on AWS (Azure and Vmware to follow)
+## on AWS and Azure (Vmware and KVM to follow)
 
-Automated installation for Ezmeral Container Platform and MLOps on AWS for demo purposes.
+Automated installation for Ezmeral Container Platform and MLOps on AWS/Azure for demo purpose.
 
 You need docker to run the container. It should work on any docker runtime.
 
@@ -12,7 +12,6 @@ Download the [start script](https://raw.githubusercontent.com/hpe-container-plat
 
 ```
 #!/usr/bin/env bash
-
 VOLUMES=()
 CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json")
 for file in "${CONFIG_FILES[@]}"
@@ -21,15 +20,11 @@ do
   # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
-
-# echo "${VOLUMES[*]}"
 printf -v joined ' -v %s' "${VOLUMES[@]}"
-# echo "${joined}"
-## run at the background with web service exposed at 4000
 docker run -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
 ```
 
-Create "aws_config.json" in the same folder with your settings and credentials. Template provided below:
+Create "aws_config.json" or "azure_config.json" in the same folder with your settings and credentials. Template provided below:
 
 AWS Template;
 ```
@@ -44,6 +39,20 @@ AWS Template;
 }
 
 ```
+Azure Template;
+```
+{
+  "subscription": "",
+  "appId": "",
+  "password": "",
+  "tenant": "",
+  "is_mlops": false,
+  "user": "",
+  "admin_password": "ChangeMe!",
+  "is_mapr": false,
+  "project_id": ""
+}
+```
 
 Once the container starts, you can either use the WebUI on http://localhost:4000/ or run scripts manually within the container.
 
@@ -57,16 +66,16 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ### Run all
 
-```./00-run_all.sh aws```
+```./00-run_all.sh aws|azure|vmware|kvm```
 
 ### Run Individaully
 
 At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
 
-- `./01-init.sh aws`
-- `./02-apply.sh aws`
-- `./03-install.sh aws`
-- `./04-configure.sh aws`
+- `./01-init.sh aws|azure|vmware|kvm`
+- `./02-apply.sh aws|azure|vmware|kvm`
+- `./03-install.sh aws|azure|vmware|kvm`
+- `./04-configure.sh aws|azure|vmware|kvm`
 
 Deployed resources will be available in ./server/ansible/inventory.ini file
 
@@ -82,6 +91,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 ## Utilities used in the container (or you need if you are running locally)
 * AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* Azure-CLI - Download from [Azure](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 * Terraform - Download from [Terraform](https://www.terraform.io/downloads.html)
 * Ansible - Install from [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) or simply via pip (sudo pip3 install ansible)
 * python3 (apt/yum/brew install python3)
@@ -126,7 +136,7 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
 [X] Dockerfile to containerise this tool
 
-[ ] Add Azure deployment capability
+[X] Add Azure deployment capability
 
 [ ] Add Vmware deployment capability
 
@@ -135,4 +145,10 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
 ## Notes
 
-Deployment uses EU-WEST-2 (London) region on AWS
+Deployment uses EU-WEST-2 region on AWS, UK South region on Azure. 
+
+For AWS:
+Edit ./aws/variables.tf to update region, az and az_id parameters.
+
+For Azure:
+Edit ./azure/variables.tf to update region parameter.

@@ -25,26 +25,6 @@ ____HERE
 # Set variables from terraform output
 ###############################################################################
 
-# PROJECT_DIR=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["project_dir"]["value"])')
-# [ "$PROJECT_DIR" ] || ( echo "ERROR: PROJECT_DIR is empty" && exit 1 )
-
-# ADDITIONAL_CLIENT_IP_LIST=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["additional_client_ip_list"]["value"])')
-#echo ADDITIONAL_CLIENT_IP_LIST="${ADDITIONAL_CLIENT_IP_LIST}"
-
-# LOG_FILE="${PROJECT_DIR}"/generated/bluedata_install_output.txt
-
-# CLIENT_CIDR_BLOCK=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["client_cidr_block"]["value"])')
-# [ "$CLIENT_CIDR_BLOCK" ] || ( echo "ERROR: CLIENT_CIDR_BLOCK is empty" && exit 1 )
-
-# USER_TAG=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["user"]["value"])')
-# [ "$USER_TAG" ] || ( echo "ERROR: USER_TAG is empty" && exit 1 )
-
-# USER=$USER_TAG
-# ADMIN_PASSWORD=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["admin_password"]["value"])')
-
-# PROJECT_ID=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["project_id"]["value"])')
-# [ "PROJECT_ID" ] || ( echo "ERROR: PROJECT_ID is empty" && exit 1 )
-
 SSH_PUB_KEY_PATH="generated/controller.pub_key"
 SSH_PRV_KEY_PATH="generated/controller.prv_key"
 
@@ -74,7 +54,6 @@ AD_PRV_IP=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.st
 
 ### SYSTEM SETTINGS
 source ./settings.sh 
-# EPIC_DL_URL="$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["epic_dl_url"]["value"])')"
 
 ### USER SETTINGS
 IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)

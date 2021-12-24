@@ -14,9 +14,6 @@ variable "centos7_ami" { default = "ami-0bab5c8be0975423b" }
 variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
 variable "ubuntu_ami" { default = "ami-0f9124f7452cdb2a6" }
 
-variable "ssh_prv_key_path" { default = "./generated/controller.prv_key" }
-variable "ssh_pub_key_path" { default = "./generated/controller.pub_key" }
-
 variable "gtw_instance_type" { default = "m5.xlarge" } ## 4c16
 variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 
@@ -36,11 +33,4 @@ variable "wkr_instance_type" {
 }
 variable "ad_instance_type" { default = "t2.small" }
 
-variable "epic_dl_url" { default = "" }
-
-variable "ad_member_group" { default = "DemoTenantUsers" }
-variable "ad_admin_group" { default = "DemoTenantAdmins" }
-
 variable "client_cidr_block" { default = "0.0.0.0/0" } ### USING THE DEFAULT IS NOT RECOMMENDED
-
-variable "additional_client_ip_list" { default = [] }

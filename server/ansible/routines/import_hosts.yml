@@ -2,8 +2,8 @@
 - hosts: localhost
   vars:
     worker_ips: "{{ groups['workers'] | list }}"
-    kubeworker_ips: "{{ worker_ips[:2] }}"
-    dfworker_ips: "{{ worker_ips[2:5] }}"
+    kubeworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[:2], worker_ips) }}"
+    dfworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[2:5], []) }}"
     ssh_prv_key_path: "../../{{ ssh_prv_key }}"
 
   tasks:
