@@ -58,6 +58,7 @@ source ./settings.sh
 ### USER SETTINGS
 IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)
 IS_MLOPS=$(jq '.is_mlops // false' "${1}"/config.json)
+IS_MAPR=$(jq '.is_mapr // false' "${1}"/config.json)
 ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
 
 # echo "${EPIC_DL_URL}"
