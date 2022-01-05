@@ -8,7 +8,7 @@ You need docker to run the container. It should work on any docker runtime.
 
 # Usage
 
-Download the [start script](https://raw.githubusercontent.com/hpe-container-platform-community/ezdemo/main/docker-run.sh), or copy/paste below to start the container.
+Download the [start script](https://raw.githubusercontent.com/hpe-container-platform-community/ezdemo/main/start.sh), or copy/paste below to start the container.
 
 ```
 #!/usr/bin/env bash
