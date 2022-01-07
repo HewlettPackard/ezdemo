@@ -38,20 +38,6 @@ EOF
    echo "$CLOUD_INIT" > ./generated/cloud-init.yaml
 fi
 
-if [[ ! -f "./generated/cloud-init-ad-server.yaml" ]]; then
-   AD_POSIX_CLASSES=$(base64 ./files/ad_set_posix_classes.ldif)
-   AD_USER_SETUP=$(base64 ./files/ad_user_setup.sh)
-   LDIF_MODIFY=$(base64 ./files/ldif_modify.sh)
-   RUN_AD=$(base64 ./files/run_ad.sh)
-  
-   CLOUD_INIT=$(eval "cat <<EOF
-$(<./etc/cloud-init-ad-server.yaml-template)
-EOF
-" 2> /dev/null)
-
-   echo "$CLOUD_INIT" > ./generated/cloud-init-ad-server.yaml
-fi
-
 pushd "${1}" > /dev/null
    TF_IN_AUTOMATION=1 terraform init -no-color
    ### Init hook-up for individual targets (aws, vmware etc)

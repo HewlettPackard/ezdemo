@@ -6,8 +6,8 @@ set -euo pipefail
 ACCESS_KEY=$(jq '.aws_access_key' ./config.json)
 SECRET=$(jq '.aws_secret_key' ./config.json)
 USER_ID=$(jq '.user' ./config.json)
-ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
 PROJECT_ID=$(jq '.project_id' ./config.json)
+ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
 

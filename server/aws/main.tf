@@ -15,22 +15,3 @@ resource "random_uuid" "deployment_uuid" {}
 data "template_file" "cloud_data" {
   template = file("../generated/cloud-init.yaml")
 }
-
-data "template_file" "user_data" {
-  template = file("../generated/cloud-init-ad-server.yaml")
-}
-
-data "template_cloudinit_config" "ad_cloud_config" {
-  gzip          = true
-  base64_encode = true
-  part {
-    filename     = "init.cfg"
-    content_type = "text/cloud-config"
-    content      = data.template_file.cloud_data.rendered
-  }
-  part {
-    filename     = "user.cfg"
-    content_type = "text/cloud-config"
-    content      = data.template_file.user_data.rendered
-  }
-}
