@@ -7,5 +7,10 @@
   "vsphere_resourcepool": "",
   "vsphere_datastore": "",
   "vsphere_network": "",
-  "domain": ""
+  "domain": "",
+  "is_mlops": false,
+  "user": "",
+  "admin_password": "ChangeMe!",
+  "is_mapr": false,
+  "project_id": ""
 }
