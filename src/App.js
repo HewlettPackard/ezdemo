@@ -215,6 +215,7 @@ function App() {
                 </FormField>
               )}
               <Box direction='row' justify='center'>
+                <CheckBox toggle reverse label='Stable' checked={ config['is_stable'] } onChange={ () => setConfig( old => ( {...old, 'is_stable': !old['is_stable'] }) ) } />
                 <CheckBox toggle reverse label='Verbose' checked={ config['is_verbose'] } onChange={ () => setConfig( old => ( {...old, 'is_verbose': !old['is_verbose'] }) ) } />
                 <CheckBox toggle reverse label='MLOps' checked={ config['is_mlops'] } onChange={ () => setConfig( old => ( {...old, 'is_mlops': !old['is_mlops'] }) ) } />
                 <CheckBox toggle reverse label='External DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />

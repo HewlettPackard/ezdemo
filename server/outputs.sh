@@ -60,7 +60,10 @@ IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)
 IS_MLOPS=$(jq '.is_mlops // false' "${1}"/config.json)
 IS_MAPR=$(jq '.is_mapr // false' "${1}"/config.json)
 ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
+IS_STABLE=$(jq '.is_stable // true' "${1}"/config.json)
 
+EPIC_DL_URL=${EPIC_STABLE_URL}
+[[ "${IS_STABLE}" == "false" ]] && export EPIC_DL_URL=${EPIC_LATEST_URL}
 # echo "${EPIC_DL_URL}"
 EPIC_FILENAME="$(echo ${EPIC_DL_URL##*/})"
 # echo ${EPIC_FILENAME}
