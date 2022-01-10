@@ -7,7 +7,7 @@ if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
    exit 1
 fi
 
-source ./settings.sh ### These settings coming from system, not the user
+source ./system_settings.sh ### These settings coming from system, not the user
 
 pushd "${1}" > /dev/null
    TF_IN_AUTOMATION=1 terraform refresh \
@@ -15,10 +15,7 @@ pushd "${1}" > /dev/null
       -parallelism 10 \
       -auto-approve=true \
       -var-file=<(cat ./*.tfvars) \
-      -var="epic_dl_url=${EPIC_DL_URL}" \
-      -var="is_ha=${IS_HA}" \
-      -var="is_runtime=${IS_RUNTIME}" \
-      -var="is_mapr=${IS_MAPR}"
+      -var="is_runtime=${IS_RUNTIME}"
    # Save output
    TF_IN_AUTOMATION=1 terraform output -json > ../generated/output.json
 popd > /dev/null

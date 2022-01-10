@@ -53,14 +53,10 @@ MAPR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys
 AD_PRV_IP=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["ad_server_private_ip"]["value"])')
 
 ### SYSTEM SETTINGS
-source ./settings.sh 
+source ./system_settings.sh 
 
 ### USER SETTINGS
-IS_VERBOSE=$(jq '.is_verbose // false' "${1}"/config.json)
-IS_MLOPS=$(jq '.is_mlops // false' "${1}"/config.json)
-IS_MAPR=$(jq '.is_mapr // false' "${1}"/config.json)
-ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
-IS_STABLE=$(jq '.is_stable // true' "${1}"/config.json)
+source ./user_settings.sh "${1}"
 
 EPIC_DL_URL=${EPIC_STABLE_URL}
 [[ "${IS_STABLE}" == "false" ]] && export EPIC_DL_URL=${EPIC_LATEST_URL}
