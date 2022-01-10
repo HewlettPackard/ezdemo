@@ -99,7 +99,7 @@
     shell: echo "{{ disks.stdout }}" > /tmp/disks.txt
 
   - name: install mapr
-    shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'] | first }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
+    shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'][:3] | join(':2222,') }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
     become: yes
 
   - name: configure mapr

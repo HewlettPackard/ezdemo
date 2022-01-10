@@ -10,10 +10,10 @@ for vm in $(<hosts.out);do
   ssh-keygen -R "${ip}" || true
   rm -rf "vms/${name}"
 done
-rm -f ansible/inventory.ini || true
+# rm -f ansible/inventory.ini || true
 rm -f hosts.out || true
-rm -f ca-* || true
-rm -f run.log || true
-rm -f adconf.json || true
+# rm -f ca-* || true
+# rm -f run.log || true
+# rm -f adconf.json || true
 
 exit 0
