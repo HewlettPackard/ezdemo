@@ -26,6 +26,10 @@ variable "ssh_pub_key_path" { default = "../generated/controller.pub_key" }
 variable "cloud_init_file" { default = "../generated/cloud-init.yaml" }
 
 variable "worker_count" { default = 3 }
+## GPU Workers
+variable "gworker_count" { default = 0 }
+variable "gpu_instance_type" { default = "Standard_NC6s_v3" } ## 6c 112GB 1v100
+# variable "gpu_instance_type" { default = "Standard_ND96asr_v4" } ## 96c 900GB 8a100
 
 # variable "gtw_instance_type" { default = "Standard_B16ms" } ## 16c 64GB
 variable "gtw_instance_type" { default = "Standard_B4ms" } ## 4c 16GB
@@ -35,7 +39,7 @@ variable "wkr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 # variable "wkr_instance_type" { default = "Standard_A8m_v2" } ## 8c 64GB
 variable "ad_instance_type" { default = "Standard_B1ms" } ## 1c 2GB
 
-variable "mapr_count" { default = 1 }
+variable "mapr_count" { default = 3 }
 variable "mapr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 # variable "mapr_instance_type" { default = "Standard_A4m_v2" } ## 4c 32GB
 
