@@ -29,7 +29,7 @@
   - import_tasks: prepare_gworkers.yml
 
   ### install non-df nodes (untagged)
-  - name: create addon workers
+  - name: create non-df workers
     shell: hpecp k8sworker create-with-ssh-key --ip "{{ item }}" --ssh-key-file "{{ ssh_prv_key_path }}"
     with_items: "{{ kubeworker_ips + gworker_ips }}"
     ignore_errors: yes
