@@ -98,22 +98,22 @@
   - name: disks.txt
     shell: echo "{{ disks.stdout }}" > /tmp/disks.txt
 
-  - name: install mapr
-    shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'][:3] | join(':2222,') }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
-    become: yes
+  # - name: install mapr
+  #   shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'][:3] | join(':7222,') }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
+  #   become: yes
 
-  - name: configure mapr
-    shell: /opt/mapr/server/configure.sh -R
-    become: yes
+  # - name: configure mapr
+  #   shell: /opt/mapr/server/configure.sh -R
+  #   become: yes
 
-  - name: register demo licence
-    shell: maprcli license add -license '{{ mapr_license }}' -is_file false
-    become: yes
-    vars:
-      mapr_license: |-
-        Removed for privacy - Contact your HPE representative
-    ignore_errors: yes
-        Removed for privacy - Contact your HPE representative
+  # - name: register demo licence
+  #   shell: maprcli license add -license '{{ mapr_license }}' -is_file false
+  #   become: yes
+  #   vars:
+  #     mapr_license: |-
+  #       Removed for privacy - Contact your HPE representative
+  #   ignore_errors: yes
+  #       Removed for privacy - Contact your HPE representative
 
 - hosts: localhost
   tasks:
