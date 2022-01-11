@@ -1,0 +1,35 @@
+### Install GPU drivers & configure the gworkers
+- name: prepare gpu nodes
+  shell: |-
+    yum update -y
+    yum install -y kernel-devel kernel-headers gcc-c++ perl pciutils
+    yum install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
+    cat > /etc/modprobe.d/blacklist-nouveau.conf <<EOF
+    blacklist nouveau
+    options nouveau modeset=0
+    EOF
+    rmmod nouveau
+    dracut --force
+  with_items: "{{ groups['gworkers'] | list }}"
+  become: yes
+
+- name: reboot gpu nodes
+  reboot:
+    reboot_timeout: 600
+  with_items: "{{ groups['gworkers'] | list }}"
+
+- name: install nvidia drivers
+  shell: |-
+    cd /nvidia
+    wget https://us.download.nvidia.com/tesla/470.82.01/NVIDIA-Linux-x86_64-470.82.01.run
+    chmod +x ./NVIDIA-Linux-*.run
+    ./NVIDIA-Linux-*.run -s
+    nvidia-smi
+    nvidia-modprobe -u -c=0
+  with_items: "{{ groups['gworkers'] | list }}"
+  become: yes
+
+- name: reboot gpu nodes to finish driver installation
+  reboot:
+    reboot_timeout: 600
+  with_items: "{{ groups['gworkers'] | list }}"

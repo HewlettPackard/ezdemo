@@ -2,6 +2,7 @@
 - hosts: localhost
   vars:
     worker_ips: "{{ groups['workers'] | list }}"
+    gworker_ips: "{{ groups['gworkers'] | list }}"
     kubeworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[:2], worker_ips) }}"
     dfworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[2:5], []) }}"
     ssh_prv_key_path: "../../{{ ssh_prv_key }}"
@@ -24,10 +25,13 @@
     with_items: "{{ dfworker_ips }}"
     ignore_errors: yes
 
+  ### Prepare GPU Workers
+  - import_tasks: prepare_gworkers.yml
+
   ### install non-df nodes (untagged)
   - name: create addon workers
     shell: hpecp k8sworker create-with-ssh-key --ip "{{ item }}" --ssh-key-file "{{ ssh_prv_key_path }}"
-    with_items: "{{ kubeworker_ips }}"
+    with_items: "{{ kubeworker_ips + gworker_ips }}"
     ignore_errors: yes
 
   - name: get df workers

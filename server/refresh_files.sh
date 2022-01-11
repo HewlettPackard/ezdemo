@@ -18,6 +18,8 @@ $(echo ${CTRL_PRV_IPS[@]} | sed 's/ /\n/g')
 $(echo ${GATW_PRV_IPS[@]} | sed 's/ /\n/g')
 [workers]
 $(echo ${WRKR_PRV_IPS[@]} | sed 's/ /\n/g')
+[gworkers]
+$(echo ${GWRKR_PRV_IPS[@]} | sed 's/ /\n/g')
 [ad_server]
 ${AD_PRV_IP}
 [mapr]
