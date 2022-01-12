@@ -1,37 +1,57 @@
-- hosts: localhost
-  tasks: 
+- hosts: gworkers
+  tasks:
   ### Install GPU drivers & configure the gworkers
-  - name: prepare gpu nodes
-    shell: |-
-      yum update -y
-      yum install -y kernel-devel kernel-headers gcc-c++ perl pciutils
-      yum install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
-      cat > /etc/modprobe.d/blacklist-nouveau.conf <<EOF
-      blacklist nouveau
-      options nouveau modeset=0
-      EOF
-      rmmod nouveau
-      dracut --force
-    with_items: "{{ groups['gworkers'] | list }}"
+  - name: install kernel packages
+    package:
+      name: 
+        - kernel-devel
+        - kernel-headers
+        - gcc-c++
+        - perl
+        - pciutils
+      state: latest
     become: yes
+    register: packages
+
+  - name: check nvidia-smi
+    shell: "command -v nvidia-smi"
+    register: command_out
+    ignore_errors: yes
+
+  - name: disable nouveau
+    blockinfile: 
+      block: |-
+        blacklist nouveau
+        options nouveau modeset=0
+      path: "/etc/modprobe.d/blacklist-nouveau.conf"
+      owner: root
+      group: root
+      mode: 0644
+      create: yes
+    become: yes
+    
+  - name: module update
+    shell: "(rmmod nouveau || true) && dracut --force"
+    become: yes
+    when: packages.changed
 
   - name: reboot gpu nodes
     reboot:
-      reboot_timeout: 600
-    with_items: "{{ groups['gworkers'] | list }}"
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    ignore_errors: yes
+    become: yes
+    when: packages.changed
 
   - name: install nvidia drivers
     shell: |-
-      cd /nvidia
-      wget https://us.download.nvidia.com/tesla/470.82.01/NVIDIA-Linux-x86_64-470.82.01.run
+      cd /tmp
+      curl -O https://us.download.nvidia.com/tesla/470.82.01/NVIDIA-Linux-x86_64-470.82.01.run
       chmod +x ./NVIDIA-Linux-*.run
       ./NVIDIA-Linux-*.run -s
-      nvidia-smi
       nvidia-modprobe -u -c=0
-    with_items: "{{ groups['gworkers'] | list }}"
+      rm /tmp/NVIDIA-Linux-*.run
     become: yes
-
-  - name: reboot gpu nodes to finish driver installation
-    reboot:
-      reboot_timeout: 600
-    with_items: "{{ groups['gworkers'] | list }}"
+    when: command_out.failed

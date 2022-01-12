@@ -119,6 +119,7 @@ dist
 yarn.lock 
 
 **/generated
+**/mac
 **/.vscode
 **/.terraform
 **/.terraform*.lock.*

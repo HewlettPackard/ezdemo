@@ -11,6 +11,8 @@ variable "region" { default = "eu-west-2" }
 variable "az" { default = "eu-west-2a" }
 variable "az_id" { default = "euw2-az2" }
 variable "centos7_ami" { default = "ami-0bab5c8be0975423b" }
+# variable "centos7_pv_ami" { default = "ami-0b22fcaf3564fb0c9" }
+variable "centos7_pv_ami" { default = "ami-00846a67" }
 variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
 variable "ubuntu_ami" { default = "ami-0f9124f7452cdb2a6" }
 

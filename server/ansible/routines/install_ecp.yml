@@ -101,11 +101,11 @@
       mode: '0755'
     when: not installation_file.stat.exists
     
-  - stat: path=/home/centos/ca-cert.pem
+  - stat: path=/home/centos/minica.pem
     register: cert_file
   - name: copy certificate
     copy:
-      src: "../../generated/ca-cert.pem"
+      src: "../../generated/{{ gateway_pub_dns }}/cert.pem"
       dest: "/home/centos/minica.pem"
       owner: "centos"
       group: "centos"
@@ -114,7 +114,7 @@
 
   - name: copy certificate key
     copy:
-      src: "../../generated/ca-key.pem"
+      src: "../../generated/{{ gateway_pub_dns }}/key.pem"
       dest: "/home/centos/minica-key.pem"
       owner: "centos"
       group: "centos"

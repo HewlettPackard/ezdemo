@@ -42,7 +42,7 @@
     when: selinux.reboot_required or package.changed
     become: True
 
-- hosts: all:!gateway
+- hosts: all:!gateway:!gworkers
   gather_facts: False
   tasks:
   - name: reboot others
