@@ -20,7 +20,7 @@ EOF
 
 cat > ./my.tfvars <<EOF
 user = ${USER_ID}
-project_id = ${PROJECT_ID}
+project_id = ${PROJECT_ID// /_}
 is_mlops = ${IS_MLOPS}
 is_mapr = ${IS_MAPR}
 admin_password = ${ADMIN_PASSWORD}

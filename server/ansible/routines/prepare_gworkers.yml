@@ -1,10 +1,14 @@
 - hosts: gworkers
   tasks:
   ### Install GPU drivers & configure the gworkers
+  - name: check nvidia-smi
+    shell: "command -v nvidia-smi"
+    register: command_out
+    ignore_errors: yes
+
   - name: install kernel packages
     package:
       name: 
-        - kernel-devel
         - kernel-headers
         - gcc-c++
         - perl
@@ -12,38 +16,7 @@
       state: latest
     become: yes
     register: packages
-
-  - name: check nvidia-smi
-    shell: "command -v nvidia-smi"
-    register: command_out
-    ignore_errors: yes
-
-  - name: disable nouveau
-    blockinfile: 
-      block: |-
-        blacklist nouveau
-        options nouveau modeset=0
-      path: "/etc/modprobe.d/blacklist-nouveau.conf"
-      owner: root
-      group: root
-      mode: 0644
-      create: yes
-    become: yes
-    
-  - name: module update
-    shell: "(rmmod nouveau || true) && dracut --force"
-    become: yes
-    when: packages.changed
-
-  - name: reboot gpu nodes
-    reboot:
-      reboot_timeout: 300
-      connect_timeout: 5
-      pre_reboot_delay: 0
-      post_reboot_delay: 30
-    ignore_errors: yes
-    become: yes
-    when: packages.changed
+    when: command_out.failed
 
   - name: install nvidia drivers
     shell: |-

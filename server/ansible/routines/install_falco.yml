@@ -30,7 +30,7 @@
     reboot:
       reboot_timeout: 300
       connect_timeout: 5
-      pre_reboot_delay: 0
+      pre_reboot_delay: 30
       post_reboot_delay: 30
     when: package.changed
     ignore_errors: yes

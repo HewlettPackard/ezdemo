@@ -8,6 +8,23 @@
       line: ip_resolve=4
     become: True 
 
+  - name: disable nouveau
+    blockinfile: 
+      block: |-
+        blacklist nouveau
+        options nouveau modeset=0
+      path: "/etc/modprobe.d/blacklist-nouveau.conf"
+      owner: root
+      group: root
+      mode: 0644
+      create: yes
+    become: yes
+    
+  - name: remove nouveau
+    shell: "rmmod nouveau"
+    become: yes
+    ignore_errors: yes
+
   - name: enable epel repo
     package:
       name: 
