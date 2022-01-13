@@ -21,7 +21,7 @@
     become: yes
     
   - name: remove nouveau
-    shell: "rmmod nouveau"
+    shell: "rmmod nouveau || true"
     become: yes
     ignore_errors: yes
 

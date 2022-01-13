@@ -27,9 +27,6 @@
 ######################################################################################################
 - name: Import Hosts
   import_playbook: routines/prepare_gworkers.yml
-  async: 3600
-  poll: 0
-  register: gpu_workers
   when: is_runtime | bool
 
 ######################################################################################################
@@ -38,14 +35,6 @@
 - name: Install ECP
   import_playbook: routines/install_ecp.yml
   when: is_runtime | bool
-
-### Check GPU worker installation
-- name: Check sync status
-  async_status:
-    jid: "{{ gpu_workers.ansible_job_id }}"
-  register: async_poll_results
-  until: async_poll_results.finished
-  retries: 30
 
 ######################################################################################################
 # SETUP LOCAL CLIENT (update hpecp and kubectl configurations and autocomplete settings)
