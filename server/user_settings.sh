@@ -7,4 +7,3 @@ IS_MLOPS=$(jq 'if has("is_mlops") then .is_mlops else false end' "${1}"/config.j
 IS_MAPR=$(jq 'if has("is_mapr") then .is_mapr else false end' "${1}"/config.json)
 IS_HA=$(jq 'if has("is_ha") then .is_ha else false end' "${1}"/config.json)
 ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
-IS_STABLE=$(jq 'if has("is_stable") then .is_stable else true end' "${1}"/config.json)

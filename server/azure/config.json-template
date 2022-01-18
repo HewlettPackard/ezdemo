@@ -3,10 +3,11 @@
   "appId": "",
   "password": "",
   "tenant": "",
-  "is_mlops": false,
-  "user": "",
   "admin_password": "ChangeMe!",
+  "user": "",
+  "project_id": "",
+  "is_mlops": false,
   "is_mapr": false,
-  "is_stable": true,
-  "project_id": ""
+  "is_gpu": false,
+  "is_ha": false
 }

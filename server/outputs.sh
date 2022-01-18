@@ -58,12 +58,12 @@ AD_PRV_IP=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.st
 
 ### SYSTEM SETTINGS
 source ./system_settings.sh 
+EPIC_DL_URL=${EPIC_STABLE_URL}
+[[ "${IS_STABLE}" == "false" ]] && export EPIC_DL_URL=${EPIC_LATEST_URL}
 
 ### USER SETTINGS
 source ./user_settings.sh "${1}"
 
-EPIC_DL_URL=${EPIC_STABLE_URL}
-[[ "${IS_STABLE}" == "false" ]] && export EPIC_DL_URL=${EPIC_LATEST_URL}
 # echo "${EPIC_DL_URL}"
 EPIC_FILENAME="$(echo ${EPIC_DL_URL##*/})"
 # echo ${EPIC_FILENAME}

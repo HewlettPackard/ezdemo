@@ -31,11 +31,13 @@ AWS Template;
 {
   "aws_access_key": "",
   "aws_secret_key": "",
-  "is_mlops": false,
+  "project_id": "",
   "user": "",
   "admin_password": "ChangeMe!",
+  "is_mlops": false,
   "is_mapr": false,
-  "project_id": ""
+  "is_gpu": false,
+  "is_ha": false
 }
 
 ```
@@ -46,11 +48,13 @@ Azure Template;
   "appId": "",
   "password": "",
   "tenant": "",
-  "is_mlops": false,
+  "project_id": "",
   "user": "",
   "admin_password": "ChangeMe!",
+  "is_mlops": false,
   "is_mapr": false,
-  "project_id": ""
+  "is_gpu": false,
+  "is_ha": false
 }
 ```
 

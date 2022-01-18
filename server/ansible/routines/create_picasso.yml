@@ -48,7 +48,9 @@
       --datafabric true \
       --datafabric-name=dfdemo"
       vars: 
-        addons_list: '["spark-operator", "kubeflow", "istio"]'
+        addons_53: '["kubeflow","picasso-compute"]'
+        addons_54: '["spark-operator", "kubeflow", "istio"]'
+        addons_list: "{{ addons_53 if (is_stable | bool) else addons_54 }}"
         external_groups_list: '["CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com","CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"]'
       ignore_errors: True
 

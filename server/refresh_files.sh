@@ -35,7 +35,9 @@ ssh_prv_key=${SSH_PRV_KEY_PATH}
 is_mlops=${IS_MLOPS}
 is_mapr=${IS_MAPR}
 is_runtime=${IS_RUNTIME}
+is_stable=${IS_STABLE}
 ad_realm=SAMDOM.EXAMPLE.COM
+app_version=${APP_VERSION}
 "
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
