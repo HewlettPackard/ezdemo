@@ -1,5 +1,5 @@
 ### Configure Picasso
-- hosts: "{{ groups['controllers'] | first }}"
+- hosts: "{{ (groups['controllers'] | first) | default([])}}"
   tasks:
     - name: read cluster id
       shell: "hpecp k8scluster list -o text | cut -d' ' -f1"

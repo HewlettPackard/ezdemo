@@ -17,3 +17,40 @@
       enabled: yes
       name: docker
     become: yes
+
+  - name: copy ldif file
+    copy:
+      src: "../../files/ad_set_posix_classes.ldif"
+      dest: "/home/centos/ad_set_posix_classes.ldif"
+      owner: "centos"
+      group: "centos"
+      mode: 0644
+
+  - name: copy user setup script
+    copy:
+      src: "../../files/ad_user_setup.sh"
+      dest: "/home/centos/ad_user_setup.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: copy ldif script
+    copy:
+      src: "../../files/ldif_modify.sh"
+      dest: "/home/centos/ldif_modify.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: copy ad run script
+    copy:
+      src: "../../files/run_ad.sh"
+      dest: "/home/centos/run_ad.sh"
+      owner: "centos"
+      group: "centos"
+      mode: 0755
+
+  - name: run samba
+    shell: "/home/centos/run_ad.sh && sleep 120 && /home/centos/ldif_modify.sh"
+    async: 600 ## wait for 10 minutes before time out
+    poll: 0 ## don't wait it to finish

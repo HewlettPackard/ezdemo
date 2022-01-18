@@ -31,7 +31,7 @@
       done
     with_items: "{{ cluster_ids }}"
 
-- hosts: controllers
+- hosts: "{{ controllers | default([]) }}"
   tasks:
   - name: configure hpecp
     copy:

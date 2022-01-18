@@ -25,7 +25,7 @@
 ######################################################################################################
 # PREPARE GPU HOSTS
 ######################################################################################################
-- name: Import Hosts
+- name: Prepare GPU Nodes
   import_playbook: routines/prepare_gworkers.yml
   when: is_runtime | bool
 
