@@ -6,6 +6,13 @@
     register: command_out
     ignore_errors: yes
 
+  - name: update network interface
+    replace:
+      path: /etc/udev/rules.d/70-persistent-net.rules
+      regex: '^(\.*)NAME="ens5"'
+      replace: '\1NAME="eth0"'
+    become: yes
+
   - name: install kernel packages
     package:
       name: 
