@@ -6,11 +6,11 @@ Automated installation for Ezmeral Container Platform and MLOps on AWS/Azure for
 
 You need docker to run the container. It should work on any docker runtime.
 
-# Usage
+## Usage
 
 Download the [start script](https://raw.githubusercontent.com/hpe-container-platform-community/ezdemo/main/start.sh), or copy/paste below to start the container.
 
-```
+```bash
 #!/usr/bin/env bash
 VOLUMES=()
 CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json")
@@ -27,7 +27,8 @@ docker run -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
 Create "aws_config.json" or "azure_config.json" in the same folder with your settings and credentials. Template provided below:
 
 AWS Template;
-```
+
+```json
 {
   "aws_access_key": "",
   "aws_secret_key": "",
@@ -39,10 +40,11 @@ AWS Template;
   "is_gpu": false,
   "is_ha": false
 }
+```
 
-```
 Azure Template;
-```
+
+```json
 {
   "subscription": "",
   "appId": "",
@@ -58,13 +60,13 @@ Azure Template;
 }
 ```
 
-Once the container starts, you can either use the WebUI on http://localhost:4000/ or run scripts manually within the container.
+Once the container starts, you can either use the WebUI on <http://localhost:4000/> or run scripts manually within the container.
 
-# Advanced Usage
+## Advanced Usage
 
 Exec into the container and use scripts provided.
 
-```
+```bash
 docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q)" /bin/bash
 ```
 
@@ -91,49 +93,43 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 - Copy "./generated/*/minica.pem" to local folder and install into your browser to prevent SSL certificate errors
 
-# Reference
+## Reference
 
-## Utilities used in the container (or you need if you are running locally)
-* AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-* Azure-CLI - Download from [Azure](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-* Terraform - Download from [Terraform](https://www.terraform.io/downloads.html)
-* Ansible - Install from [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) or simply via pip (sudo pip3 install ansible)
-* python3 (apt/yum/brew install python3)
-* jq (apt/yum/brew install jq)
-* hpecp (pip3 install hpecp)
-* kubectl from [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+### Utilities used in the container (or you need if you are running locally)
 
-## Scripts
-* 00-run_all.sh: Runs all scripts at once (unattended install)
-* 01-init.sh: Initialize Terraform, create SSH keys & certificates
-* 02-apply.sh: Runs `terraform apply` to deploy resources
-* 03-install.sh: Run Ansible scripts to install ECP
-* 04-configure.sh: Run Ansible scripts to configure ECP for demo
+- AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- Azure-CLI - Download from [Azure](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+- Terraform - Download from [Terraform](https://www.terraform.io/downloads.html)
+- Ansible - Install from [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) or simply via pip (sudo pip3 install ansible)
+- python3 (apt/yum/brew install python3)
+- jq (apt/yum/brew install jq)
+- hpecp (pip3 install hpecp)
+- kubectl from [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 
-* 99-destroy.sh: Destroy all created resources on AWS (** DANGER **: All resources will be destroyed, except the generated keys and certificates)
+### Scripts
 
+- 00-run_all.sh: Runs all scripts at once (unattended install)
+- 01-init.sh: Initialize Terraform, create SSH keys & certificates
+- 02-apply.sh: Runs `terraform apply` to deploy resources
+- 03-install.sh: Run Ansible scripts to install ECP
+- 04-configure.sh: Run Ansible scripts to configure ECP for demo
+- 99-destroy.sh: Destroy all created resources on AWS (**DANGER**: All resources will be destroyed, except the generated keys and certificates)
 
-## Ansible Scripts
+### Ansible Scripts
 
-Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
+Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 
-  - prepare_centos: Updates packages and requirements for ECP installation
+- prepare_centos: Updates packages and requirements for ECP installation
+- install_falco: Updates kernel and install falco service
+- install_ecp: Initial installation and setup for ECP
+- import_hosts: Collects node information and update them as ECP worker nodes
+- create_k8s: Installs Kubernetes Cluster (if MLOps is not selected)
+- create_picasso: Installs Kubernetes Cluster and Picasso (Data Fabric on Kubernetes)
+- configure_picasso: Enables Picasso (Data Fabric on Kubernetes) for all tenants
+- configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
 
-  - install_falco: Updates kernel and install falco service
+## TO-DO
 
-  - install_ecp: Initial installation and setup for ECP
-
-  - import_hosts: Collects node information and update them as ECP worker nodes
-
-  - create_k8s: Installs Kubernetes Cluster (if MLOps is not selected)
-
-  - create_picasso: Installs Kubernetes Cluster and Picasso (Data Fabric on Kubernetes)
-
-  - configure_picasso: Enables Picasso (Data Fabric on Kubernetes) for all tenants
-
-  - configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
-
-# TO-DO
 [X] External DF deployment
 
 [ ] Use GPU workers
@@ -146,10 +142,9 @@ Courtesy of Dirk Derichsweiler (https://github.com/dderichswei).
 
 [ ] Add KVM deployment capability
 
-
 ## Notes
 
-Deployment uses EU-WEST-2 region on AWS, UK South region on Azure. 
+Deployment uses EU-WEST-2 region on AWS, UK South region on Azure.
 
 For AWS:
 Edit ./aws/variables.tf to update region, az and az_id parameters.
