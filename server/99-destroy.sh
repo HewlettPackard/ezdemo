@@ -21,8 +21,8 @@ popd > /dev/null
 source outputs.sh ${1}
 ssh -S /tmp/MCS-socket -O exit centos@${GATW_PRV_DNS} || true
 
+rm -rf generated/"${GATW_PUB_DNS}"
 rm -f generated/output.json
-rm -f generated/ssh_host.sh
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
 rm -f "${1}/*run.log"
@@ -30,8 +30,9 @@ rm -f "${1}/*run.log"
 rm -f ~/.hpecp.conf
 rm -f ~/.hpecp_tenant.conf
 rm -f ~/.hpecp_admin.config
+rm -f ~/.kube/*_admin.config
 
 echo "Environment destroyed"
-echo "SSH key-pair, certificates and cloud-init files are not removed!"
+echo "SSH key-pair, CA certs and cloud-init files are not removed!"
 
 exit 0
