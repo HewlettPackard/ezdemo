@@ -22,6 +22,11 @@
   import_playbook: routines/configure_picasso.yml
   when: (is_runtime | bool) and (is_mlops | bool)
 
+# Fix GPU Node pod creation issue
+- name: configure gworkers
+  import_playbook: routines/configure_gworkers.yml
+  when: is_gpu | bool
+
 ######################################################################################################
 # MLOPS INSTALLATION (setup spark & kubeflow addons)
 ######################################################################################################

@@ -1,0 +1,25 @@
+- hosts: localhost
+  tasks:
+  ### TODO: why these are needed on AWS?
+  - name: drain gpu nodes
+    shell: "kubectl drain {{ item }}"
+    with_items: "{{ gworkers }}"
+
+- hosts: gworkers
+  tasks:
+  - name: remove file
+    file:
+      path: /var/lib/kubelet/cpu_manager_state
+      state: absent
+    become: yes
+
+  - name: restart kubelet
+    service: name=kubelet state=restarted enabled=yes
+    become: yes
+
+- hosts: localhost
+  tasks:
+  ### TODO: why these are needed on AWS?
+  - name: uncordon nodes
+    shell: "kubectl uncordon {{ item }}"
+    with_items: "{{ gworkers }}"
