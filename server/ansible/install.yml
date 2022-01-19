@@ -60,4 +60,3 @@
 - name: Install External MapR Hosts
   import_playbook: routines/create_mapr.yml
   when: is_mapr | bool
-

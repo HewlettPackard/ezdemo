@@ -6,13 +6,6 @@
     register: command_out
     ignore_errors: yes
 
-  - name: update network interface
-    replace:
-      path: /etc/udev/rules.d/70-persistent-net.rules
-      regex: '^(\.*)NAME="ens5"'
-      replace: '\1NAME="eth0"'
-    become: yes
-
   - name: install kernel packages
     package:
       name: 
@@ -28,10 +21,19 @@
   - name: install nvidia drivers
     shell: |-
       cd /tmp
-      curl -O https://us.download.nvidia.com/tesla/470.82.01/NVIDIA-Linux-x86_64-470.82.01.run
+      curl -O https://us.download.nvidia.com/tesla/470.57.02/NVIDIA-Linux-x86_64-470.57.02.run
       chmod +x ./NVIDIA-Linux-*.run
       ./NVIDIA-Linux-*.run -s
       nvidia-modprobe -u -c=0
       rm /tmp/NVIDIA-Linux-*.run
     become: yes
     when: command_out.failed
+
+  - name: configure MIG
+    shell: |-
+      nvidia-smi -L | grep A100
+      if [ "$?" == 0 ]; then
+        nvidia-smi -mig 1
+        nvidia-smi mig -cgi 19,19,19,19,19,19,19 -C
+      fi
+    become: yes
