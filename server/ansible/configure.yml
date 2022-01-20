@@ -25,7 +25,7 @@
 # Fix GPU Node pod creation issue
 - name: configure gworkers
   import_playbook: routines/configure_gworkers.yml
-  when: is_gpu | bool
+  when: is_runtime | bool
 
 ######################################################################################################
 # MLOPS INSTALLATION (setup spark & kubeflow addons)

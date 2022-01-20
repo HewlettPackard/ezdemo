@@ -1,11 +1,18 @@
 - hosts: localhost
+  gather_facts: false
   tasks:
-  ### TODO: why these are needed on AWS?
+  - name: select nodes ## capture node name from Internal IP address
+    shell: kubectl get nodes -o json | jq -r '.items[] | select( .status.addresses[].address == "{{ item }}") | .metadata.name'
+    with_items: "{{ groups['gworkers'] }}"
+    register: gnodes
+
+  ### TODO: why do we need to do these on AWS GPU hosts?
   - name: drain gpu nodes
-    shell: "kubectl drain {{ item }}"
-    with_items: "{{ gworkers }}"
+    shell: kubectl drain --ignore-daemonsets "{{ item.stdout }}"
+    with_items: "{{ gnodes.results }}"
 
 - hosts: gworkers
+  gather_facts: false
   tasks:
   - name: remove file
     file:
@@ -18,8 +25,9 @@
     become: yes
 
 - hosts: localhost
+  gather_facts: false
   tasks:
   ### TODO: why these are needed on AWS?
   - name: uncordon nodes
-    shell: "kubectl uncordon {{ item }}"
-    with_items: "{{ gworkers }}"
+    shell: "kubectl uncordon {{ item.stdout }}"
+    with_items: "{{ gnodes.results }}"
