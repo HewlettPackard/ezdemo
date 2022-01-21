@@ -29,8 +29,7 @@ rm -f "${1}/*run.log"
 ## Clean user environment
 rm -f ~/.hpecp.conf
 rm -f ~/.hpecp_tenant.conf
-rm -f ~/.hpecp_admin.config
-rm -f ~/.kube/*_admin.config
+rm -f ~/.kube/config
 
 echo "Environment destroyed"
 echo "SSH key-pair, CA certs and cloud-init files are not removed!"

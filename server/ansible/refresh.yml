@@ -25,8 +25,8 @@
   - name: update kubeadmin config
     shell: |-
       while : ; do
-        hpecp k8scluster admin_kube_config {{ item }} > ~/.hpecp_admin.config
-        [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
+        hpecp k8scluster admin_kube_config {{ item }} > ~/.kube/config
+        [ $(wc -l ~/.kube/config | cut -d' ' -f1) -lt 5 ] || break
         sleep 10
       done
     with_items: "{{ cluster_ids }}"
@@ -50,8 +50,8 @@
   - name: update kubeadmin config
     shell: |-
       while : ; do
-        hpecp k8scluster admin_kube_config {{ item }} > ~/.hpecp_admin.config
-        [ $(wc -l ~/.hpecp_admin.config | cut -d' ' -f1) -lt 5 ] || break
+        hpecp k8scluster admin_kube_config {{ item }} > ~/.kube/config
+        [ $(wc -l ~/.kube/config | cut -d' ' -f1) -lt 5 ] || break
         sleep 10
       done
     with_items: "{{ hostvars['localhost'].cluster_ids }}"
