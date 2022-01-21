@@ -1,37 +1,10 @@
 - hosts: all
-  # any_errors_fatal: true
-  # gather_facts: False
   tasks:
   - name: configure yum for ipv4
     lineinfile:
       dest: /etc/yum.conf
       line: ip_resolve=4
     become: True 
-
-  ### Disabling module here so with the package update below new initrd.img includes disabled module (avoid building initrd twice)
-  - name: disable nouveau
-    blockinfile: 
-      block: |-
-        blacklist nouveau
-        options nouveau modeset=0
-      path: "/etc/modprobe.d/blacklist-nouveau.conf"
-      owner: root
-      group: root
-      mode: 0644
-      create: yes
-    become: yes
-    
-  - name: remove nouveau
-    shell: "rmmod nouveau || true"
-    become: yes
-    ignore_errors: yes
-
-  # - name: rename network interface # need consistent naming for gpu workers
-  #   replace:
-  #     path: /etc/udev/rules.d/70-persistent-net.rules
-  #     regexp: 'ens5'
-  #     replace: 'eth0'
-  #   become: yes
 
   - name: enable epel repo
     package:
@@ -41,6 +14,8 @@
       state: latest
     become: True
 
+- hosts: all
+  tasks:
   - name: update packages
     package:
       name: '*'
@@ -67,7 +42,7 @@
     when: selinux.reboot_required or package.changed
     become: True
 
-- hosts: all:!gateway:!gworkers
+- hosts: all:!gateway
   gather_facts: False
   tasks:
   - name: reboot others

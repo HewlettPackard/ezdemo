@@ -1,5 +1,32 @@
 - hosts: gworkers
   tasks:
+
+  - name: disable nouveau
+    blockinfile: 
+      block: |-
+        blacklist nouveau
+        options nouveau modeset=0
+      path: "/etc/modprobe.d/blacklist-nouveau.conf"
+      owner: root
+      group: root
+      mode: 0644
+      create: yes
+    become: yes
+
+  - name: 
+    shell: "dracut /boot/initramfs-$(uname -r).img $(uname -r) --force"
+    register: imagebuild
+    become: yes
+
+  - name: reboot gpunode
+    reboot:
+      reboot_timeout: 300
+      connect_timeout: 5
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+    when: imagebuild.changed
+    become: True
+
   ### Install GPU drivers & configure the gworkers
   - name: check nvidia-smi
     shell: "command -v nvidia-smi"

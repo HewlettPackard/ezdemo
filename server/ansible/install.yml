@@ -10,11 +10,11 @@
 ######################################################################################################
 - name: Prepare ECP Hosts
   import_playbook: routines/prepare_centos.yml 
-  # when: skip_preparation is not defined
 
 ### Install AD
 - name: Install AD server
-  import_playbook: routines/install_ad.yml 
+  import_playbook: routines/install_ad.yml
+
 ######################################################################################################
 # INSTALL FALCO (for workers)
 ######################################################################################################
