@@ -6,7 +6,7 @@ locals {
 
 resource "aws_instance" "workers" {
   count         = local.worker_count
-  ami           = var.centos7_ami
+  ami           = var.EC2_CENTOS7_AMIS[var.region]
   instance_type = var.wkr_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([

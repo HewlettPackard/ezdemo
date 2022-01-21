@@ -139,3 +139,4 @@ yarn.lock
 **/my.tfvars
 **/azure_config.json
 **/aws_config.json
+cr-app-hcp-ezdemo-1.0.yaml

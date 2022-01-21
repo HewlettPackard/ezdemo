@@ -13,10 +13,14 @@ resource "aws_vpc" "main" {
   }
 }
 
+data "aws_availability_zone" "main" {
+  name = var.az
+}
+
 resource "aws_subnet" "main" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.1.0.0/24"
-  availability_zone_id    = var.az_id
+  availability_zone_id    = data.aws_availability_zone.main.zone_id
   map_public_ip_on_launch = true
 
   tags = {

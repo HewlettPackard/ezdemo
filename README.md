@@ -147,7 +147,7 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 Deployment uses EU-WEST-2 region on AWS, UK South region on Azure.
 
 For AWS:
-Edit ./aws/variables.tf to update region, az and az_id parameters.
+Edit ./aws/variables.tf to update region, and az parameters.
 
 For Azure:
 Edit ./azure/variables.tf to update region parameter.

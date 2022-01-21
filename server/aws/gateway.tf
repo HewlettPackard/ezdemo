@@ -2,7 +2,7 @@
 
 resource "aws_instance" "gateway" {
   count         = var.is_ha ? 2 : 1
-  ami           = var.centos7_ami
+  ami           = var.EC2_CENTOS7_AMIS[var.region]
   instance_type = var.gtw_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([
@@ -25,7 +25,7 @@ resource "aws_instance" "gateway" {
   }
 
   tags = {
-    Name            = "${var.project_id}-instance-gateway-${count.index + 1}"
+    Name            = "${var.project_id}-gateway-${count.index + 1}"
     Project         = var.project_id
     user            = var.user
     deployment_uuid = random_uuid.deployment_uuid.result

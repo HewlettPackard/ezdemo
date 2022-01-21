@@ -1,7 +1,7 @@
 ### AD Instance
 
 resource "aws_instance" "ad_server" {
-  ami           = var.centos7_ami
+  ami           = var.EC2_CENTOS7_AMIS[var.region]
   instance_type = var.ad_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([
@@ -22,7 +22,7 @@ resource "aws_instance" "ad_server" {
   }
 
   tags = {
-    Name            = "${var.project_id}-instance-ad-server"
+    Name            = "${var.project_id}-ad-server"
     Project         = var.project_id
     user            = var.user
     deployment_uuid = random_uuid.deployment_uuid.result
