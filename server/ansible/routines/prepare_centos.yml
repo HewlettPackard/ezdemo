@@ -26,12 +26,12 @@
     become: yes
     ignore_errors: yes
 
-  - name: rename network interface # need consistent naming for gpu workers
-    replace:
-      path: /etc/udev/rules.d/70-persistent-net.rules
-      regexp: 'ens5'
-      replace: 'eth0'
-    become: yes
+  # - name: rename network interface # need consistent naming for gpu workers
+  #   replace:
+  #     path: /etc/udev/rules.d/70-persistent-net.rules
+  #     regexp: 'ens5'
+  #     replace: 'eth0'
+  #   become: yes
 
   - name: enable epel repo
     package:
