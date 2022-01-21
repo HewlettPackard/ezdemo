@@ -5,8 +5,8 @@ set -euo pipefail
 # update credentials & tags from config file
 ACCESS_KEY=$(jq '.aws_access_key' ./config.json)
 SECRET=$(jq '.aws_secret_key' ./config.json)
-USER_ID=$(jq -r '.user' ./config.json)
-PROJECT_ID=$(jq -r '.project_id' ./config.json)
+USER_ID=$(jq 'if .user == "" then "unknown user" else .user end' ./config.json)
+PROJECT_ID=$(jq 'if .project_id == "" then "unnamed" else .project_id end' ./config.json)
 ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
@@ -17,9 +17,6 @@ cat > ./credentials <<EOF
 aws_access_key_id=${ACCESS_KEY}
 aws_secret_access_key=${SECRET}
 EOF
-
-[[ "${USER_ID}" == "" ]] && USER_ID="unknown_user" && echo "USER: ${USER_ID}"
-[[ "${PROJECT_ID}" == "" ]] && PROJECT_ID="unnamed project" && echo "PROJECT: ${PROJECT_ID}"
 
 cat > ./my.tfvars <<EOF
 user = ${USER_ID}

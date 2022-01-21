@@ -8,15 +8,12 @@ SUBSCRIPTION=$(jq '.az_subscription' ./config.json)
 TENANT=$(jq '.az_tenant' ./config.json)
 APPID=$(jq '.az_appId' ./config.json)
 PASSWORD=$(jq '.az_password' ./config.json)
-USER_ID=$(jq -r '.user' ./config.json)
+USER_ID=$(jq 'if .user == "" then "unknown user" else .user end' ./config.json)
+PROJECT_ID=$(jq 'if .project_id == "" then "unnamed" else .project_id end' ./config.json)
 ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
-PROJECT_ID=$(jq -r '.project_id' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
 IS_GPU=$(jq -r '.is_gpu // false' ./config.json)
-
-[[ "${USER_ID}" == "" ]] && USER_ID="unknown_user" && echo "USER: ${USER_ID}"
-[[ "${PROJECT_ID}" == "" ]] && PROJECT_ID="unnamed project" && echo "PROJECT: ${PROJECT_ID}"
 
 cat > ./my.tfvars <<EOF
 subscription_id = ${SUBSCRIPTION}
