@@ -7,8 +7,8 @@ variable "is_runtime" { default = false }
 variable "is_ha" { default = false }
 
 ### TODO: allow region selection
-variable "region" { default = "eu-west-1" }
-variable "az" { default = "eu-west-1a" }
+variable "region" { default = "eu-west-2" }
+variable "az" { default = "eu-west-2a" }
 # variable "centos7_ami" { default = "ami-0bab5c8be0975423b" }
 # variable "centos7_pv_ami" { default = "ami-00846a67" }
 variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }

@@ -130,9 +130,9 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 
 ## TO-DO
 
-[X] External DF deployment
+[X] External DF deployment (single node)
 
-[ ] Use GPU workers
+[X] Use GPU workers
 
 [X] Dockerfile to containerise this tool
 
@@ -145,6 +145,27 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 ## Notes
 
 Deployment uses EU-WEST-2 region on AWS, UK South region on Azure.
+
+Region change in AWS is available by manually changing region and az variables in "aws/variables.tf"
+
+```yaml
+variable "region" { default = "eu-west-1" }
+variable "az" { default = "eu-west-1a" }
+```
+
+These regions can be selected for deployment;
+
+us-east-1
+us-east-2
+us-west-1
+us-west-2
+ap-southeast-1
+eu-central-1
+eu-west-1
+eu-west-2
+eu-west-3
+eu-north-1
+ca-central-1
 
 For AWS:
 Edit ./aws/variables.tf to update region, and az parameters.
