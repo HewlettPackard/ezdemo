@@ -24,6 +24,7 @@
 
   - name: update kubeadmin config
     shell: |-
+      [[ -d ~/.kube ]] || mkdir ~/.kube
       while : ; do
         hpecp k8scluster admin_kube_config {{ item }} > ~/.kube/config
         [ $(wc -l ~/.kube/config | cut -d' ' -f1) -lt 5 ] || break
