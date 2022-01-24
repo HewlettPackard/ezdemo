@@ -21,6 +21,7 @@ class ProviderName(str, Enum):
   azure = "Azure"
   # vmware = "VMWare"
   # kvm = "KVM"
+  # ovirt = "OVirt"
 
 @app.route('/')
 @cross_origin()

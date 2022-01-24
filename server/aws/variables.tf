@@ -3,15 +3,14 @@ variable "project_id" {}
 variable "admin_password" {}
 variable "is_mlops" { default = true }
 variable "is_mapr" { default = false }
-variable "is_runtime" { default = false }
+variable "is_runtime" { default = true }
 variable "is_ha" { default = false }
 
 ### TODO: allow region selection
 variable "region" { default = "eu-west-2" }
 variable "az" { default = "eu-west-2a" }
-# variable "centos7_ami" { default = "ami-0bab5c8be0975423b" }
-# variable "centos7_pv_ami" { default = "ami-00846a67" }
-variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
+
+# variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
 
 variable "gtw_instance_type" { default = "m5.xlarge" } ## 4c16
 variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
@@ -37,5 +36,5 @@ variable "wkr_instance_type" {
 }
 variable "ad_instance_type" { default = "t2.small" }
 
-variable "client_cidr_block" { default = "0.0.0.0/0" } ### USING THE DEFAULT IS NOT RECOMMENDED
+variable "client_cidr_block" { default = "0.0.0.0/0" } ### Access possible via gateway only - for limited ports
 

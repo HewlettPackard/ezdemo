@@ -1,7 +1,7 @@
 # Worker instances
 resource "aws_instance" "mapr" {
   count         = var.is_mapr ? var.mapr_count : 0
-  ami           = var.centos8_ami
+  ami           = data.aws_ami.ec2_centos8_ami.image_id
   instance_type = var.mapr_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([

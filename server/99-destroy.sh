@@ -13,7 +13,6 @@ pushd "${1}" > /dev/null
     -parallelism 12 \
     -var-file=<(cat ./*.tfvars) \
     -auto-approve=true \
-    # -var="client_cidr_block=$(curl -s http://ipinfo.io/ip)/32"
     
 popd > /dev/null
 

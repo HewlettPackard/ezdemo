@@ -67,8 +67,3 @@ resource "aws_internet_gateway" "main" {
     deployment_uuid = random_uuid.deployment_uuid.result
   }
 }
-
-### OUTPUTS
-# output "client_cidr_block" {
-#   value = var.client_cidr_block
-# }
