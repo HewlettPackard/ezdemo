@@ -2,7 +2,7 @@
 
 resource "aws_instance" "controllers" {
   count         = ( var.is_runtime ? ( var.is_ha ? 3 : 1) : 0)
-  ami           = var.EC2_CENTOS7_AMIS[var.region]
+  ami           = data.aws_ami.ec2_centos7_ami.image_id
   instance_type = var.ctr_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([
