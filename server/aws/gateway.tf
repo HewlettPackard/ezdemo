@@ -2,7 +2,7 @@
 
 resource "aws_instance" "gateway" {
   count         = var.is_ha ? 2 : 1
-  ami           = var.EC2_CENTOS7_AMIS[var.region]
+  ami           = data.aws_ami.ec2_centos7_ami.image_id
   instance_type = var.gtw_instance_type
   key_name      = aws_key_pair.main.key_name
   vpc_security_group_ids = flatten([
