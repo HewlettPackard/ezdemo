@@ -1,9 +1,9 @@
 {
   "name": "ezdemo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
-    "grommet": "~2.19.1",
+    "grommet": "^2.20.0",
     "grommet-icons": "~4.7.0",
     "grommet-theme-hpe": "~2.3.0",
     "react": "^17.0.2",

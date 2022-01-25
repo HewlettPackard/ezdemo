@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Grommet, Box, CheckBox, Button, Text, TextInput, Form, FormField, 
+import { Grommet, Box, Card, CardFooter, CheckBox, Button, Text, TextInput, Form, FormField, 
   Footer, Anchor, RadioButtonGroup, TextArea } from 'grommet';
 import { hpe } from "grommet-theme-hpe";
 import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Trash } from 'grommet-icons';
@@ -148,8 +148,12 @@ function App() {
   //   .then(result => console.dir(result) && setGwurl(undefined) );
 
   const reset = () => {
-    configureProvider(providers[0]);
+    // configureProvider(providers[0]);
+    setProvider(null);
+    setConfig({});
+    setShowconfig(false);
     setOutput([]);
+    setShowoutput(false);
     setGwurl(undefined);
     setMCSready(false);
     setLogfile(undefined);
@@ -194,34 +198,37 @@ function App() {
           plain margin='small'
           label={ showconfig ? 'Hide config' : 'Show config' } 
           onClick={ () => setShowconfig(!showconfig) } /> 
-      { showconfig && <Box animation='zoomIn'>
-        <Form
-          value= { config }
-          validate='change' 
-          onChange= { (value) => setConfig(value) }
-          >
-            {/* { Object.keys(config).map( key => 
-                <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
-                    { key.includes('is_') ?
-                      <CheckBox toggle reverse key={key} label={key.replace('is_','')} checked={ config[key] } onChange={ (e) => setConfig( old => ( {...old, [key]: !old[key] }) ) } />
-                      :
-                      <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
-                    }
-                </FormField>
-              )} */}
-            { Object.keys(config).filter(k => !k.includes('is_')).map( key => 
-                <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
-                      <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
-                </FormField>
-              )}
-              <Box direction='row' justify='center'>
-                <CheckBox toggle reverse label='Verbose' checked={ config['is_verbose'] } onChange={ () => setConfig( old => ( {...old, 'is_verbose': !old['is_verbose'] }) ) } />
-                <CheckBox toggle reverse label='MLOps' checked={ config['is_mlops'] } onChange={ () => setConfig( old => ( {...old, 'is_mlops': !old['is_mlops'] }) ) } />
-                <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } />
-                <CheckBox toggle reverse label='Standalone DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />
-              </Box>
-          </Form>
-      </Box> }
+      { showconfig && 
+        <Card margin="small" animation='zoomIn'>
+          <Form
+            value= { config }
+            validate='change' 
+            onChange= { (value) => setConfig(value) }
+            >
+              {/* { Object.keys(config).map( key => 
+                  <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
+                      { key.includes('is_') ?
+                        <CheckBox toggle reverse key={key} label={key.replace('is_','')} checked={ config[key] } onChange={ (e) => setConfig( old => ( {...old, [key]: !old[key] }) ) } />
+                        :
+                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
+                      }
+                  </FormField>
+                )} */}
+              { Object.keys(config).filter(k => !k.includes('is_')).map( key => 
+                  <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
+                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
+                  </FormField>
+                )}
+                <CardFooter>
+                  <Box direction='row' justify='center'>
+                    <CheckBox toggle reverse label='Verbose' checked={ config['is_verbose'] } onChange={ () => setConfig( old => ( {...old, 'is_verbose': !old['is_verbose'] }) ) } />
+                    <CheckBox toggle reverse label='MLOps' checked={ config['is_mlops'] } onChange={ () => setConfig( old => ( {...old, 'is_mlops': !old['is_mlops'] }) ) } />
+                    <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } />
+                    <CheckBox toggle reverse label='Standalone DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />
+                  </Box>
+                </CardFooter>
+            </Form>
+        </Card> }
       {/* Run */}
       { provider && (! Object.values(config).some(v => v===""))
         && <Box animation='zoomIn' direction='row' justify='between' margin='none'>
@@ -234,18 +241,20 @@ function App() {
         { spin && <Text color='status-warning'>Please wait...</Text> }
       </Box>}
 
-      <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
-        { showoutput && 
-          <TextArea 
-            readOnly 
-            fill
-            ref={ outputRef }
-            value={ output.join('') }
-            size='xsmall'
-            plain
-            style={{ whiteSpace: 'pre', fontFamily: 'Consolas,Courier New,monospace' }} />
-        }
-      </Box>
+        <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
+          { showoutput && 
+            <Card margin="small">
+              <TextArea 
+                readOnly 
+                fill
+                ref={ outputRef }
+                value={ output.join('') }
+                size='xsmall'
+                plain
+                style={{ whiteSpace: 'pre', fontFamily: 'Consolas,Courier New,monospace' }} />
+            </Card>
+          }
+        </Box>
 
       {/* Footer */}
       <Box justify='end'>
@@ -266,8 +275,8 @@ function App() {
             /> }
           </Fragment>
           <Box direction='row'>
-            <Text margin={ { right: 'small' } }>Copyright HPE @2021 </Text>
-            <Anchor label='About' onClick={ () => alert('Contact Erdinc Kaya <kaya@hpe.com> for suggestions.') } />
+            <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
+            <Anchor label='About' onClick={ () => alert('https://github.com/hpe-container-platform-community/ezdemo for issues and suggestions.') } />
           </Box>
         </Footer>
       </Box>
