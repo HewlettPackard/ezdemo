@@ -30,7 +30,7 @@ resource "azurerm_network_interface" "gatewaynics" {
 resource "azurerm_linux_virtual_machine" "gateways" {
   count                 = var.is_ha ? 2 : 1
   name                  = "gw${count.index + 1}"
-  computer_name         = "${var.project_id}-${count.index + 1}" // to avoid gateway name for vnet
+  computer_name         = "${replace(var.project_id,"_","")}-${count.index + 1}" // to avoid gateway name for vnet
   location              = azurerm_resource_group.resourcegroup.location
   resource_group_name   = azurerm_resource_group.resourcegroup.name
   network_interface_ids = [azurerm_network_interface.gatewaynics[count.index].id]

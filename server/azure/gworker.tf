@@ -70,7 +70,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "gwrkdatadisk-attach" {
   for_each           = toset([for j in local.gdatadisk_lun_map : j.datadisk_name])
   managed_disk_id    = azurerm_managed_disk.gwrkdatadisk[each.key].id
   virtual_machine_id = azurerm_linux_virtual_machine.gworkers[parseint(element(regex("^gworker(\\d)-\\w*$", each.key), 0), 10) - 1].id
-  lun                = lookup(local.luns, each.key)
+  lun                = lookup(local.gluns, each.key)
   caching            = "ReadWrite"
 }
 

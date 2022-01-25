@@ -15,6 +15,7 @@
     become: True
 
 - hosts: all
+  gather_facts: no
   tasks:
   - name: update packages
     package:
