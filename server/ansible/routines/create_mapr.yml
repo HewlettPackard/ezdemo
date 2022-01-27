@@ -1,164 +1,80 @@
 ### Start MapR installation on first DF node
 - hosts: "{{ (groups['mapr'] | first) | default([]) }}"
   tasks:
-  # - name: get mapr installer
-  #   get_url:
-  #     url: https://package.mapr.hpe.com/releases/installer/mapr-setup.sh
-  #     dest: /tmp/mapr-setup.sh
-  #     mode: '0755'
+  - name: get mapr installer
+    get_url:
+      url: https://package.mapr.hpe.com/releases/installer/mapr-setup.sh
+      dest: /tmp/mapr-setup.sh
+      mode: '0755'
 
-  # - name: setup mapr installer
-  #   command: /tmp/mapr-setup.sh -y
-  #   become: yes
-  #   register: install
+  - stat: path=/opt/mapr/installer/bin/mapr-installer-cli
+    register: installer
+
+  - name: setup mapr installer
+    command: /tmp/mapr-setup.sh -y
+    become: yes
+    when: not installer.stat.exists
   
-  # - name: copy private key
-  #   copy:
-  #     src: "../../generated/controller.prv_key"
-  #     dest: "~/controller.prv_key"
-  #     mode: 0600
+  - name: copy private key
+    copy:
+      src: "../../generated/controller.prv_key"
+      dest: "~/controller.prv_key"
+      mode: 0600
 
-  # - name: get hostnames
-  #   shell: getent hosts "{{ item }}" | awk '{ print $2 }'
-  #   with_items: "{{ groups['mapr'] }}"
-  #   register: hostnames
+  - name: get hostnames
+    shell: getent hosts "{{ item }}" | awk '{ print $2 }'
+    with_items: "{{ groups['mapr'] }}"
+    register: hostnames
 
-  # - name: get hostlist
-  #   set_fact:
-  #     mapr_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
-
-  - name: mapr repo key
-    rpm_key:
-      state: present
-      key: https://package.mapr.hpe.com/releases/pub/maprgpg.key
-    become: yes
-
-  - name: mapr repo
-    yum_repository:
-      name: mapr
-      description: MapR Repo
-      file: mapr
-      baseurl: https://package.mapr.com/releases/v6.2.0/redhat/
-      enabled: yes
-      gpgcheck: yes
-    become: yes
-
-  - name: mapr ecosystem repo
-    yum_repository:
-      name: mapr-ecosystem
-      description: MapR Ecosystem Pack Repo
-      file: mapr
-      baseurl: https://package.mapr.com/releases/MEP/MEP-8.0/redhat
-      enabled: yes
-      gpgcheck: yes
-    become: yes
-
-  - name: create mapr group
-    group:
-      name: mapr
-      state: present
-      gid: 5000
-    become: yes
-
-  - name: create mapr user
-    user: 
-      name: mapr
-      password: "{{ 'mapr' | password_hash('sha512', 'mysecretsalt') }}"
-      comment: Data Fabric Admin
-      uid: 5000
-      group: mapr
-      groups: wheel
-      shell: /bin/bash
-      home: /home/mapr
-    become: yes
-
-  - name: install mapr packages
-    package:
-      name:
-        - mapr-librdkafka
-        - mapr-hadoop-util
-        - mapr-client
-        - mapr-core-internal
-        - mapr-core
-        - mapr-fileserver
-        - mapr-cldb
-        - mapr-zk-internal
-        - mapr-zookeeper
-        - mapr-apiserver
-        - mapr-webserver
-        - mapr-loopbacknfs
-        - mapr-nfs
-      state: latest
-    become: yes
+  - set_fact:
+      mapr_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
 
   - shell: "fdisk -l | grep '500 GiB' | cut -d' ' -f2 | tr -d ':'"
-    register: disks
+    register: mapr_disks
     become: yes 
 
-  - name: disks.txt
-    shell: echo "{{ disks.stdout }}" > /tmp/disks.txt
+  # - name: disks.txt
+  #   shell: echo "{{ mapr_disks.stdout }}" > /tmp/disks.txt
 
-  # - name: install mapr
-  #   shell: "/opt/mapr/server/configure.sh -Z {{ groups['mapr'] | join(',') }} -C {{ groups['mapr'][:3] | join(':7222,') }}:7222 -N dfdemo.mapr.io -F /tmp/disks.txt -unsecure"
-  #   become: yes
+  - name: update stanza
+    copy:
+      dest: /tmp/mapr.stanza
+      content: |-
+        environment:
+          mapr_core_version: 6.2.0
+        config:
+          hosts:
+            - "{{ mapr_hosts[0] }}"
+            - "{{ mapr_hosts[1] }}"
+            - "{{ mapr_hosts[2] }}"
+          ssh_id: {{ ansible_user_id }}
+          ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
+          metrics_ui_admin_password: admin
+          license_type: M5
+          mep_version: 8.0.0
+          disks:
+            - "{{ mapr_disks.stdout_lines[0] }}"
+            - "{{ mapr_disks.stdout_lines[1] }}"
+            - "{{ mapr_disks.stdout_lines[2] }}"
+          cluster_name: dfdemo.local
+          services:
+            mapr-hivemetastore:
+              database:
+                name: hive
+                user: hive
+                password: mapr
 
-  # - name: configure mapr
-  #   shell: /opt/mapr/server/configure.sh -R
-  #   become: yes
+      force: yes
 
-  # - name: register demo licence
-  #   shell: maprcli license add -license '{{ mapr_license }}' -is_file false
-  #   become: yes
-  #   vars:
-  #     mapr_license: |-
-  #       Removed for privacy - Contact your HPE representative
-  #   ignore_errors: yes
-  #       Removed for privacy - Contact your HPE representative
+  - name: configure mapr
+    command: bash -c 'echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza'
 
 - hosts: localhost
   tasks:
+  - name: check tunnel
+    stat: path=/tmp/MCS-socket
+    register: socket_file
+    
   - name: MCS tunnel
     shell: "cd ../..; ssh -M -S /tmp/MCS-socket -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
-
-  #### NOT WORKING !!!
-  # - debug: msg="{{ ansible_devices }}"
-  # - set_fact: 
-  #     disks: "{{ ansible_devices.keys() | reject('match', '^loop(.*)$') | list }}"
-  # - set_fact: 
-  #     mapr_disks: "{{ ansible_devices[item] | json_query(jmesquery) }}"
-  #   loop: "{{ disks }}"
-  #   vars:
-  #     jmesquery: "[?size=='500.00 GB']"
-
-  # - name: update stanza
-  #   copy:
-  #     dest: /tmp/mapr.stanza
-  #     content: |-
-  #       environment:
-  #         mapr_core_version: 6.2.0
-  #       config:
-  #         hosts:
-  #           - "{{ mapr_hosts[0] }}"
-  #           - "{{ mapr_hosts[1] }}"
-  #           - "{{ mapr_hosts[2] }}"
-  #         ssh_id: {{ ansible_user_id }}
-  #         ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
-  #         metrics_ui_admin_password: admin
-  #         license_type: M5
-  #         mep_version: 8.0.0
-  #         disks:
-  #           - "{{ mapr_disks[0] }}"
-  #           - "{{ mapr_disks[1] }}"
-  #         cluster_name: dfdemo.local
-  #         services:
-  #           mapr-hivemetastore:
-  #             database:
-  #               name: hive
-  #               user: hive
-  #               password: mapr
-
-  #     force: yes
-
-  # - name: configure mapr
-  #   command: "echo 'y' | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
-
+    when: not socket_file.stat.exists

@@ -1,12 +1,13 @@
 ## Configure mapr centos hosts
-- hosts: "{{ groups['mapr'] }}"
+- hosts: mapr
+  gather_facts: no
   tasks:
   ### FROM: https://github.com/mapr-emea/mapr-ansible/tree/master/roles
-  - name: Set /etc/sysctl.conf
+  - name: update sysctl
     lineinfile:
       dest: /etc/sysctl.conf
-      regexp: "{{item.regex}}"
-      line: "{{item.line}}"
+      regexp: "{{ item.regex }}"
+      line: "{{ item.line }}"
       create: true
     with_items:
       - regex: ^vm\.swappiness
@@ -19,93 +20,25 @@
         line: net.ipv4.tcp_fin_timeout = 30
     become: yes
     register: sysctl
-  - name: Ensure permissions for PAM config /etc/pam.d/system-auth-pc (2/5)
-    file:
-      path: /etc/pam.d/system-auth-pc
-      state: directory
-      mode: 0644
+
+  - name: install python3
+    package:
+      name: 
+        - python3
+        - python3-pip
+        - expect
+      state: latest
     become: yes
-  - name: install requirements
-    vars:
-      packages:
-        - sssd
-        - perl
-        - java-11-openjdk
-        - java-11-openjdk-devel
-        - wget
-        - curl
-    package: name={{ item }} state=present
-    with_items: "{{ vars['packages'] }}"
-    become: yes
-  # - name: Configure sssd.conf
-  #   copy: dest=/etc/sssd/sssd.conf content={{ sssd_file }}
-  #   become: yes
-  #   vars:
-  #     sssd_file: |-
-  #       [sssd]
-  #       config_file_version = 2
-  #       debug_level = 1
-  #       domains = {{ ad_realm }}
-  #       services = nss, pam, ssh
-  #       [domain/{{ ad_realm }}]
-  #       id_provider = ad
-  #       auth_provider = ad
-  #       access_provider = ad
-  #       chpass_provider = ad
-  #       ldap_id_mapping = true
-  #       ldap_schema = rfc2307bis
-  #       ad_server = {{ groups['ad_server'] | first }}
-  #       krb5_realm = {{ ad_realm }}
-  #       # no dynamic dns update
-  #       dyndns_update = false
-  #       dyndns_refresh_interval = 43200
-  #       dyndns_update_ptr = false
-  #       dyndns_ttl = 3600
-  #       ad_enable_gc = true
-  #       ldap_sasl_mech = GSSAPI
-  #       ldap_krb5_keytab = /etc/krb5.keytab
-  #       ldap_krb5_init_creds = true
-  #       ad_gpo_access_control = disabled
-  #       override_homedir = /home/%u
-  #       override_shell = /bin/bash
-  #       # Users and groups are not enumerated to reduce trafic
-  #       enumerate = false
-  #       ldap_access_order = expire
-  #       ldap_account_expire_policy = ad
-  #       ldap_force_upper_case_realm = true
-  #       case_sensitive = false
-  #       ldap_referrals = false
-  #       # perf
-  #       cache_credentials = true
-  # - name: Set /etc/sssd/sssd.conf to chmod 400
-  #   file: path=/etc/sssd/sssd.conf mode=0400
-  #   become: yes
-  # - name: Configure smb.conf
-  #   copy: dest=/etc/samba/smb.conf content={{ smb_file }}
-  #   vars:
-  #     mapr_workgroup: "samdom"
-  #     smb_file: |-
-  #       [global]
-  #       security = ads
-  #       workgroup = {{ mapr_workgroup }}
-  #       realm = {{ ad_realm }}
-  #       kerberos method = secrets and keytab
-  #       passdb backend = tdbsam
-  #       unix extensions = yes
-  #       client signing = yes
-  #       client use spnego = yes
-  #   become: yes
-  # - name: Join to Windows domain
-  #   shell: echo '5ambaPwd@' | sudo net ads join -U administrator
-  # - name: Enable and start the SSSD  service
-  #   service: name=sssd state=restarted enabled=yes
-  #   become: yes
-  # - name: Change PAM configuration with Redhat authconfig
-  #   shell: authconfig --enablesssd --enablesssdauth  --disablekrb5 --enablemkhomedir --update --enablecache
+
+  # - name: permissions for pam
+  #   file:
+  #     path: /etc/pam.d/system-auth-pc
+  #     state: directory
+  #     mode: 0644
   #   become: yes
 
-  - name: settings for mapr (3/5)
-    shell: echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
+  # - name: settings for mapr (3/5)
+  #   shell: echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
 
   # - name: settings for mapr (4/5)
   #   shell: >

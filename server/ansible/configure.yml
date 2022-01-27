@@ -35,7 +35,6 @@
   when: (is_runtime | bool) and (is_mlops | bool)
   
 ### External Data Fabric
-- name: install mapr
+- name: Install External MapR Hosts
   import_playbook: routines/create_mapr.yml
   when: is_mapr | bool
-  

@@ -57,6 +57,6 @@
   import_playbook: routines/prepare_centos_mapr.yml
   when: is_mapr | bool
 
-- name: Install External MapR Hosts
-  import_playbook: routines/create_mapr.yml
+- name: Join MapR hosts to AD
+  import_playbook: routines/ad_integration.yml
   when: is_mapr | bool
