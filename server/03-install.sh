@@ -7,8 +7,8 @@ if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
    exit 1
 fi
 
-source ./outputs.sh "${1}"
 ./refresh_files.sh "${1}"
+source ./outputs.sh "${1}"
 
 ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
   -i ./ansible/inventory.ini \

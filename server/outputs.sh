@@ -2,6 +2,11 @@
 
 set -euo pipefail
 
+if ! echo "aws azure kvm vmware" | grep -w -q ${1}; then
+   echo Usage: "${0} aws|azure|kvm|vmware"
+   exit 1
+fi
+
 OUTPUT_JSON=$(cat "generated/output.json")
 
 ###############################################################################
@@ -24,7 +29,6 @@ ____HERE
 ###############################################################################
 # Set variables from terraform output
 ###############################################################################
-
 SSH_PUB_KEY_PATH="generated/controller.pub_key"
 SSH_PRV_KEY_PATH="generated/controller.prv_key"
 

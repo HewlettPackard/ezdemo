@@ -78,5 +78,5 @@ output "controller_private_ips" {
     value = [ azurerm_network_interface.controllernics.*.private_ip_address ]
 }
 output "controller_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.controllers : [ "${g.name}.${azurerm_network_interface.controllernics.0.internal_domain_name_suffix}" ] ]
+  value = [[ for g in azurerm_linux_virtual_machine.controllers : [ "${g.name}.${azurerm_network_interface.controllernics.0.internal_domain_name_suffix}" ] ]]
 }

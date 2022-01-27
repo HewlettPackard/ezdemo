@@ -46,6 +46,7 @@ SSH_OPTS="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnown
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars
 echo "ansible_ssh_common_args: ${SSH_OPTS}" > ./ansible/group_vars/all.yml
 
+# echo "Gateway at: $GATW_PUB_DNS"
 ### TODO: Move to ansible task
 SSH_CONFIG="
 Host *
