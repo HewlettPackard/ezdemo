@@ -21,7 +21,7 @@ do
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 printf -v joined ' -v %s' "${VOLUMES[@]}"
-docker run -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
+docker run --pull always -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
 ```
 
 Create "aws_config.json" or "azure_config.json" in the same folder with your settings and credentials. Template provided below:
