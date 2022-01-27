@@ -58,3 +58,20 @@
       # retries: 15
       # delay: 60
       # until: result is not failed
+
+- name: configure picasso DF users
+  hosts: localhost
+  tasks:
+
+    - name: mapr password
+      shell: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo get secret system -o yaml | grep MAPR_PASSWORD | head -1 | awk '{print $2}' | base64 --decode"
+      register: mapr_password
+
+    - name: maprlogin
+      shell: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- bash -c 'echo {{ mapr_password.stdout }} | maprlogin password'"
+
+    - name: add ad_admin1
+      shell: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- maprcli acl edit -type cluster -user ad_admin1:fc"
+
+    - name: add ad_user1
+      shell: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- maprcli acl edit -type cluster -user ad_user1:login"
