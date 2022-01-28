@@ -88,11 +88,6 @@ output "gateway_private_ips" {
 output "gateway_private_dns" {
   value = [ for g in azurerm_linux_virtual_machine.gateways : [ "${g.name}.${azurerm_network_interface.gatewaynics.0.internal_domain_name_suffix}" ] ]
 }
-
-# data "azurerm_public_ip" "gtw_public_ip" {
-#   name                = azurerm_public_ip.gatewaypip.0.name
-#   resource_group_name = azurerm_linux_virtual_machine.gateways.0.resource_group_name
-# }
 output "gateway_public_ips" {
   # value = data.azurerm_public_ip.gtw_public_ip.ip_address
   value = [ azurerm_public_ip.gatewaypip.*.ip_address ]
@@ -100,6 +95,3 @@ output "gateway_public_ips" {
 output "gateway_public_dns" {
   value = azurerm_public_ip.gatewaypip.0.fqdn
 }
-# output "gateway_ssh_command" {
-  # value = "ssh -o StrictHostKeyChecking=no -i ./generated/controller.prv_key centos@${data.azurerm_public_ip.gtw_public_ip.public_ip}"
-# }

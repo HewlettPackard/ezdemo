@@ -34,7 +34,6 @@ SSH_PRV_KEY_PATH="generated/controller.prv_key"
 
 CTRL_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_ips"]["value"][0], sep=" ")') 
 CTRL_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_dns"]["value"][0], sep=" ")') 
-# CTRL_PRV_HOST=$(echo $CTRL_PRV_DNS | cut -d"." -f1)
 
 GATW_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_ips"]["value"][0], sep=" ")')
 GATW_PUB_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_ips"]["value"][0], sep=" ")')
