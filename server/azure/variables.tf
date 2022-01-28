@@ -25,7 +25,7 @@ variable "ssh_pub_key_path" { default = "../generated/controller.pub_key" }
 
 variable "cloud_init_file" { default = "../generated/cloud-init.yaml" }
 
-variable "worker_count" { default = 3 }
+variable "worker_count" { default = 2 }
 ## GPU Workers
 variable "gworker_count" { default = 0 }
 variable "gpu_instance_type" { default = "Standard_NC6s_v3" } ## 6c 112GB 1v100
