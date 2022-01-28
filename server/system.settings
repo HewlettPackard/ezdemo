@@ -3,5 +3,6 @@
   "epic_stable" : "https://ezmeral-platform-releases.s3.amazonaws.com/5.3.6/3060/hpe-cp-rhel-release-5.3.6-3060.bin",
   "is_runtime" : true,
   "is_stable" : false,
+  "k8s_version": "1.20.11",
   "version": "5.4"
 }
