@@ -22,7 +22,7 @@
     shell: |-
       hpecp k8scluster create \
       --name k8scluster \
-      --k8s_version 1.20.11 \
+      --k8s_version "{{ k8s_version }}" \
       --k8shosts-config {{ k8shost_list | join(',')  }} \
       --addons "{{ addons_list }}" \
       --ext_id_svr_bind_pwd '5ambaPwd@' \

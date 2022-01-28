@@ -38,6 +38,8 @@ is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
 ad_realm=SAMDOM.EXAMPLE.COM
 app_version=${APP_VERSION}
+k8s_version=${K8S_VERSION}
+
 "
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
