@@ -71,7 +71,7 @@ async def log(target: str):
 def read_providers():
     return jsonify(list(x for x in ProviderName))
 
-allowed_files = ['aws/run.log', 'aws/terraform.tfstate', 'generated/controller.prv_key']
+allowed_files = ['aws/run.log', 'azure/run.log', 'aws/terraform.tfstate', 'azure/terraform.tfstate','generated/controller.prv_key']
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):
