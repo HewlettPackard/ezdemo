@@ -243,10 +243,10 @@ function App() {
 
         <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
           { showoutput && 
-            <Card margin="small">
+            <Card margin="small" fill flex>
               <TextArea 
                 readOnly 
-                fill
+                fill flex
                 ref={ outputRef }
                 value={ output.join('') }
                 size='xsmall'
@@ -257,8 +257,8 @@ function App() {
         </Box>
 
       {/* Footer */}
-      <Box justify='end'>
-        <Footer background='brand' pad='medium'>
+      <Box justify='end' pad="small" margin="small">
+        <Footer background='brand' pad='small'>
           <Fragment>
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
@@ -269,13 +269,13 @@ function App() {
             { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
             { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }
             { prvkey && <Button label='Destroy'
-              alignSelf='end' margin='xsmall'
+              alignSelf='end' margin='xsmall' pad="small"
               icon={ <Trash color="status-critical" /> } 
               tip='Destroy the environment' 
               onClick={ () => window.confirm('All will be deleted') && destroy() } 
             /> }
           </Fragment>
-          <Box direction='row'>
+          <Box direction='row' pad="small">
             <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
             <Anchor label='About' onClick={ () => alert('https://github.com/hpe-container-platform-community/ezdemo for issues and suggestions.') } />
           </Box>
