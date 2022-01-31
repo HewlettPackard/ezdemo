@@ -9,7 +9,7 @@ resource "azurerm_public_ip" "gatewaypip" {
   location                     = azurerm_resource_group.resourcegroup.location
   resource_group_name          = azurerm_resource_group.resourcegroup.name
   allocation_method            = "Dynamic"
-  domain_name_label            = "${regex("[a-z0-9_]+", lower(var.project_id))}${lower(random_id.gw_dns.hex)}"
+  domain_name_label            = "${regex("[a-z0-9]+", lower(var.project_id))}${lower(random_id.gw_dns.hex)}"
 }
 
 # Gateway NIC
