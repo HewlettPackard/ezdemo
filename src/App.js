@@ -105,7 +105,7 @@ function App() {
             if (textVal.includes('TASK [exit site lockdown]'))
               setGwready(true);
             // if External Data Fabric console ready
-            if (textVal.includes('TASK [MCS tunnel]'))
+            if (textVal.includes('TASK [MCS tunnel admin]'))
               setMCSready(true);
             if (textVal.includes('Environment destroyed'))
             {
@@ -264,6 +264,7 @@ function App() {
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
             { MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
+            { MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
             { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} target='_blank' rel='noreferrer' /> }
             { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
             { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }

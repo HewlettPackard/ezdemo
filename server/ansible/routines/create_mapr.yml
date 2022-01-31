@@ -72,9 +72,13 @@
 - hosts: localhost
   tasks:
   - name: check tunnel
-    stat: path=/tmp/MCS-socket
+    stat: path=/tmp/MCS-socket-admin
     register: socket_file
     
-  - name: MCS tunnel
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
+  - name: MCS tunnel admin
+    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-admin -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
+    when: not socket_file.stat.exists
+
+  - name: MCS tunnel installer
+    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-installer -fNT -L 0.0.0.0:9443:{{ groups['mapr'] | first }}:9443 centos@{{ groups['gateway'] | first }}"
     when: not socket_file.stat.exists
