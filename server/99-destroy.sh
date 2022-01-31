@@ -18,7 +18,8 @@ popd > /dev/null
 
 # Tear down ssh port forwarding (if exist) for MapR MCS
 source outputs.sh ${1}
-ssh -S /tmp/MCS-socket -O exit centos@${GATW_PRV_DNS} || true
+ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS} || true
+ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS} || true
 
 rm -rf generated/"${GATW_PUB_DNS}"
 rm -f generated/output.json
