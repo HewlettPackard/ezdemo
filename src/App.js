@@ -280,8 +280,8 @@ function App() {
             { MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
             { MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
             { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} rel='noreferrer' /> }
-            { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
-            { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }
+            { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} rel='noreferrer' /> }
+            { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> }
             { prvkey && <Button label='Destroy' alignSelf='end'
               icon={ <Trash color="status-critical" /> } 
               tip='Destroy the environment' 
