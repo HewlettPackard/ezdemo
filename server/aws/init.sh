@@ -11,6 +11,7 @@ ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
 IS_GPU=$(jq -r '.is_gpu // false' ./config.json)
+REGION=$(jq -r '.region' ./config.json)
 
 cat > ./credentials <<EOF
 [default]
@@ -28,6 +29,11 @@ EOF
 
 if [[ "${IS_GPU}" == "true" ]]; then 
   echo "gworker_count = 1" >> ./my.tfvars 
+fi
+if [[ "${REGION}" != "" ]]; then
+  echo "setting $REGION"
+  echo "region = \"${REGION}\"" >> ./my.tfvars
+  echo "az = \"${REGION}a\"" >> ./my.tfvars
 fi
 
 exit 0

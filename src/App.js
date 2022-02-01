@@ -1,8 +1,9 @@
 import React, { Fragment } from 'react';
 import { Grommet, Box, Card, CardFooter, CheckBox, Button, Text, TextInput, Form, FormField, 
-  Footer, Anchor, RadioButtonGroup, TextArea } from 'grommet';
+  Footer, Anchor, RadioButtonGroup, TextArea, Select } from 'grommet';
 import { hpe } from "grommet-theme-hpe";
-import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Trash } from 'grommet-icons';
+import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Trash, HostMaintenance, System } from 'grommet-icons';
+import regions from './regions';
 
 function App() {
   const [theme, setTheme] = React.useState('light');
@@ -25,7 +26,7 @@ function App() {
 
   React.useEffect(() => {
     const fetchData = async () => {
-      fetch(`/providers`)
+      fetch('/providers')
       .then(res => res.json())
       .then(
         (result) => {
@@ -63,7 +64,7 @@ function App() {
   const configureProvider = (val) => {
     setProvider(val);
     setShowconfig(true);
-    checkExistingRun(val).then(res => { if (res.result) setLogfile(true) } );
+    checkExistingRun(val).then(res => { if (res) setLogfile(true) } );
     fetchData(`/${val.toLowerCase()}/config`)
       .then(response => {
         if (! response.ok) setError(response.statusText)
@@ -167,7 +168,7 @@ function App() {
       <Box direction='row' justify='between'>
         <Button icon={ <Home /> } onClick={ () => reset() } />
         {/* Providers */}
-        <Box margin='small' animation='zoomIn'>
+        <Box animation='zoomIn'>
           { providers && <RadioButtonGroup id='target-id' 
             name='target' 
             direction='row'
@@ -190,16 +191,22 @@ function App() {
             checked={ showoutput ? true : false }
             onChange={ () => setShowoutput(!showoutput) }
           /> }
+          { <CheckBox 
+            toggle reverse
+            label={ showconfig ? <HostMaintenance /> : <System /> }
+            checked={ showconfig ? true : false }
+            onChange={ () => setShowconfig(!showconfig) }
+          /> }
         </Box>
       </Box>
       {/* Configure */}
-      <Button 
+      {/* <Button 
           alignSelf='end' 
-          plain margin='small'
+          plain pad='xsmall'
           label={ showconfig ? 'Hide config' : 'Show config' } 
-          onClick={ () => setShowconfig(!showconfig) } /> 
+          onClick={ () => setShowconfig(!showconfig) } />  */}
       { showconfig && 
-        <Card margin="small" animation='zoomIn'>
+        <Card margin="small" animation='zoomIn' overflow="auto">
           <Form
             value= { config }
             validate='change' 
@@ -214,11 +221,18 @@ function App() {
                       }
                   </FormField>
                 )} */}
-              { Object.keys(config).filter(k => !k.includes('is_')).map( key => 
+              { Object.keys(config).filter(k => !k.includes('is_') && !k.includes('region')).map( key => 
                   <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
                         <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
                   </FormField>
                 )}
+                { provider.toLowerCase() === "aws" && <FormField name='region' htmlfor='region' label='region' key='region' required={ true } margin="small">
+                        <Select placeholder='Region' id='region' name='region' 
+                          options={regions.aws}
+                          onChange={({ option }) => setConfig( old => ( {...old, 'region': option }) )  }
+                          value={ config['region'] } />
+                  </FormField>
+                }
                 <CardFooter>
                   <Box direction='row' justify='center'>
                     <CheckBox toggle reverse label='Verbose' checked={ config['is_verbose'] } onChange={ () => setConfig( old => ( {...old, 'is_verbose': !old['is_verbose'] }) ) } />
@@ -257,25 +271,24 @@ function App() {
         </Box>
 
       {/* Footer */}
-      <Box justify='end' pad="small" margin="small">
-        <Footer background='brand' pad='small'>
+      <Box justify='end'>
+        <Footer background='brand' pad="xsmall">
           <Fragment>
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
             { MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
             { MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
-            { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} target='_blank' rel='noreferrer' /> }
+            { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} rel='noreferrer' /> }
             { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} target='_blank' rel='noreferrer' /> }
             { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} target='_blank' rel='noreferrer' /> }
-            { prvkey && <Button label='Destroy'
-              alignSelf='end' margin='xsmall' pad="small"
+            { prvkey && <Button label='Destroy' alignSelf='end'
               icon={ <Trash color="status-critical" /> } 
               tip='Destroy the environment' 
               onClick={ () => window.confirm('All will be deleted') && destroy() } 
             /> }
           </Fragment>
-          <Box direction='row' pad="small">
+          <Box direction='row'>
             <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
             <Anchor label='About' onClick={ () => alert('https://github.com/hpe-container-platform-community/ezdemo for issues and suggestions.') } />
           </Box>

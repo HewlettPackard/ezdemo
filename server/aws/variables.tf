@@ -6,7 +6,6 @@ variable "is_mapr" { default = false }
 variable "is_runtime" { default = true }
 variable "is_ha" { default = false }
 
-### TODO: allow region selection
 variable "region" { default = "eu-west-2" }
 variable "az" { default = "eu-west-2a" }
 
