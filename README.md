@@ -1,6 +1,6 @@
 # Ezmeral Container Platform Demo
 
-## on AWS and Azure (Vmware and KVM to follow)
+## on AWS and Azure (VMware and KVM to follow)
 
 Automated installation for Ezmeral Container Platform and MLOps on AWS/Azure for demo purpose.
 
@@ -138,7 +138,7 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 
 [X] Add Azure deployment capability
 
-[ ] Add Vmware deployment capability
+[ ] Add VMware deployment capability
 
 [ ] Add KVM deployment capability
 
