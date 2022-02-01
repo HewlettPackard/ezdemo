@@ -226,9 +226,9 @@ function App() {
                         <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
                   </FormField>
                 )}
-                { provider.toLowerCase() === "aws" && <FormField name='region' htmlfor='region' label='region' key='region' required={ true } margin="small">
+                { (provider.toLowerCase() === "aws" || provider.toLowerCase() === "azure") && <FormField name='region' htmlfor='region' label='region' key='region' required={ true } margin="small">
                         <Select placeholder='Region' id='region' name='region' 
-                          options={regions.aws}
+                          options={regions[provider.toLowerCase()]}
                           onChange={({ option }) => setConfig( old => ( {...old, 'region': option }) )  }
                           value={ config['region'] } />
                   </FormField>

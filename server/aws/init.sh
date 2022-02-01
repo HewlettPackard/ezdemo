@@ -31,7 +31,7 @@ if [[ "${IS_GPU}" == "true" ]]; then
   echo "gworker_count = 1" >> ./my.tfvars 
 fi
 if [[ "${REGION}" != "" ]]; then
-  echo "setting $REGION"
+  echo "setting region to $REGION"
   echo "region = \"${REGION}\"" >> ./my.tfvars
   echo "az = \"${REGION}a\"" >> ./my.tfvars
 fi

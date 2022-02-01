@@ -9,5 +9,6 @@
   "is_mlops": false,
   "is_mapr": false,
   "is_gpu": false,
-  "is_ha": false
+  "is_ha": false,
+  "region": ""
 }
