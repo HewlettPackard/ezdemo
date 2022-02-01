@@ -1,10 +1,8 @@
 # Ezmeral Container Platform Demo
 
-## on AWS and Azure (VMware and KVM to follow)
+Automated installation for Ezmeral Container Platform and MLOps on various platforms (available on AWS and Azure) for demo purposes.
 
-Automated installation for Ezmeral Container Platform and MLOps on AWS/Azure for demo purpose.
-
-You need docker to run the container. It should work on any docker runtime.
+You need a container runtime to run tool. It should work on any container runtime and tested on Docker. Podman doesn't work if you try to map volumes (should work fine without the mounts).
 
 ## Usage
 
@@ -17,7 +15,6 @@ CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_co
 for file in "${CONFIG_FILES[@]}"
 do
   target="${file%_*}"
-  # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 printf -v joined ' -v %s' "${VOLUMES[@]}"
@@ -38,7 +35,8 @@ AWS Template;
   "is_mlops": false,
   "is_mapr": false,
   "is_gpu": false,
-  "is_ha": false
+  "is_ha": false,
+  "region": ""
 }
 ```
 
@@ -56,7 +54,8 @@ Azure Template;
   "is_mlops": false,
   "is_mapr": false,
   "is_gpu": false,
-  "is_ha": false
+  "is_ha": false,
+  "region": ""
 }
 ```
 
@@ -89,7 +88,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 - Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config setup for jump host via gateway)
 
-- You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your host to use them to access hosts directly
+- You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your localhost to access hosts directly
 
 - Copy "./generated/*/minica.pem" to local folder and install into your browser to prevent SSL certificate errors
 
@@ -113,7 +112,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 - 02-apply.sh: Runs `terraform apply` to deploy resources
 - 03-install.sh: Run Ansible scripts to install ECP
 - 04-configure.sh: Run Ansible scripts to configure ECP for demo
-- 99-destroy.sh: Destroy all created resources on AWS (**DANGER**: All resources will be destroyed, except the generated keys and certificates)
+- 99-destroy.sh: Destroy all created resources (**DANGER**: All resources will be destroyed, except the generated keys and certificates)
 
 ### Ansible Scripts
 
@@ -128,47 +127,47 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 - configure_picasso: Enables Picasso (Data Fabric on Kubernetes) for all tenants
 - configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
 
-## TO-DO
-
-[X] External DF deployment (single node)
-
-[X] Use GPU workers
-
-[X] Dockerfile to containerise this tool
-
-[X] Add Azure deployment capability
-
-[ ] Add VMware deployment capability
-
-[ ] Add KVM deployment capability
-
 ## Notes
 
-Deployment uses EU-WEST-2 region on AWS, UK South region on Azure.
+Deployment defaults to EU-WEST-2 (EU - London) region on AWS, UK South (EU - London) region on Azure.
 
-Region change in AWS is available by manually changing region and az variables in "aws/variables.tf"
+Please use following format to choose your region on AWS (config.json);
 
-```yaml
-variable "region" { default = "eu-west-1" }
-variable "az" { default = "eu-west-1a" }
+```shell
+"us-east-1"      // N.Virginia
+"us-east-2"      // Ohio
+"us-west-1"      // N.California
+"us-west-2"      // Oregon
+"ap-southeast-1" // Singapore
+"eu-central-1"   // Frankfurt
+"eu-west-1"      // Ireland
+"eu-west-2"      // London
+"eu-west-3"      // Paris
+"eu-north-1"     // Stockholm
+"ca-central-1"   // Montréal, Québec
 ```
 
-These regions can be selected for deployment;
+This format should be used to select a region on Azure;
 
-us-east-1
-us-east-2
-us-west-1
-us-west-2
-ap-southeast-1
-eu-central-1
-eu-west-1
-eu-west-2
-eu-west-3
-eu-north-1
-ca-central-1
+```shell
+"eastus"
+"eastus2"
+"centralus"
+"westus"
+"westus2"
+"canadacentral"
+"canadaeast"
+"northeurope"
+"westeurope"
+"ukwest"
+"uksouth"
+"francecentral"
+"germanynorth"
+"centralindia"
+"japaneast"
+"australiacentral"
+"uaenorth"
+"southafricawest"
+```
 
-For AWS:
-Edit ./aws/variables.tf to update region, and az parameters.
-
-For Azure:
-Edit ./azure/variables.tf to update region parameter.
+** Not all regions are tested, please provide feedback if you have an issue with a region (issues)
