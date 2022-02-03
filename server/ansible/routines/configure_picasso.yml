@@ -97,6 +97,7 @@
     - name: copy ca cert
       shell: "{{ kubectl_dfdemo }} cp ../../generated/minica.pem admincli-0:{{ work_folder.stdout }}"
 
+    # If using this script on a production environment, keep your CA safe.  Don't copy it around your environment!!
     - name: copy ca key
       shell: "{{ kubectl_dfdemo }} cp ../../generated/minica-key.pem admincli-0:{{ work_folder.stdout }}"
 
