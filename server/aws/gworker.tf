@@ -15,6 +15,7 @@ resource "aws_instance" "gworkers" {
   root_block_device {
     volume_type = "gp2"
     volume_size = 400
+    delete_on_termination = true
     tags = {
       Name            = "${var.project_id}-gworker-${count.index + 1}-root-ebs"
       Project         = var.project_id
