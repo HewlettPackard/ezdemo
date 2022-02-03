@@ -67,6 +67,17 @@ resource "aws_network_acl_rule" "allow_api_from_client_ips" {
   to_port        = 8080
 }
 
+resource "aws_network_acl_rule" "allow_k8s_api_from_client_ips" {
+  network_acl_id = aws_network_acl.main.id
+  rule_number    = 135
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = var.client_cidr_block
+  from_port      = 9500
+  to_port        = 9699
+}
+
 resource "aws_network_acl_rule" "allow_mapped_from_client_ips" {
   network_acl_id = aws_network_acl.main.id
   rule_number    = 140
