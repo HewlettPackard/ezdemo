@@ -13,6 +13,7 @@ resource "aws_instance" "ad_server" {
   root_block_device {
     volume_type = "gp2"
     volume_size = 400
+    delete_on_terminate = true
     tags = {
       Name            = "${var.project_id}-ad-server-root-ebs"
       Project         = var.project_id
