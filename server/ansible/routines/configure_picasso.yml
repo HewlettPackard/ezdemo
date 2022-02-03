@@ -82,7 +82,6 @@
 
 
 - name: configure picasso MCS TLS
-  hosts: localhost
   vars:
     kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo "
     kubeexec_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- "
