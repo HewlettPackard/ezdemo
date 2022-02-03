@@ -59,6 +59,7 @@
       # delay: 60
       # until: result is not failed
 
+
 - name: configure picasso DF users
   hosts: localhost
   vars:
@@ -77,3 +78,41 @@
 
     - name: add ad_user1
       shell: "{{ kubectl_dfdemo }} exec admincli-0 -- maprcli acl edit -type cluster -user ad_user1:login"
+
+
+
+- name: configure picasso MCS TLS
+  vars:
+    kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo "
+    kubeexec_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- "
+  tasks:
+
+    - name: Collect current timestamp
+      shell: "echo /tmp/ansible-tls-$(date +%d%b%y_%H-%M-%S)"
+      register: work_folder
+
+    - name: Create folder
+      shell: "{{ kubeexec_dfdemo }} mkdir {{ work_folder.stdout }}"
+
+    - name: copy ca cert
+      shell: "{{ kubectl_dfdemo }} cp ../../generated/minica.pem admincli-0:{{ work_folder.stdout }}"
+
+    - name: copy ca key
+      shell: "{{ kubectl_dfdemo }} cp ../../generated/minica-key.pem admincli-0:{{ work_folder.stdout }}"
+
+    - name: gencsr, create cert and import
+      shell: >
+          {{ kubeexec_dfdemo }} bash -c "
+            cd {{ work_folder.stdout }}
+            cp /opt/mapr/kubernetes/template.cnf my.cnf
+            printf '\nDNS.4 = {{ gateway_pub_dns }}\n' >> my.cnf
+            sed -i -r 's/\{service\}/mcs-svc/g' my.cnf
+            sed -i -r 's/\{namespace\}/dfdemo/g' my.cnf
+            sed -i -r 's/\{private-key-subject-cn\}/*.maprwebserver-svc.mycluster.svc.cluster.local/g'
+            edftool gen-csrs -t my.cnf -y
+            openssl x509 -req -in dfdemo-mcs-svc.csr -CA minica.pem -CAkey minica-key.pem -CAcreateserial -out dfdemo-mcs-svc.crt -days 500 -sha256 -extensions 'v3_req' -extfile <(cat my.cnf)
+            edftool import-certs -y
+            # yes Y | edf update cluster # not required if only updating mcs?
+            "
+    - name: restart pod
+      shell: "{{ kubectl_dfdemo }} delete pod mcs-0"
