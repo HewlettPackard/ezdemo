@@ -82,6 +82,7 @@
 
 
 - name: configure picasso MCS TLS
+  hosts: localhost
   vars:
     kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo "
     kubeexec_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- "
@@ -97,6 +98,7 @@
     - name: copy ca cert
       shell: "{{ kubectl_dfdemo }} cp ../../generated/minica.pem admincli-0:{{ work_folder.stdout }}"
 
+    # If using this script on a production environment, keep your CA safe.  Don't copy it around your environment!!
     - name: copy ca key
       shell: "{{ kubectl_dfdemo }} cp ../../generated/minica-key.pem admincli-0:{{ work_folder.stdout }}"
 
