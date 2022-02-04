@@ -14,6 +14,7 @@ ADMIN_PASSWORD=$(jq '.admin_password' ./config.json)
 IS_MLOPS=$(jq -r '.is_mlops // false' ./config.json)
 IS_MAPR=$(jq -r '.is_mapr // false' ./config.json)
 IS_GPU=$(jq -r '.is_gpu // false' ./config.json)
+IS_HA=$(jq -r '.is_ha // false' ./config.json)
 REGION=$(jq -r '.region' ./config.json)
 
 cat > ./my.tfvars <<EOF
@@ -25,6 +26,7 @@ user = ${USER_ID}
 project_id = ${PROJECT_ID// /_}
 is_mlops = ${IS_MLOPS}
 is_mapr = ${IS_MAPR}
+is_ha = ${IS_HA}
 admin_password = ${ADMIN_PASSWORD}
 EOF
 
