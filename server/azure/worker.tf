@@ -76,10 +76,10 @@ resource "azurerm_virtual_machine_data_disk_attachment" "wrkdatadisk-attach" {
 
 ## Outputs
 output "workers_private_ip" {
-  value = [azurerm_network_interface.workernics.*.private_ip_address]
+  value = azurerm_network_interface.workernics.*.private_ip_address
 }
 output "workers_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.workers : [ "${g.name}.${azurerm_network_interface.workernics.0.internal_domain_name_suffix}" ] ]
+  value = azurerm_network_interface.workernics.*.internal_domain_name_suffix
 }
 output "worker_count" {
   value = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0

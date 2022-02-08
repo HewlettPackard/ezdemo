@@ -31,33 +31,41 @@ ____HERE
 ###############################################################################
 SSH_PUB_KEY_PATH="generated/controller.pub_key"
 SSH_PRV_KEY_PATH="generated/controller.prv_key"
+CTRL_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_ips"]["value"], sep=" ")') 
+#echo "CTRL_PRV_IPS=${CTRL_PRV_IPS}"
+CTRL_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_dns"]["value"], sep=" ")') 
+#echo "CTRL_PRV_DNS=${CTRL_PRV_DNS}"
 
-CTRL_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_ips"]["value"][0], sep=" ")') 
-CTRL_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["controller_private_dns"]["value"][0], sep=" ")') 
-
-GATW_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_ips"]["value"][0], sep=" ")')
-GATW_PUB_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_ips"]["value"][0], sep=" ")')
-GATW_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_dns"]["value"][0], sep=" ")')
-### getting only the first dns name for gateway
-GATW_PUB_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["gateway_public_dns"]["value"])')
+GATW_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_ips"]["value"], sep=" ")')
+#echo "GATW_PRV_IPS=${GATW_PRV_IPS}"
+GATW_PUB_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_ips"]["value"], sep=" ")')
+#echo "GATW_PUB_IPS=${GATW_PUB_IPS}"
+GATW_PRV_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_private_dns"]["value"], sep=" ")')
+#echo "GATW_PRV_DNS=${GATW_PRV_DNS}"
+GATW_PUB_DNS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gateway_public_dns"]["value"], sep=" ")')
+#echo "GATW_PUB_DNS=${GATW_PUB_DNS}"
 # GATW_PUB_HOST=$(echo $GATW_PUB_DNS | cut -d"." -f1)
 # GATW_PRV_HOST=$(echo $GATW_PRV_DNS | cut -d"." -f1)
 
 #### WORKERS
 WORKER_COUNT=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["worker_count"]["value"], sep=" ")') 
-WRKR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["workers_private_ip"]["value"][0], sep=" ")') 
+WRKR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["workers_private_ip"]["value"], sep=" ")') 
+#echo "WRKR_PRV_IPS=${WRKR_PRV_IPS}"
 #read -r -a WRKR_PRV_IPS <<< "$WRKR_PRV_IPS"
 
 #### GPU WORKERS
-GWORKER_COUNT=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["gworker_count"]["value"], sep=" ")') 
-GWRKR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gworkers_private_ip"]["value"][0], sep=" ")') 
+GWORKER_COUNT=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["gworker_count"]["value"], sep=" ")')
+GWRKR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["gworkers_private_ip"]["value"], sep=" ")')
+#echo "GWRKR_PRV_IPS=${GWRKR_PRV_IPS}"
 
 #### MAPR NODES
-MAPR_COUNT=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["mapr_count"]["value"], sep=" ")') 
-MAPR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["mapr_private_ips"]["value"][0], sep=" ")') 
+MAPR_COUNT=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["mapr_count"]["value"], sep=" ")')
+MAPR_PRV_IPS=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (*obj["mapr_private_ips"]["value"], sep=" ")')
+#echo "MAPR_PRV_IPS=${MAPR_PRV_IPS}"
 #read -r -a WRKR_PRV_IPS <<< "$WRKR_PRV_IPS"
 
 AD_PRV_IP=$(echo $OUTPUT_JSON | python3 -c 'import json,sys;obj=json.load(sys.stdin);print (obj["ad_server_private_ip"]["value"])')
+#echo "AD_PRV_IP=${AD_PRV_IP}"
 
 ### SYSTEM SETTINGS
 source ./system_settings.sh 

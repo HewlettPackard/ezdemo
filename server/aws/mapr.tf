@@ -99,7 +99,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdd" {
 }
 ### OUTPUTS
 output "mapr_private_ips" {
-  value = [aws_instance.mapr.*.private_ip]
+  value = aws_instance.mapr.*.private_ip
 }
 # output "mapr_private_dns" {
 #   value = [aws_instance.mapr.*.private_dns]

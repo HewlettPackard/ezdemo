@@ -76,10 +76,10 @@ resource "azurerm_virtual_machine_data_disk_attachment" "gwrkdatadisk-attach" {
 
 ## Outputs
 output "gworkers_private_ip" {
-  value = [azurerm_network_interface.gworkernics.*.private_ip_address]
+  value = azurerm_network_interface.gworkernics.*.private_ip_address
 }
 output "gworkers_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.gworkers : [ "${g.name}.${azurerm_network_interface.gworkernics.0.internal_domain_name_suffix}" ] ]
+  value = azurerm_network_interface.gworkernics.*.internal_domain_name_suffix
 }
 output "gworker_count" {
   value = var.gworker_count

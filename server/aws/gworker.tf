@@ -79,10 +79,10 @@ resource "aws_volume_attachment" "gworker-volume-attachment-sdc" {
 }
 ### OUTPUTS
 output "gworkers_private_ip" {
-  value = [aws_instance.gworkers.*.private_ip]
+  value = aws_instance.gworkers.*.private_ip
 }
 output "gworkers_private_dns" {
-  value = [aws_instance.gworkers.*.private_dns]
+  value = aws_instance.gworkers.*.private_dns
 }
 output "gworker_count" {
   value = var.gworker_count

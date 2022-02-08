@@ -1,7 +1,7 @@
 # Controller NIC
 resource "azurerm_network_interface" "controllernics" {
   count                       = ( var.is_runtime ? ( var.is_ha ? 3 : 1) : 0)
-  name                        = "controller-nic"
+  name                        = "controller${count.index + 1}-nic"
   location                    = azurerm_resource_group.resourcegroup.location
   resource_group_name         = azurerm_resource_group.resourcegroup.name
   ip_configuration {
@@ -75,8 +75,8 @@ resource "azurerm_virtual_machine_data_disk_attachment" "ctrdatadisk-attach" {
 
 ## Outputs
 output "controller_private_ips" {
-    value = [ azurerm_network_interface.controllernics.*.private_ip_address ]
+    value = azurerm_network_interface.controllernics.*.private_ip_address
 }
 output "controller_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.controllers : [ "${g.name}.${azurerm_network_interface.controllernics.0.internal_domain_name_suffix}" ] ]
+  value = azurerm_network_interface.controllernics.*.internal_domain_name_suffix
 }

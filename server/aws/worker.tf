@@ -83,10 +83,10 @@ resource "aws_volume_attachment" "worker-volume-attachment-sdc" {
 }
 ### OUTPUTS
 output "workers_private_ip" {
-  value = [aws_instance.workers.*.private_ip]
+  value = aws_instance.workers.*.private_ip
 }
 output "workers_private_dns" {
-  value = [aws_instance.workers.*.private_dns]
+  value = aws_instance.workers.*.private_dns
 }
 output "worker_count" {
   value = local.worker_count

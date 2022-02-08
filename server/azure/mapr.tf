@@ -76,10 +76,10 @@ resource "azurerm_virtual_machine_data_disk_attachment" "maprdatadisk-attach" {
 
 ## Outputs
 output "mapr_private_ips" {
-  value = [azurerm_network_interface.maprnics.*.private_ip_address]
+  value = azurerm_network_interface.maprnics.*.private_ip_address
 }
 output "mapr_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.mapr : [ "${g.name}.${azurerm_network_interface.maprnics.0.internal_domain_name_suffix}" ] ]
+  value = azurerm_network_interface.maprnics.*.internal_domain_name_suffix
 }
 output "mapr_count" {
   value = var.is_mapr ? var.mapr_count : 0

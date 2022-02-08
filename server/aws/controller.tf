@@ -59,8 +59,8 @@ resource "aws_volume_attachment" "controller-volume-attachment-sdb" {
 
 ### OUTPUTS
 output "controller_private_ips" {
-  value = [aws_instance.controllers.*.private_ip]
+  value = aws_instance.controllers.*.private_ip
 }
 output "controller_private_dns" {
-  value = [aws_instance.controllers.*.private_dns]
+  value = aws_instance.controllers.*.private_dns
 }

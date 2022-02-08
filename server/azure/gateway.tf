@@ -1,5 +1,5 @@
 resource "random_id" "gw_dns" {
-  byte_length = 1
+  byte_length = 2
 }
 
 # Gateway Public IP
@@ -8,8 +8,8 @@ resource "azurerm_public_ip" "gatewaypip" {
   name                         = "gateway${count.index + 1}-pip"
   location                     = azurerm_resource_group.resourcegroup.location
   resource_group_name          = azurerm_resource_group.resourcegroup.name
-  allocation_method            = "Dynamic"
-  domain_name_label            = "${regex("[a-z0-9]+", lower(var.project_id))}${lower(random_id.gw_dns.hex)}"
+  allocation_method            = "Static"
+  domain_name_label            = "${regex("[a-z0-9]+", lower(var.project_id))}${lower(random_id.gw_dns.hex)}${count.index}"
 }
 
 # Gateway NIC
@@ -83,15 +83,15 @@ resource "azurerm_network_interface_security_group_association" "nsgforgateway" 
 
 ## Outputs
 output "gateway_private_ips" {
-  value = [ azurerm_network_interface.gatewaynics.*.private_ip_address ]
+  value = azurerm_network_interface.gatewaynics.*.private_ip_address
 }
 output "gateway_private_dns" {
-  value = [ for g in azurerm_linux_virtual_machine.gateways : [ "${g.name}.${azurerm_network_interface.gatewaynics.0.internal_domain_name_suffix}" ] ]
+  value = azurerm_network_interface.gatewaynics.*.internal_domain_name_suffix
 }
 
 output "gateway_public_ips" {
-  value = [ azurerm_public_ip.gatewaypip.*.ip_address ]
+  value = azurerm_public_ip.gatewaypip.*.ip_address
 }
 output "gateway_public_dns" {
-  value = azurerm_public_ip.gatewaypip.0.fqdn
+  value = azurerm_public_ip.gatewaypip.*.fqdn
 }
