@@ -81,8 +81,8 @@ pushd ./generated/ > /dev/null
   fi
   ALL_DOMAINS="$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_DNS} | sed 's/ /,/g'),${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_DOMAINS},localhost"
   ALL_IPS="$(echo ${GATW_PUB_IPS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),${CTRL_IPS},127.0.0.1"
-  echo "ALL_DOMAINS=${ALL_DOMAINS}"
-  echo "ALL_IPS=${ALL_IPS}"
+  # echo "ALL_DOMAINS=${ALL_DOMAINS}"
+  # echo "ALL_IPS=${ALL_IPS}"
   minica -domains "$(echo "$ALL_DOMAINS" | sed 's/,,/,/g')" -ip-addresses "$(echo "$ALL_IPS" | sed 's/,,/,/g')"
 popd > /dev/null 
 
