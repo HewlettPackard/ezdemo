@@ -18,14 +18,14 @@ popd > /dev/null
 
 # Tear down ssh port forwarding (if exist) for MapR MCS
 source outputs.sh ${1}
-ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS} || true
-ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS} || true
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
 
-rm -rf generated/"${GATW_PUB_DNS}"
-rm -f generated/output.json
+rm -rf generated/"$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g')" ## created by minica in refresh_files.sh
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
-rm -f "${1}/*run.log"
+ls "${1}"/*run.log | xargs rm -f
+rm -f generated/output.json
 ## Clean user environment
 rm -f ~/.hpecp.conf
 rm -f ~/.hpecp_tenant.conf
