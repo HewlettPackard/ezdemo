@@ -10,12 +10,12 @@
     register: cluster_name
 
   - name: create tenant
-    shell: "hpecp tenant create --name 'k8s-tenant-1' --description 'MLOPS Example' --k8s-cluster-id {{ cluster_id.stdout }} --tenant-type k8s --specified-namespace-name k8s-tenant-1 --features '{ ml_project: true }' --quota-cores 1000"
+    shell: "hpecp tenant create --name 'mlops-ex-demo' --description 'MLOPS Example' --k8s-cluster-id {{ cluster_id.stdout }} --tenant-type k8s --specified-namespace-name mlops-ex-demo --features '{ ml_project: true }' --quota-cores 1000"
     register: tenant
     ignore_errors: True
 
   - name: get tenant id
-    shell: "hpecp tenant list -o text | grep 'k8s-tenant-1' | cut -d' ' -f1"
+    shell: "hpecp tenant list -o text | grep 'mlops-ex-demo' | cut -d' ' -f1"
     register: tenant_id
 
   - name: wait for tenant
