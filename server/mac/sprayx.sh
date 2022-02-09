@@ -48,55 +48,55 @@ GATW_PUB_DNS=${GATW_PRV_IP}
 IS_MLOPS=false
 
 
-ANSIBLE_INVENTORY="####
-# Ansible Hosts File for HPE Container Platform Deployment
-# created by Dirk Derichsweiler
-# modified by Erdinc Kaya
-#
-# Important:
-# use only ip addresses in this file
-####
-[controllers]
-${CTRL_PRV_IP}
-[gateway]
-${GATW_PRV_IP}
-[k8s]
-${K8S_IPS}
-[picasso]
-${PICASSO_IPS}
-[mlops]
-${MLOPS_IPS}
-[ad_server]
-${AD_PRV_IP}
-[mapr]
-${MAPR_IP}
-[all:vars]
-ansible_connection=ssh
-ansible_user=${USER}
-install_file=${EPIC_FILENAME}
-download_url=${EPIC_DL_URL}
-admin_password=${ADMIN_PASSWORD}
-gateway_pub_dns=${GATW_PUB_DNS}
-ssh_prv_key=${SSH_PRV_KEY_PATH}
-is_mlops=${IS_MLOPS}"
-echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
-# sed "s/GATEWAY_IP/${GATW_PUB_IP}/g" ./ansible/group_vars.yml-template > ./ansible/group_vars/all.yml
+# ANSIBLE_INVENTORY="####
+# # Ansible Hosts File for HPE Container Platform Deployment
+# # created by Dirk Derichsweiler
+# # modified by Erdinc Kaya
+# #
+# # Important:
+# # use only ip addresses in this file
+# ####
+# [controllers]
+# ${CTRL_PRV_IP}
+# [gateway]
+# ${GATW_PRV_IP}
+# [k8s]
+# ${K8S_IPS}
+# [picasso]
+# ${PICASSO_IPS}
+# [mlops]
+# ${MLOPS_IPS}
+# [ad_server]
+# ${AD_PRV_IP}
+# [mapr]
+# ${MAPR_IP}
+# [all:vars]
+# ansible_connection=ssh
+# ansible_user=${USER}
+# install_file=${EPIC_FILENAME}
+# download_url=${EPIC_DL_URL}
+# admin_password=${ADMIN_PASSWORD}
+# gateway_pub_dns=${GATW_PUB_DNS}
+# ssh_prv_key=${SSH_PRV_KEY_PATH}
+# is_mlops=${IS_MLOPS}"
+# echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
+# # sed "s/GATEWAY_IP/${GATW_PUB_IP}/g" ./ansible/group_vars.yml-template > ./ansible/group_vars/all.yml
 
-### Init
-if [[ ! -f  "ca-key.pem" ]]; then
-   openssl genrsa -out "ca-key.pem" 2048
-   openssl req -x509 \
-      -new -nodes \
-      -key "ca-key.pem" \
-      -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com" \
-      -sha256 -days 1024 \
-      -out "ca-cert.pem"
-fi
+# ### Init
+# if [[ ! -f  "ca-key.pem" ]]; then
+#    openssl genrsa -out "ca-key.pem" 2048
+#    openssl req -x509 \
+#       -new -nodes \
+#       -key "ca-key.pem" \
+#       -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com" \
+#       -sha256 -days 1024 \
+#       -out "ca-cert.pem"
+# fi
 
-ANSIBLE_CMD="ansible-playbook -v"
+# ANSIBLE_CMD="ansible-playbook -v"
 
-${ANSIBLE_CMD} -f 10 \
-  -i ./ansible/inventory.ini \
-  ./ansible/install.yml | tee "run.log"
+# ${ANSIBLE_CMD} -f 10 \
+#   -i ./ansible/inventory.ini \
+#   ./ansible/install.yml | tee "run.log"
 
 exit 0

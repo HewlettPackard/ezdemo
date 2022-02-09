@@ -32,28 +32,8 @@ INIT_USER=$(eval "cat <<EOF
 preserve_hostname: False
 hostname: ${NAME}
 fqdn: ${NAME}.local
-# users:
-#   - name: ${USER}
-#     gecos: Admin User
-#     home: /home/${USER}
-#     shell: /bin/bash
-#     groups: [wheel, adm, systemd-journal]
-#     sudo: 
-#       - ALL=(ALL) NOPASSWD:ALL
-#     lock_passwd: false
-#     ssh_authorized_keys: 
-#       - ${SSH_PUB_KEY}
-# chpasswd:
-#   list: |
-#     ${USER}:qwer1234
-#   expire: False
 ssh_authorized_keys: 
   - ${SSH_PUB_KEY}
-runcmd:
-  - echo "ip_resolve=4" >> /etc/yum.conf
-  - mkswap /dev/vdb
-  - echo "/dev/vdb   swap    swap    sw  0   0" >> /etc/fstab
-  - swapon -a
 EOF
 " 2> /dev/null)
 INIT_META=$(eval "cat <<EOF
@@ -63,7 +43,7 @@ EOF
 " 2> /dev/null)
 
 # DRIVE_OPTIONS="l2-cache-size=8M,aio=threads"
-DRIVE_OPTIONS="l2-cache-size=8M,cache=none,aio=threads"
+DRIVE_OPTIONS="l2-cache-size=8M,cache=none,aio=threads,discard=unmap"
 
 pushd "${VMDIR}" > /dev/null
   DATADISKS=""
@@ -102,12 +82,13 @@ pushd "${VMDIR}" > /dev/null
     -M pc,acpi=on,graphics=off,mem-merge=off \
     -smp "${CPUS}" \
     -m "${MEM}G" \
-    -netdev vmnet-macos,id=vnet0,mode=host -device virtio-net-pci,netdev=vnet0,mac=52:54:00:12:${IDX1}:${IDX2} \
+    -netdev user,id=vnet0 -device virtio-net-pci,netdev=vnet0,mac=52:54:00:12:${IDX1}:${IDX2} \
     -L /opt/homebrew/Cellar/qemu/6.2.0/share/qemu/ \
     -object iothread,id=io1 -device virtio-rng-pci \
     -drive file="${DISK1}",if=none,id="disk1,${DRIVE_OPTIONS}" -device virtio-blk,drive=disk1,bootindex=1,iothread=io1 \
     -drive file="${SWAP}",if=none,id=swap,format=raw -device virtio-blk,drive=swap ${DATADISKS} \
     ${CDROM} -nographic -monitor none -serial file:console.out & # | tee console.out &
+    # -netdev vmnet-macos,id=vnet0,mode=host -device virtio-net-pci,netdev=vnet0,mac=52:54:00:12:${IDX1}:${IDX2} \
     # -nographic -monitor none ${CDROM} -serial mon:stdio
     # -netdev vmnet-macos,id=vnet0,mode=bridged,net=10.1.0.0/24,dhcpstart=10.1.0.2 -device virtio-net-pci,netdev=vnet0,mac=52:54:00:12:${IDX1}:${IDX2} \
 
