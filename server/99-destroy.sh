@@ -18,18 +18,22 @@ popd > /dev/null
 
 # Tear down ssh port forwarding (if exist) for MapR MCS
 source outputs.sh ${1}
-([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
-([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
 
-rm -rf generated/"$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g')" ## created by minica in refresh_files.sh
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
-ls "${1}"/*run.log | xargs rm -f
+(ls "${1}"/*run.log | xargs rm -f) || true
+# rm -rf generated/"$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g')" ## TODO: if GATW_PUB_DNS returns "", it will delete the entire generated folder
+(ls -d generated/*/ | xargs rm -rf) || true # Deletes all folders under generated, better than deleting the generated folder all together
 rm -f generated/output.json
+
 ## Clean user environment
 rm -f ~/.hpecp.conf
 rm -f ~/.hpecp_tenant.conf
 rm -f ~/.kube/config
+
+# If sockets are created for MCS
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
 
 echo "Environment destroyed"
 echo "SSH key-pair, CA certs and cloud-init files are not removed!"
