@@ -5,7 +5,7 @@
       become: yes
 - hosts: controllers
   tasks:
-    - name: Shutdown workers
+    - name: Shutdown controllers
       shell: "nohup sudo halt -n </dev/null &"
       become: yes
 - hosts: gateway
