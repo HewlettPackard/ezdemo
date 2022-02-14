@@ -1,7 +1,8 @@
 # Configure the AWS Provider
 provider "aws" {
   region                  = var.region
-  shared_credentials_file = "./credentials"
+  shared_config_files      = ["./config"]
+  shared_credentials_files = ["./credentials"]
   profile                 = "default"
 }
 

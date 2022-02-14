@@ -97,9 +97,10 @@ function App() {
             const textVal = new TextDecoder().decode(value);
             // Capture fatal errors
             if (reg.test(textVal)) setError(textVal);
+            if (textVal.includes('...ignoring')) setError(undefined);
             // Capture the gateway dns name
-            if (textVal.includes('gateway_public_dns = "')) {
-              setGwurl(textVal.split('gateway_public_dns = "')[1].split('"')[0]); // extract the IP
+            if (textVal.includes('gateway_public_dns = [')) {
+              setGwurl(textVal.split('gateway_public_dns = [')[1].split('"')[0]); // extract the IP
               setTfstate(true);
             }
             // when gateway installation is complete
@@ -239,6 +240,7 @@ function App() {
                     <CheckBox toggle reverse label='MLOps' checked={ config['is_mlops'] } onChange={ () => setConfig( old => ( {...old, 'is_mlops': !old['is_mlops'] }) ) } />
                     <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } />
                     <CheckBox toggle reverse label='Standalone DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />
+                    <CheckBox toggle reverse label='Enable HA (CP only)' checked={ config['is_ha'] } onChange={ () => setConfig( old => ( {...old, 'is_ha': !old['is_ha'] }) ) } />
                   </Box>
                 </CardFooter>
             </Form>
@@ -277,8 +279,8 @@ function App() {
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
             { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
-            { MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
-            { MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
+            { config['is_mapr'] && MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
+            { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
             { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} rel='noreferrer' /> }
             { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} rel='noreferrer' /> }
             { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> }
