@@ -16,13 +16,11 @@ pushd "${1}" > /dev/null
     
 popd > /dev/null
 
-# Tear down ssh port forwarding (if exist) for MapR MCS
 source outputs.sh ${1}
 
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
 (ls "${1}"/*run.log | xargs rm -f) || true
-# rm -rf generated/"$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g')" ## TODO: if GATW_PUB_DNS returns "", it will delete the entire generated folder
 (ls -d generated/*/ | xargs rm -rf) || true # Deletes all folders under generated, better than deleting the generated folder all together
 rm -f generated/output.json
 
