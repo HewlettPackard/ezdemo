@@ -13,17 +13,17 @@ ANSIBLE_INVENTORY="####
 # use only ip addresses in this file
 ####
 [controllers]
-$(echo ${CTRL_PRV_IPS[@]} | sed 's/ /\n/g')
+$(echo ${CTRL_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gateway]
-$(echo ${GATW_PRV_IPS[@]} | sed 's/ /\n/g')
+$(echo ${GATW_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [workers]
-$(echo ${WRKR_PRV_IPS[@]} | sed 's/ /\n/g')
+$(echo ${WRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gworkers]
-$(echo ${GWRKR_PRV_IPS[@]} | sed 's/ /\n/g')
+$(echo ${GWRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [ad_server]
 ${AD_PRV_IP}
 [mapr]
-$(echo ${MAPR_PRV_IPS[@]} | sed 's/ /\n/g')
+$(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [all:vars]
 ansible_connection=ssh
 ansible_user=centos
