@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+USAGE="Usage: ${0} $(paste -s -d '|' providers)"
 
-if ! echo "aws azure kvm vmware mac" | grep -w -q ${1}; then
-   echo Usage: "${0} aws|azure|kvm|vmware"
-   exit 1
+PROVIDERS=($(<providers))
+if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
+  echo $USAGE
+  exit 1
 fi
+
+set -euo pipefail
 
 source ./system_settings.sh ### These settings coming from system, not the user
 
