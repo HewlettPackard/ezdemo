@@ -71,16 +71,16 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ### Run all
 
-```./00-run_all.sh aws|azure|vmware|kvm```
+```./00-run_all.sh aws|azure|vmware|kvm|mac```
 
 ### Run Individaully
 
 At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
 
-- `./01-init.sh aws|azure|vmware|kvm`
-- `./02-apply.sh aws|azure|vmware|kvm`
-- `./03-install.sh aws|azure|vmware|kvm`
-- `./04-configure.sh aws|azure|vmware|kvm`
+- `./01-init.sh aws|azure|vmware|kvm|mac` **MacOS target is experimental, and has undocumented prerequisites**
+- `./02-apply.sh aws|azure|vmware|kvm|mac`
+- `./03-install.sh aws|azure|vmware|kvm|mac`
+- `./04-configure.sh aws|azure|vmware|kvm|mac`
 
 Deployed resources will be available in ./server/ansible/inventory.ini file
 
