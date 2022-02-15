@@ -1,6 +1,12 @@
+# Worker instances
+
+locals {
+  worker_count = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0
+}
+
 # Worker NICs
 resource "azurerm_network_interface" "workernics" {
-    count                = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0
+    count                = local.worker_count
     name                 = "worker${count.index + 1}-nic"
     location             = azurerm_resource_group.resourcegroup.location
     resource_group_name  = azurerm_resource_group.resourcegroup.name
@@ -13,7 +19,7 @@ resource "azurerm_network_interface" "workernics" {
 
 # Worker VMs
 resource "azurerm_linux_virtual_machine" "workers" {
-  count                 = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0
+  count                 = local.worker_count
   name                  = "worker${count.index + 1}"
   location              = azurerm_resource_group.resourcegroup.location
   resource_group_name   = azurerm_resource_group.resourcegroup.name
@@ -82,5 +88,5 @@ output "workers_private_dns" {
   value = azurerm_network_interface.workernics.*.internal_domain_name_suffix
 }
 output "worker_count" {
-  value = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0
+  value = local.worker_count
 }
