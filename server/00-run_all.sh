@@ -8,6 +8,12 @@ if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
   exit 1
 fi
 
+if [[ "${1}" == "mac" && "$(uname -s)" != "Darwin" ]]
+then
+  echo "You should be running this on MacOS"
+  exit 1
+fi
+
 set -euo pipefail
 
 if [[ -f "${1}/run.log" ]]; then 

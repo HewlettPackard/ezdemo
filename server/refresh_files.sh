@@ -44,10 +44,14 @@ k8s_version=${K8S_VERSION}
 "
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
-
-SSH_OPTS="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
+SSHOPT="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars
-[[ "${1}" == "mac" ]] || echo "ansible_ssh_common_args: ${SSH_OPTS}" > ./ansible/group_vars/all.yml
+if [[ "${1}" == "mac" ]]; then
+  echo "ansible_ssh_common_args: ${SSHOPT}" > ./ansible/group_vars/all.yml
+else
+  echo "ansible_ssh_common_args: ${SSH_VIA_PROXY}" > ./ansible/group_vars/all.yml
+fi 
 
 # echo "Gateway at: $GATW_PUB_DNS"
 ### TODO: Move to ansible task

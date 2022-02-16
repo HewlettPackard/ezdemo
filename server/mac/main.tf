@@ -35,7 +35,7 @@ resource "shell_script" "centosvm" {
     NAME        = local.NAMES[count.index]
     CPU         = local.CPUS[count.index]
     MEM         = local.MEMS[count.index]
-    DATADISK    = local.DISKS[count.index]
+    DISKSIZE    = local.DISKS[count.index]
   }
 }
 
