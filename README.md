@@ -88,9 +88,9 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 - Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config setup for jump host via gateway)
 
-- You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your localhost to access hosts directly
+- You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your workstation to access the deployed nodes directly
 
-- Copy "./generated/*/minica.pem" to local folder and install into your browser to prevent SSL certificate errors
+- Copy and install "./generated/*/minica.pem" into your browser to prevent SSL certificate errors
 
 ## Reference
 
@@ -104,6 +104,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 - jq (apt/yum/brew install jq)
 - hpecp (pip3 install hpecp)
 - kubectl from [K8s](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
+- minica (apt/yum/brew install minica)
 
 ### Scripts
 
@@ -170,4 +171,4 @@ This format should be used to select a region on Azure;
 "southafricawest"
 ```
 
-** Not all regions are tested, please provide feedback if you have an issue with a region (issues)
+** Not all regions are tested, please provide feedback if you have an issue with a region.
