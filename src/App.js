@@ -100,7 +100,7 @@ function App() {
             if (textVal.includes('...ignoring')) setError(undefined);
             // Capture the gateway dns name
             if (textVal.includes('gateway_public_dns = [')) {
-              setGwurl(textVal.split('gateway_public_dns = [')[1].split('"')[0]); // extract the IP
+              setGwurl(textVal.split('gateway_public_dns = [')[1].split('"')[1]); // extract the IP
               setTfstate(true);
             }
             // when gateway installation is complete
