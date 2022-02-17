@@ -5,7 +5,7 @@ RUN npm install
 COPY . ./
 RUN npm run build
 
-FROM --platform=amd64 python:3-slim
+FROM python:3-slim
 LABEL Name=ezdemo Version=0.0.2
 ENV PATH /root/.local/bin:$PATH
 
