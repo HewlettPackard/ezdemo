@@ -21,6 +21,38 @@
     become: yes
     register: sysctl
 
+  - name: get repo files
+    shell: "ls /etc/yum.repos.d/CentOS-*"
+    when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+    register: repo_files
+
+  - name: workaround for centos8 eol 1 of 2
+    lineinfile:
+      path: "{{ item }}"
+      regexp: ^mirrorlist
+      state: absent
+    with_items: "{{ repo_files.stdout_lines | list }}"
+    when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+    become: yes
+
+  - name: workaround for centos8 eol 2 of 2
+    replace:
+      path: "{{ item }}"
+      regexp: '^#baseurl=http://mirror.centos.org/(\s*)'
+      replace: 'baseurl=http://vault.centos.org/\1'
+    with_items: "{{ repo_files.stdout_lines | list }}"
+    when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+    become: yes
+
+  - name: Enable EPEL Repository on CentOS 8
+    dnf:
+      name:
+        - epel-release
+        - bash-completion
+      state: latest
+    when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+    become: yes
+
   - name: install python3
     package:
       name: 

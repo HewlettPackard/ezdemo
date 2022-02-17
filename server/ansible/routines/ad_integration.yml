@@ -10,30 +10,16 @@
 
   tasks:
     - name: Install ad_auth required tools for RedHat/CentOS 8
-      yum: 
+      package: 
         name: realmd,sssd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,krb5-workstation,authselect-compat
         state: present
       when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
       become: yes
 
     - name: Install ad_auth required tools for RedHat/CentOS 7
-      yum: 
+      package: 
         name: sssd,realmd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,krb5-workstation,openldap-clients,policycoreutils-python
         state: present 
-      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7'
-      become: yes
-
-    - name: Enable EPEL Repository on CentOS 8
-      dnf:
-        name: epel-release
-        state: latest
-      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
-      become: yes
-
-    - name: Enable EPEL Repository on CentOS 7
-      yum:
-        name: epel-release
-        state: latest
       when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7'
       become: yes
 
