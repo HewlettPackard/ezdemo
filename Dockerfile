@@ -19,11 +19,11 @@ RUN curl "https://releases.hashicorp.com/terraform/1.0.4/terraform_1.0.4_linux_a
 ### For 5.4 we have ['1.19.15', '1.20.11', '1.21.5'] for K8s versions
 RUN curl -LO "https://dl.k8s.io/release/v1.20.11/bin/linux/amd64/kubectl" && install -o root -g root \
   -m 0755 kubectl /usr/local/bin/kubectl
-# RUN curl -LO "https://dl.google.com/go/go1.13.linux-amd64.tar.gz" && tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
-# RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/bin/go build &&\
-#   mv minica /usr/local/bin
+RUN curl -LO "https://dl.google.com/go/go1.13.linux-amd64.tar.gz" && tar -C /usr/local -xzf go1.13.linux-amd64.tar.gz
+RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/bin/go build &&\
+  mv minica /usr/local/bin
 ## clean temp files
-RUN rm -rf aws* terraform.zip kubectl /usr/local/aws-cli/v2/current/dist/awscli/examples
+RUN rm -rf aws* terraform.zip kubectl minica /usr/local/go /usr/local/aws-cli/v2/current/dist/awscli/examples
 
 WORKDIR /app
 COPY --from=builder /app/build /app/build

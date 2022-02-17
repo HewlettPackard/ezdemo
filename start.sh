@@ -13,6 +13,6 @@ done
 printf -v joined ' -v %s' "${VOLUMES[@]}"
 # echo "${joined}"
 ## run at the background with web service exposed at 4000
-docker run --pull always -d -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
+docker run -n ezdemo --pull always -d -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
 
 exit 0
