@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-echo "Creating ${NAME} with ${CPU} cores and ${MEM}GB Memory, allocating ${DISKSIZE}GB for data disks." > ${NAME}-debug.log
+echo "Creating ${NAME} with ${CPU} cores and ${MEM}GB Memory, allocating ${DISKSIZE}GB for data disks."
 
 BASEDIR=$(pwd)
 VMDIR="vms/${NAME}"
@@ -68,7 +68,6 @@ pushd "${VMDIR}" > /dev/null
     fi
   fi
 
-  echo "Starting ${NAME}" >> ${BASEDIR}/${NAME}-debug.log
    sudo /Library/Application\ Support/com.canonical.multipass/bin/qemu-system-x86_64 \
     -accel tcg,thread=multi \
     -M pc,acpi=on,graphics=off,mem-merge=off \

@@ -6,7 +6,7 @@ import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Tra
 import regions from './regions';
 
 function App() {
-  const [theme, setTheme] = React.useState('light');
+  const [theme, setTheme] = React.useState('dark');
   const [output, setOutput] = React.useState([]);
   const [showoutput, setShowoutput] = React.useState(false);
   const [error, setError] = React.useState(undefined);
@@ -21,9 +21,9 @@ function App() {
   const [gwready, setGwready] = React.useState(false);
   const [MCSready, setMCSready] = React.useState(false);
   const [prvkey, setPrvkey] = React.useState(false);
-  const [tfstate, setTfstate] = React.useState(false);
+  // const [tfstate, setTfstate] = React.useState(false);
   const outputRef = React.useRef(undefined);
-
+ 
   React.useEffect(() => {
     const fetchData = async () => {
       fetch('/providers')
@@ -101,7 +101,7 @@ function App() {
             // Capture the gateway dns name
             if (textVal.includes('gateway_public_dns = [')) {
               setGwurl(textVal.split('gateway_public_dns = [')[1].split('"')[1]); // extract the IP
-              setTfstate(true);
+              // setTfstate(true);
             }
             // when gateway installation is complete
             if (textVal.includes('TASK [exit site lockdown]'))
@@ -142,12 +142,12 @@ function App() {
     .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
     .then(result => setGwurl(undefined) );
 
-  // const log = () =>
+  // const streamlog = () =>
   //   fetchData(`/${provider.toLowerCase()}/log`)
   //   .then(response => response.body)
   //   .then(rb => processResponse(rb))
   //   .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
-  //   .then(result => console.dir(result) && setGwurl(undefined) );
+  //   .then(result => console.dir(result));
 
   const reset = () => {
     // configureProvider(providers[0]);
@@ -206,22 +206,13 @@ function App() {
           plain pad='xsmall'
           label={ showconfig ? 'Hide config' : 'Show config' } 
           onClick={ () => setShowconfig(!showconfig) } />  */}
-      { showconfig && 
-        <Card margin="small" animation='zoomIn' overflow="auto">
+      { showconfig && provider &&
+        <Card margin="small" flex animation='zoomIn' overflow="auto">
           <Form
             value= { config }
             validate='change' 
             onChange= { (value) => setConfig(value) }
             >
-              {/* { Object.keys(config).map( key => 
-                  <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
-                      { key.includes('is_') ?
-                        <CheckBox toggle reverse key={key} label={key.replace('is_','')} checked={ config[key] } onChange={ (e) => setConfig( old => ( {...old, [key]: !old[key] }) ) } />
-                        :
-                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
-                      }
-                  </FormField>
-                )} */}
               { Object.keys(config).filter(k => !k.includes('is_') && !k.includes('region')).map( key => 
                   <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
                         <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
@@ -237,10 +228,19 @@ function App() {
                 <CardFooter>
                   <Box direction='row' justify='center'>
                     <CheckBox toggle reverse label='Verbose' checked={ config['is_verbose'] } onChange={ () => setConfig( old => ( {...old, 'is_verbose': !old['is_verbose'] }) ) } />
+                    { config['is_ha'] !== undefined  && <CheckBox toggle reverse label='Enable HA (CP only)' checked={ config['is_ha'] } onChange={ () => setConfig( old => ( {...old, 'is_ha': !old['is_ha'] }) ) } /> }
                     <CheckBox toggle reverse label='MLOps' checked={ config['is_mlops'] } onChange={ () => setConfig( old => ( {...old, 'is_mlops': !old['is_mlops'] }) ) } />
-                    <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } />
+                    { config['is_gpu'] !== undefined && <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } /> }
                     <CheckBox toggle reverse label='Standalone DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />
-                    <CheckBox toggle reverse label='Enable HA (CP only)' checked={ config['is_ha'] } onChange={ () => setConfig( old => ( {...old, 'is_ha': !old['is_ha'] }) ) } />
+                    {/* { Object.keys(config).map( key => 
+                      <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
+                          { key.includes('is_') ?
+                            <CheckBox toggle reverse key={key} label={key.replace('is_','')} checked={ config[key] } onChange={ (e) => setConfig( old => ( {...old, [key]: !old[key] }) ) } />
+                            :
+                            <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
+                          }
+                      </FormField>
+                    )} */}
                   </Box>
                 </CardFooter>
             </Form>
@@ -257,33 +257,31 @@ function App() {
         { spin && <Text color='status-warning'>Please wait...</Text> }
       </Box>}
 
-        <Box pad='small' fill flex animation='zoomIn' overflow='scroll'>
-          { showoutput && 
-            <Card margin="small" fill flex>
-              <TextArea 
-                readOnly 
-                fill flex
-                ref={ outputRef }
-                value={ output.join('') }
-                size='xsmall'
-                plain
-                style={{ whiteSpace: 'pre', fontFamily: 'Consolas,Courier New,monospace' }} />
-            </Card>
-          }
-        </Box>
+        { showoutput && 
+          <Card margin="small" flex animation='zoomIn' overflow="auto">
+            <TextArea 
+              readOnly 
+              fill flex
+              ref={ outputRef }
+              value={ output.join('') }
+              size='xsmall'
+              plain
+              style={{ whiteSpace: 'pre', fontFamily: 'Consolas,Courier New,monospace', fontSize: 'small' }} />
+          </Card>
+        }
 
       {/* Footer */}
-      <Box justify='end'>
+      { showoutput && <Box justify='end'>
         <Footer background='brand' pad="xsmall">
           <Fragment>
             { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
-            { error && <Text color='red' tip={ error }>{ error.substr(0, 40) + '...' }</Text> }
+            { error && <Text color='red'>{ error }</Text> }
             { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
             { config['is_mapr'] && MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
             { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
-            { logfile && <Anchor label="Logs" href={`/file/${provider.toLowerCase()}/run.log`} rel='noreferrer' /> }
-            { prvkey && <Anchor label="Private Key" href={`/file/generated/controller.prv_key`} rel='noreferrer' /> }
-            { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> }
+            { logfile && <Anchor label='Log' href={`/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
+            { prvkey && <Anchor label='PrvKey' href={'/key'} target='_blank' rel='noreferrer' /> }
+            {/* { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
             { prvkey && <Button label='Destroy' alignSelf='end'
               icon={ <Trash color="status-critical" /> } 
               tip='Destroy the environment' 
@@ -292,10 +290,11 @@ function App() {
           </Fragment>
           <Box direction='row'>
             <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
-            <Anchor label='About' onClick={ () => alert('https://github.com/hpe-container-platform-community/ezdemo for issues and suggestions.') } />
+            <Anchor label='About' onClick={ () => alert('https://github.com/hewlettpackard/ezdemo for issues and suggestions.') } />
           </Box>
         </Footer>
       </Box>
+      }
     </Box>
   </Grommet>
   );

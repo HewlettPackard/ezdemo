@@ -1,11 +1,9 @@
 from enum import Enum
 from http import HTTPStatus
-from posixpath import split
-import flask
-from flask import jsonify, request, send_from_directory, abort
-# from werkzeug.utils import safe_join
+from flask import Flask, jsonify, request, Response, send_from_directory, abort
 from flask_cors import CORS, cross_origin
 from waitress import serve
+from sys import platform
 import subprocess
 import os, json
 
@@ -13,15 +11,18 @@ import os, json
 
 base_path = os.path.dirname(__file__)
 
-app = flask.Flask(__name__, static_url_path='', static_folder=os.path.join(base_path, '..', 'build'))
+app = Flask(__name__, static_url_path='', static_folder=os.path.join(base_path, '..', 'build'))
 CORS(app)
 
-class ProviderName(str, Enum):
-  aws = "AWS"
-  azure = "Azure"
+ProviderName = {
+  "aws": "AWS",
+  "azure": "Azure",
   # vmware = "VMWare"
   # kvm = "KVM"
   # ovirt = "OVirt"
+}
+if (platform == "darwin"):
+  ProviderName["mac"] = "Mac"
 
 @app.route('/')
 @cross_origin()
@@ -49,46 +50,50 @@ async def init(target: str):
     process = subprocess.Popen(['./00-run_all.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline,''):
       yield line
-  return flask.Response(inner(), mimetype='html/text')
-
+  return Response(inner(), mimetype='html/text')
+  
 @app.route('/<target>/destroy', methods = ['POST'])
 async def destroy(target: str):
   def inner():
     process = subprocess.Popen(['./99-destroy.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline,''):
       yield line
-  return flask.Response(inner(), mimetype='html/text')
+  return Response(inner(), mimetype='html/text')
 
-@app.route('/<target>/log')
-async def log(target: str):
-  def inner():
-    process = subprocess.Popen(['tail', '-f', target + '/run.log'], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    for line in iter(process.stdout.readline,''):
-      yield line
-  return flask.Response(inner(), mimetype='html/text')
+# @app.route('/<target>/log')
+# async def log(target: str):
+#   def inner():
+#     process = subprocess.Popen(['tail', '-f', target + '/run.log'], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+#     for line in iter(process.stdout.readline,''):
+#       yield line
+#   return Response(inner(), mimetype='html/text')
 
 @app.route('/providers')
 def read_providers():
-    return jsonify(list(x for x in ProviderName))
+    return jsonify(list(ProviderName[x] for x in ProviderName))
 
-allowed_files = ['aws/run.log', 'azure/run.log', 'aws/terraform.tfstate', 'azure/terraform.tfstate','generated/controller.prv_key']
+allowed_files = ['aws/run.log', 'azure/run.log', 'mac/run.log','generated/controller.prv_key']
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):
   if logfile not in allowed_files or not os.path.exists(logfile):
-    return flask.Response(status=HTTPStatus.NO_CONTENT)
+    return Response(status=HTTPStatus.NO_CONTENT)
   else:
-    return flask.Response(status=HTTPStatus.OK)
+    return Response(status=HTTPStatus.OK)
 
-@app.route('/file/<path:logfile>')
-def get_log(logfile: str):
-  if logfile not in allowed_files:
-    return abort(400)
+@app.route('/log/<target>')
+def getlog(target: str):
   try:
-    target, filename = logfile.split('/', 1)
-    return send_from_directory(directory=base_path + '/' + target, path=filename)
+    return send_from_directory(directory=base_path + '/' + target, path='run.log')
   except FileNotFoundError:
-    return abort(400)
+    return Response(status=HTTPStatus.NO_CONTENT)
+
+@app.route('/key')
+def getkey():
+  try:
+    return send_from_directory(directory=base_path + '/generated', path='controller.prv_key')
+  except FileNotFoundError:
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 if __name__ == '__main__':
   if "DEV" in os.environ:
