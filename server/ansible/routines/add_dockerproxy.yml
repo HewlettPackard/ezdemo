@@ -14,11 +14,6 @@
 
       - name: append more key/values
         set_fact:
-          imported_var: "{{ imported_var.content|b64decode|from_json | default([]) | combine({ 'registry-mirrors': ['https://cache.ctc.mydirk.de','https://cache.mydirk.de'] }) }}"
-        when: ad_username is defined
-
-      - name: append more key/values
-        set_fact:
           imported_var: "{{ imported_var.content|b64decode|from_json | default([]) | combine({ 'registry-mirrors': ['http://192.168.10.3:5000','http://192.168.10.3:5000'] }) }}"
         when: ad_username is not defined
 
