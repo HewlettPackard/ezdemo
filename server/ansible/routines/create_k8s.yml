@@ -39,18 +39,13 @@
       --external-groups '{{ external_groups_list }}'
     ignore_errors: True
     vars:
-      addons_53: '["kubeflow", "picasso-compute"]'
-      addons_54: '["spark-operator", "kubeflow", "istio"]'
+      addons_53: '[]'
+      addons_54: '["spark-operator", "istio"]'
       addons_list: "{{ addons_53 if (is_stable | bool) else addons_54 }}"
       external_groups_list: '["CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com","CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"]'
+
+  - shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
     register: cluster_id
 
   - name: wait for K8s cluster
-    shell: 'hpecp k8scluster wait-for-status "{{ item }}" --status [''ready''] --timeout-secs 1200'
-    with_items: "{{ cluster_id.stdout }}"
-    ignore_errors: True
-
-  # - name: create mlflow tenant
-  #   import_tasks: configure_mlops.yml
-  #   when: not is_mlops | bool
-
+    shell: "hpecp k8scluster wait-for-status ''[ready]'' --id {{ cluster_id.stdout }} --timeout-secs 3600"
