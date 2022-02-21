@@ -62,32 +62,6 @@
       state: latest
     become: yes
 
-  # - name: permissions for pam
-  #   file:
-  #     path: /etc/pam.d/system-auth-pc
-  #     state: directory
-  #     mode: 0644
-  #   become: yes
-
-  # - name: settings for mapr (3/5)
-  #   shell: echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
-
-  # - name: settings for mapr (4/5)
-  #   shell: >
-  #     echo "
-  #     soft memlock unlimited
-  #     hard memlock unlimited
-  #     mapr - nofile 65536
-  #     mapr - nproc 64000
-  #     mapr - memlock unlimited
-  #     mapr - core unlimited
-  #     mapr - nice -10
-  #     " | sudo tee -a /etc/security/limits.conf
-
-  # - name: settings for mapr (5/5)
-  #   shell: tuned-adm profile network-latency
-  #   become: yes
-
   - name: reboot df nodes
     reboot: 
       reboot_timeout: 300
