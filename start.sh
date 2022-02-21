@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VOLUMES=()
-CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json")
+CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json" "mac_config.json")
 for file in "${CONFIG_FILES[@]}"
 do
   target="${file%_*}"
