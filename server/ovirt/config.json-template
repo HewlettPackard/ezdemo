@@ -28,10 +28,12 @@
   "vm_k8s_memory": "",
   "vm_k8s_cpu_cores": "",
   "vm_k8s_cpu_sockets": "",
+  "ephermal_device": "",
+  "persistent_device": "",  
   "host_prefix": ""
   "is_mlops": false,
   "user": "",
   "admin_password": "ChangeMe!",
   "is_mapr": false,
-  "project_id": ""
+  "project_id": ""  
 }
