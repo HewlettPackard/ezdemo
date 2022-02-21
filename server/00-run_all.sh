@@ -20,9 +20,16 @@ if [[ -f "${1}/run.log" ]]; then
   mv "${1}/run.log" "${1}/$(date +'%Y%m%d%H%M')-run.log"
 fi
 
-./01-init.sh "${1}" | tee "${1}/run.log"
-./02-apply.sh "${1}" | tee -a "${1}/run.log"
-./03-install.sh "${1}" | tee -a "${1}/run.log"
-./04-configure.sh "${1}" | tee -a "${1}/run.log"
+if [[ "${EZWEB:-}" == "true" ]]; then
+  ./01-init.sh "${1}" | tee -a "${1}/run.log"
+  ./02-apply.sh "${1}" | tee -a "${1}/run.log"
+  ./03-install.sh "${1}" | tee -a "${1}/run.log"
+  ./04-configure.sh "${1}" | tee -a "${1}/run.log"
+else
+  ./01-init.sh "${1}"
+  ./02-apply.sh "${1}"
+  ./03-install.sh "${1}"
+  ./04-configure.sh "${1}"
+fi
 
 exit 0

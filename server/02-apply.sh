@@ -14,8 +14,7 @@ source ./system_settings.sh
 ### These settings coming from system, not the user
 
 pushd "${1}" > /dev/null
-   TF_IN_AUTOMATION=1 terraform apply \
-      -no-color \
+   TF_IN_AUTOMATION=1 terraform apply ${EZWEB_TF:-} \
       -parallelism 10 \
       -auto-approve=true \
       -var-file=<(cat ./*.tfvars) \

@@ -24,6 +24,11 @@ ProviderName = {
 if (platform == "darwin"):
   ProviderName["mac"] = "Mac"
 
+## Pass environment variable to scripts, tell them they are running under web process
+web_env = os.environ.copy()
+web_env["EZWEB"] = "true"
+web_env["EZWEB_TF"] = "-no-color"
+
 @app.route('/')
 @cross_origin()
 def home():
@@ -47,7 +52,7 @@ async def init(target: str):
   with open(conf_file, 'w') as f:
     json.dump(request.get_json(force=True, silent=True), f)
   def inner():
-    process = subprocess.Popen(['./00-run_all.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(['./00-run_all.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
     for line in iter(process.stdout.readline,''):
       yield line
   return Response(inner(), mimetype='html/text')
@@ -55,7 +60,7 @@ async def init(target: str):
 @app.route('/<target>/destroy', methods = ['POST'])
 async def destroy(target: str):
   def inner():
-    process = subprocess.Popen(['./99-destroy.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.Popen(['./99-destroy.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
     for line in iter(process.stdout.readline,''):
       yield line
   return Response(inner(), mimetype='html/text')

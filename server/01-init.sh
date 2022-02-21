@@ -48,7 +48,7 @@ EOF
 fi
 
 pushd "${1}" > /dev/null
-   TF_IN_AUTOMATION=1 terraform init -no-color
+   TF_IN_AUTOMATION=1 terraform init -upgrade ${EZWEB_TF:-}
    ### Init hook-up for individual targets (aws, vmware etc)
    if [[ -f "./init.sh" ]]; then
       "./init.sh"
