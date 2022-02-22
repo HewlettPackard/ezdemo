@@ -44,10 +44,10 @@ Azure Template;
 
 ```json
 {
-  "subscription": "",
-  "appId": "",
-  "password": "",
-  "tenant": "",
+  "az_subscription": "",
+  "az_appId": "",
+  "az_password": "",
+  "az_tenant": "",
   "project_id": "",
   "user": "",
   "admin_password": "ChangeMe!",

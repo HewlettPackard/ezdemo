@@ -1,8 +1,8 @@
 {
-  "subscription": "",
-  "appId": "",
-  "password": "",
-  "tenant": "",
+  "az_subscription": "",
+  "az_appId": "",
+  "az_password": "",
+  "az_tenant": "",
   "admin_password": "ChangeMe!",
   "user": "",
   "project_id": "",
