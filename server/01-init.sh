@@ -24,16 +24,6 @@ if [[ ! -f  "./generated/controller.prv_key" ]]; then
    chmod 600 "./generated/controller.prv_key"
 fi
 
-# if [[ ! -f  "./generated/ca-key.pem" ]]; then
-#    openssl genrsa -out "./generated/ca-key.pem" 2048
-#    openssl req -x509 \
-#       -new -nodes \
-#       -key "./generated/ca-key.pem" \
-#       -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com" \
-#       -sha256 -days 1024 \
-#       -out "./generated/ca-cert.pem"
-# fi
-
 SSH_PUB_KEY=$(cat ./generated/controller.pub_key)
 SSH_PRV_KEY=$(cat ./generated/controller.prv_key)
 SSH_PRV_KEY_B64=$(base64 ./generated/controller.prv_key)
@@ -56,6 +46,5 @@ pushd "${1}" > /dev/null
 popd > /dev/null
 
 echo "Stage 1 complete"
-# ./02-apply.sh "${1}"
 
 exit 0
