@@ -8,22 +8,21 @@ terraform {
 }
 
 provider "shell" {
-  # sensitive_environment = {
-  #   OAUTH_TOKEN = var.oauth_token
-  # }
   enable_parallelism = true
 }
 
 locals {
-  NAMES = ["ct", "gw", "ad", "wrk1", "wrk2", "df"]
-  CPUS = ["4", "2", "1", "8", "8", "4"]
-  MEMS = ["8", "8", "4", "16", "16", "32"]
-  DISKS = ["500", "0", "0", "500", "500", "100"]
+  dfnodes = [ for i in range(var.mapr_count) : format("df%02d", i ) ]
+  wrknodes = [ for i in range(var.worker_count) : format("wrk%02d", i) ]
+  NAMES = concat(["ct", "gw"], local.wrknodes, ["ad"], local.dfnodes)
+  CPUS = concat(["4", "2"], [ for i in range(var.mapr_count) : "8" ], ["1"], [ for i in range(var.mapr_count) : "4" ])
+  MEMS = concat(["8", "8"], [ for i in range(var.mapr_count) : "16" ], ["4"], [ for i in range(var.mapr_count) : "32" ])
+  DISKS = concat(["500", "0"], [ for i in range(var.mapr_count) : "500" ], ["0"], [ for i in range(var.mapr_count) : "100" ])
 }
 
 resource "shell_script" "centosvm" {
   
-  count = (var.is_runtime ? 3 : 0) + var.worker_count + var.mapr_count
+  count = (var.is_runtime ? 5 : 1) + var.mapr_count
   lifecycle_commands {
     create = file("./create-centos.sh")
     delete = file("./delete-centos.sh")
@@ -32,53 +31,36 @@ resource "shell_script" "centosvm" {
   interpreter = ["/bin/bash", "-c"]
 
   environment = {
-    NAME        = local.NAMES[count.index]
-    CPU         = local.CPUS[count.index]
-    MEM         = local.MEMS[count.index]
-    DISKSIZE    = local.DISKS[count.index]
+    NAME        = local.NAMES[var.is_runtime ? count.index : count.index + 3]
+    CPU         = local.CPUS[var.is_runtime ? count.index : count.index + 3]
+    MEM         = local.MEMS[var.is_runtime ? count.index : count.index + 3]
+    DISKSIZE    = local.DISKS[var.is_runtime ? count.index : count.index + 3]
   }
 }
 
-# resource "null_resource" "mac" {
-#   provisioner "local-exec" {
-#     command = "./sprayx.sh > ${null_resource.mac.id}_out.txt"
-#   }
-# }
-
-# data "local_file" "script_out" {
-#   filename = ("${null_resource.mac.id}_out.txt")
-# }
-
-# locals {
-#   outjson = jsonencode(data.local_file.script_out.content)
-# }
-# data "external" "spray" {
-#   program = ["./sprayx.sh"]
-# }
-
 output "controller_private_ips" {
-  value = [ shell_script.centosvm[0].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[0].output.ip_address ] : []
 }
 output "controller_private_dns" {
-  value = [ shell_script.centosvm[0].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[0].output.ip_address ] : []
 }
 output "gateway_private_ips" {
-  value = [ shell_script.centosvm[1].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[1].output.ip_address ] : []
 }
 output "gateway_public_ips" {
-  value = [ shell_script.centosvm[1].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[1].output.ip_address ] : []
 }
 output "gateway_private_dns" {
-  value = [ shell_script.centosvm[1].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[1].output.ip_address ] : []
 }
 output "gateway_public_dns" {
-  value = [ shell_script.centosvm[1].output.ip_address ]
+  value = var.is_runtime ? [ shell_script.centosvm[1].output.ip_address ] : []
 }
 output "worker_count" {
-  value = 2
+  value = var.worker_count
 }
 output "workers_private_ip" {
-  value = [ shell_script.centosvm[3].output.ip_address, shell_script.centosvm[4].output.ip_address ]
+  value = var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 2, var.worker_count) : []
 }
 output "gworker_count" {
   value = 0
@@ -87,11 +69,11 @@ output "gworkers_private_ip" {
   value = [ ]
 }
 output "mapr_count" {
-  value = 0
+  value = var.mapr_count
 }
 output "mapr_private_ips" {
-  value = var.is_mapr ? [ shell_script.centosvm[5].output.ip_address ] : [ ]
+  value = var.is_mapr ? var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 4, 4 + var.mapr_count) : slice(shell_script.centosvm.*.output.ip_address, 1, 1 + var.mapr_count) : []
 }
 output "ad_server_private_ip" {
-  value = shell_script.centosvm[2].output.ip_address
+  value = element(shell_script.centosvm.*.output.ip_address, var.is_runtime ? 4 : 0)
 }

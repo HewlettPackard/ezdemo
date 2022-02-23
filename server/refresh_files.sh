@@ -30,7 +30,7 @@ ansible_user=centos
 install_file=${EPIC_FILENAME}
 download_url=${EPIC_DL_URL}
 admin_password=${ADMIN_PASSWORD}
-gateway_pub_dns=$(echo ${GATW_PUB_DNS[0]})
+gateway_pub_dns=$(echo ${GATW_PUB_DNS[0]:-})
 ssh_prv_key=${SSH_PRV_KEY_PATH}
 is_mlops=${IS_MLOPS}
 is_mapr=${IS_MAPR}
@@ -45,7 +45,7 @@ k8s_version=${K8S_VERSION}
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 SSHOPT="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]}\""
+SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]:-}\""
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars
 if [[ "${1}" == "mac" ]]; then
   echo "ansible_ssh_common_args: ${SSHOPT}" > ./ansible/group_vars/all.yml
@@ -53,13 +53,12 @@ else
   echo "ansible_ssh_common_args: ${SSH_VIA_PROXY}" > ./ansible/group_vars/all.yml
 fi 
 
-# echo "Gateway at: $GATW_PUB_DNS"
 ### TODO: Move to ansible task
 SSH_CONFIG="
 Host *
   StrictHostKeyChecking no
 Host hpecp_gateway
-  Hostname $(echo ${GATW_PUB_DNS[0]})
+  Hostname $(echo ${GATW_PUB_DNS[0]:-})
   IdentityFile generated/controller.prv_key
   ServerAliveInterval 30
   User centos
@@ -75,19 +74,14 @@ Host 10.1.0.*
 [[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible, delete on destroy
 
 pushd ./generated/ > /dev/null
-  rm -rf "$(echo ${GATW_PUB_DNS[0]})"
   if [[ $IS_RUNTIME == "true" ]]; then
+    rm -rf "$(echo ${GATW_PUB_DNS[0]})"
     CTRL_DOMAINS="$(echo ${CTRL_PRV_DNS[@]} | sed 's/ /,/g'),$(echo ${CTRL_PRV_DNS%%.*})"
     CTRL_IPS="$(echo ${CTRL_PRV_IPS[@]} | sed 's/ /,/g')"
-  else
-    CTRL_DOMAINS=""
-    CTRL_IPS=""
+    ALL_DOMAINS="$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_DNS} | sed 's/ /,/g'),${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_DOMAINS},localhost"
+    ALL_IPS="$(echo ${GATW_PUB_IPS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),${CTRL_IPS},127.0.0.1"
+    minica -domains "$(echo "$ALL_DOMAINS" | sed 's/,,/,/g')" -ip-addresses "$(echo "$ALL_IPS" | sed 's/,,/,/g')"
   fi
-  ALL_DOMAINS="$(echo ${GATW_PUB_DNS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_DNS} | sed 's/ /,/g'),${GATW_PUB_DNS%%.*},${GATW_PRV_DNS%%.*},${CTRL_DOMAINS},localhost"
-  ALL_IPS="$(echo ${GATW_PUB_IPS[@]} | sed 's/ /,/g'),$(echo ${GATW_PRV_IPS[@]} | sed 's/ /,/g'),${CTRL_IPS},127.0.0.1"
-  # echo "ALL_DOMAINS=${ALL_DOMAINS}"
-  # echo "ALL_IPS=${ALL_IPS}"
-  minica -domains "$(echo "$ALL_DOMAINS" | sed 's/,,/,/g')" -ip-addresses "$(echo "$ALL_IPS" | sed 's/,,/,/g')"
 popd > /dev/null 
 
 exit 0
