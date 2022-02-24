@@ -25,7 +25,7 @@ resource "shell_script" "centosvm" {
   count = (var.is_runtime ? 5 : 1) + var.mapr_count
   lifecycle_commands {
     create = file("./create-centos.sh")
-    delete = file("./delete-centos.sh")
+    delete = file("./delete-vm.sh")
   }
 
   interpreter = ["/bin/bash", "-c"]
