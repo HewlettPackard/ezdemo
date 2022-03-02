@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+# =============================================================================
+# Copyright 2022 Hewlett Packard Enterprise
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# =============================================================================
 
 set -euo pipefail
 
@@ -53,7 +74,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
-      
+
 ---
 kind: Service
 apiVersion: v1
@@ -73,7 +94,7 @@ spec:
 
 EOF_YAML
 
-while [[ $(${KUBEATNS} get pods -l app=gitea -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do 
+while [[ $(${KUBEATNS} get pods -l app=gitea -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do
   echo "waiting for pod" && sleep 1
 done
 
@@ -85,7 +106,7 @@ echo POD=$POD
 EXTERNAL_URL=$(${KUBEATNS} get service gitea-service \
   -o 'jsonpath={..annotations.hpecp-internal-gateway/3000}')
 # echo EXTERNAL_URL=$EXTERNAL_URL
-  
+
 EXTERNAL_URL_ESC=$(echo "http://$EXTERNAL_URL" | python3 -c "import urllib.parse;print (urllib.parse.quote(input()))")
 # perl -MURI::Escape -wlne 'print uri_escape $_')
 # echo EXTERNAL_URL_ESC=$EXTERNAL_URL_ESC
@@ -111,7 +132,7 @@ ${KUBEATNS} exec $POD -- \
 
 ${KUBEATNS} exec $POD -- \
   su git -c 'rm -rf /tmp/gatekeeper-library'
-  
+
 ${KUBEATNS} exec $POD -- \
   su git -c 'gitea dump-repo --git_service github --clone_addr https://github.com/riteshja/gatekeeper-library --units issues,labels --repo_dir /tmp/gatekeeper-library'
 
@@ -143,13 +164,13 @@ stringData:
   authType: password #either of token or password. If token is selected, fill "token" field with token, otherwise "password" with password
   #token: my-github-token # fill this if authType is chosen as "token"
   password: $(echo -n pass123 | base64) # fill this if authType is chosen as "password" - base64 encoded
-  branch: master  
+  branch: master
   email: ad_user1@samdom.example.com
-  repoURL: http://$EXTERNAL_URL/ad_user1/jupyter-demo.git  
+  repoURL: http://$EXTERNAL_URL/ad_user1/jupyter-demo.git
   type: github   #either of "bitbucket" or "github"
-  username: ad_user1 
-  #proxyHostname: web-proxy.hpe.net #optional 
-  #proxyPort: "8080" #optional 
+  username: ad_user1
+  #proxyHostname: web-proxy.hpe.net #optional
+  #proxyPort: "8080" #optional
   #proxyProtocol: http #http or https (optional)
 kind: Secret
 metadata:

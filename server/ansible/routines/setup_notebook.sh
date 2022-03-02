@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+# =============================================================================
+# Copyright 2022 Hewlett Packard Enterprise
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# =============================================================================
 
 set -euo pipefail
 
@@ -59,78 +80,78 @@ echo "Launching Training Cluster"
 cat <<EOF_YAML | ${KUBEATNS} apply -f -
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata: 
+metadata:
   name: "${TRAINING_CLUSTER_NAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     description: ""
-spec: 
+spec:
   app: "training-engine"
   namingScheme: "CrNameRole"
   appCatalog: "local"
-  connections: 
-    secrets: 
+  connections:
+    secrets:
       - ${AD_USER_KC_SECRET}
       - hpecp-ext-auth-secret
-  roles: 
-    - 
+  roles:
+    -
       id: "LoadBalancer"
       members: 1
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      podLabels: 
+      podLabels:
         hpecp.hpe.com/dtap: "hadoop2"
-    - 
+    -
       id: "RESTServer"
       members: 1
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      podLabels: 
+      podLabels:
         hpecp.hpe.com/dtap: "hadoop2"
-    - 
+    -
       id: "controller"
       members: 1
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      podLabels: 
+      podLabels:
         hpecp.hpe.com/dtap: "hadoop2"
 EOF_YAML
 
 date
 echo "Waiting for Training to have state==configured"
-  
+
 COUNTER=0
-while [ $COUNTER -lt 30 ]; 
+while [ $COUNTER -lt 30 ];
 do
   STATE=$(${KUBEATNS} get kubedirectorcluster $TRAINING_CLUSTER_NAME -o 'jsonpath={.status.state}')
   echo STATE=$STATE
   [[ $STATE == "configured" ]] && break
   sleep 1m
-  let COUNTER=COUNTER+1 
+  let COUNTER=COUNTER+1
 done
 date
 
@@ -144,42 +165,42 @@ echo "Launching Jupyter Notebook as '$AD_USER_NAME' user ($AD_USER_ID)"
 cat <<EOF_YAML | ${KUBEATNS} apply -f -
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata: 
+metadata:
   name: "$NB_CLUSTER_NAME"
   namespace: "$TENANT_NS"
-  labels: 
+  labels:
     "kubedirector.hpe.com/createdBy": "$AD_USER_ID"
-spec: 
+spec:
   app: "jupyter-notebook"
   appCatalog: "local"
   connections:
     clusters:
       - $MLFLOW_CLUSTER_NAME
       - $TRAINING_CLUSTER_NAME
-    secrets: 
+    secrets:
       - hpecp-sc-secret-gitea-ad-user1-nb
       - hpecp-ext-auth-secret
       - mlflow-sc
       - $AD_USER_KC_SECRET
-  roles: 
-    - 
+  roles:
+    -
       id: "controller"
       members: 1
       serviceAccountName: "ecp-tenant-member-sa"
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-      storage: 
+      storage:
         # size: "20Gi"
         # storageClassName: "dfdemo"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      podLabels: 
+      podLabels:
         hpecp.hpe.com/dtap: "hadoop2"
 EOF_YAML
 
@@ -196,22 +217,22 @@ date
 echo "Waiting for Notebook to have state==configured"
 
 COUNTER=0
-while [ $COUNTER -lt 180 ]; 
+while [ $COUNTER -lt 180 ];
 do
   STATE=$(${KUBEATNS} get kubedirectorcluster $NB_CLUSTER_NAME -o 'jsonpath={.status.state}')
   echo STATE=$STATE
   [[ $STATE == "configured" ]] && break
   sleep 1m
-  let COUNTER=COUNTER+1 
+  let COUNTER=COUNTER+1
 done
 date
-  
+
 ###########
 # Retrieve the notebook pod
 ###########
 
 POD=$(${KUBEATNS} get pod -l kubedirector.hpe.com/kdcluster=$NB_CLUSTER_NAME -o 'jsonpath={.items..metadata.name}')
-  
+
 echo TENANT_NS=$TENANT_NS
 echo POD=$POD
 
@@ -224,29 +245,29 @@ HPECP_VERSION=$(hpecp config get --query 'objects.[bds_global_version]' --output
 if [[ "$HPECP_VERSION" == *"5.4"*  ]]; then
 
   set -x
-  
+
   SECRET_NAME=$(${KUBEATNS} get secret --field-selector type=kubernetes.io/service-account-token | grep '\-sa\-' | cut -f 1 -d' ')
   echo SECRET_NAME=$SECRET_NAME
-  
+
   # Extract and decode
   # ${KUBEATNS} get secret $SECRET_NAME -o yaml | grep " token:" | awk '{print $2}' | base64 -d > token
-  
+
   # FIXME
-  
+
   # Put the token file in your nb pod
   # kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
   #   cp token -c app \$POD:/var/run/secrets/kubernetes.io/serviceaccount/token -n $TENANT_NS
-    
+
 fi
 
-###########  
+###########
 # create home folders
 ###########
 
 TENANT_USER=ad_user1
 
 echo "Login to notebook to create home folders for ${TENANT_USER}"
-  
+
 ${KUBEATNS} exec -c app $POD -- sudo su - ${TENANT_USER}
 
 echo "Copying example files to notebook pods"
@@ -256,22 +277,22 @@ echo "Copying example files to notebook pods"
 #   BASEFILE=\$(basename \$FILE)
 #   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
 #     cp --container app \$FILE $TENANT_NS/\$POD:/home/\${TENANT_USER}/\${BASEFILE}
-    
+
 #   kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
 #     exec -c app -n $TENANT_NS \$POD -- chown ad_user1:domain\\ users /home/\${TENANT_USER}/\${BASEFILE}
-  
+
 #   if [[ "\${BASEFILE##*.}" == ".sh" ]]; then
 #     kubectl --kubeconfig <(hpecp k8scluster --id $CLUSTER_ID admin-kube-config) \
 #       exec -c app -n $TENANT_NS \$POD -- chmod +x /home/\${TENANT_USER}/\${BASEFILE}
 #   fi
 # done
-  
+
 echo "Adding pytest and nbval python libraries for testing"
 
 ${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip3 install --user --quiet --no-warn-script-location pytest nbval
 
 echo "Setup HPECP CLI as admin user"
-    
+
 ${KUBEATNS} cp --container app ~/.hpecp_tenant.conf $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
 
 ${KUBEATNS} exec -c app $POD -- chown ad_user1:root /home/${TENANT_USER}/.hpecp.conf
