@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+# =============================================================================
+# Copyright 2022 Hewlett Packard Enterprise
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# =============================================================================
 
 set -euo pipefail
 
@@ -21,12 +42,12 @@ cat <<EOF_YAML | ${KUBEATNS} apply -f -
 ---
 apiVersion: "v1"
 kind: "ConfigMap"
-metadata: 
+metadata:
   name: "${HIVECLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     kubedirector.hpe.com/cmType: "hivemetastore238"
-data: 
+data:
   mysqlDB: "false"
   mysql_host: ""
   mysql_user: ""
@@ -40,50 +61,50 @@ data:
 ---
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata: 
+metadata:
   name: "${HIVECLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     description: ""
-spec: 
+spec:
   app: "hivemetastore238"
   namingScheme: "CrNameRole"
   appCatalog: "local"
-  connections: 
-    secrets: 
+  connections:
+    secrets:
       - ${AD_USER_KC_SECRET}
-    configmaps: 
+    configmaps:
       - "${HIVECLUSTERNAME}"
-  roles: 
-    - 
+  roles:
+    -
       id: "hivemetastore"
       members: 1
       serviceAccountName: "ecp-tenant-member-sa"
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      #podLabels: 
+      #podLabels:
         #hpecp.hpe.com/dtap: "hadoop2"
 EOF_YAML
 
 date
 echo "Waiting for Hive Metastore to have state==configured"
-  
+
 COUNTER=0
-while [ $COUNTER -lt 30 ]; 
+while [ $COUNTER -lt 30 ];
 do
   STATE=$(${KUBEATNS} get kubedirectorcluster $HIVECLUSTERNAME -o 'jsonpath={.status.state}')
   echo STATE=$STATE
   [[ $STATE == "configured" ]] && break
   sleep 60
-  let COUNTER=COUNTER+1 
+  let COUNTER=COUNTER+1
 done
 date
 
@@ -95,12 +116,12 @@ cat <<EOF_YAML | ${KUBEATNS} apply -f -
 ---
 apiVersion: "v1"
 kind: "ConfigMap"
-metadata: 
+metadata:
   name: "${SPARKHSCLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     kubedirector.hpe.com/cmType: "sparkhs312"
-data: 
+data:
   eventlogstorage: "true"
   kind: "pvc"
   pvcName: ""
@@ -118,50 +139,50 @@ data:
 ---
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata: 
+metadata:
   name: "${SPARKHSCLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     description: "SparkHS"
-spec: 
+spec:
   app: "sparkhs312"
   namingScheme: "CrNameRole"
   appCatalog: "local"
-  connections: 
-    secrets: 
+  connections:
+    secrets:
       - ${AD_USER_KC_SECRET}
-    configmaps: 
+    configmaps:
       - ${SPARKHSCLUSTERNAME}
-  roles: 
-    - 
+  roles:
+    -
       id: "sparkhs312"
       members: 1
       serviceAccountName: "ecp-tenant-member-sa"
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      #podLabels: 
+      #podLabels:
         #hpecp.hpe.com/dtap: "hadoop2"
 EOF_YAML
 
 date
 echo "Waiting for Spark History Server to have state==configured"
-  
+
 COUNTER=0
-while [ $COUNTER -lt 30 ]; 
+while [ $COUNTER -lt 30 ];
 do
   STATE=$(${KUBEATNS} get kubedirectorcluster $SPARKHSCLUSTERNAME -o 'jsonpath={.status.state}')
   echo STATE=$STATE
   [[ $STATE == "configured" ]] && break
   sleep 60
-  let COUNTER=COUNTER+1 
+  let COUNTER=COUNTER+1
 done
 date
 
@@ -173,12 +194,12 @@ cat <<EOF_YAML | ${KUBEATNS} apply -f -
 ---
 apiVersion: "v1"
 kind: "ConfigMap"
-metadata: 
+metadata:
   name: "${LIVYCLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     kubedirector.hpe.com/cmType: "livy070"
-data: 
+data:
   hivesitesource: ""
   sessionrecovery: "false"
   kind: ""
@@ -195,49 +216,49 @@ data:
 ---
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata: 
+metadata:
   name: "${LIVYCLUSTERNAME}"
   namespace: "${TENANT_NS}"
-  labels: 
+  labels:
     description: "LivyServer"
-spec: 
+spec:
   app: "livy070"
   namingScheme: "CrNameRole"
   appCatalog: "local"
-  connections: 
-    secrets: 
+  connections:
+    secrets:
       - ${AD_USER_KC_SECRET}
-    configmaps: 
+    configmaps:
       - ${LIVYCLUSTERNAME}
-  roles: 
-    - 
+  roles:
+    -
       id: "livy"
       members: 1
       serviceAccountName: "ecp-tenant-member-sa"
-      resources: 
-        requests: 
+      resources:
+        requests:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
-        limits: 
+        limits:
           cpu: "2"
           memory: "8Gi"
           nvidia.com/gpu: "0"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      #podLabels: 
+      #podLabels:
         #hpecp.hpe.com/dtap: "hadoop2"
 EOF_YAML
 
 date
 echo "Waiting for Livy Server to have state==configured"
-  
+
 COUNTER=0
-while [ $COUNTER -lt 30 ]; 
+while [ $COUNTER -lt 30 ];
 do
   STATE=$(${KUBEATNS} get kubedirectorcluster $LIVYCLUSTERNAME -o 'jsonpath={.status.state}')
   echo STATE=$STATE
   [[ $STATE == "configured" ]] && break
   sleep 60
-  let COUNTER=COUNTER+1 
+  let COUNTER=COUNTER+1
 done
 date
