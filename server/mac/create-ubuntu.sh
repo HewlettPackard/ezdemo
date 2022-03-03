@@ -6,7 +6,7 @@ echo "Creating ${NAME} with ${CPU} cores and ${MEM}GB Memory, allocating ${DISKS
 
 BASEDIR=$(pwd)
 VMDIR="vms/${NAME}"
-BASEIMG="${HOME}/Downloads/ubuntu-20.04-server-cloudimg-arm64.img"
+BASEIMG="${HOME}/Downloads/ubuntu-20.04-server-cloudimg-amd64.img"
 
 [ -d "${VMDIR}" ] || mkdir -p "${VMDIR}"
 
