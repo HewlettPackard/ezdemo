@@ -92,7 +92,7 @@
     # become: yes
 
   - name: configure ecp
-    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ groups['controllers'] | first }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin ecp-demo -k no --no-local-tenant-storage --routable no
+    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ groups['controllers'] | first }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin "{{ project_id }}" -k no --no-local-tenant-storage --routable no
     when: not hpecp_installed.stat.exists
 
   - name: install python3

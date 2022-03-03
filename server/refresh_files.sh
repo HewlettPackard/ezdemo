@@ -58,9 +58,10 @@ is_mapr=${IS_MAPR}
 is_ha=${IS_HA}
 is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
-ad_realm=SAMDOM.EXAMPLE.COM
+ad_realm=${AD_REALM}
 app_version=${APP_VERSION}
 k8s_version=${K8S_VERSION}
+project_id=${PROJECT_ID}
 
 "
 
