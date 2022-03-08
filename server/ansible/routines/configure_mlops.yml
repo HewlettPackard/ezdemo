@@ -92,10 +92,16 @@
         tenant = {{ tenant_id.stdout }}
         username = {{ AD_USER_NAME }}
         password = {{ AD_USER_PASS }}
+        [tenant_admin]
+        tenant = {{ tenant_id.stdout }}
+        username = {{ AD_ADMIN_NAME }}
+        password = {{ AD_ADMIN_PASS }}
       force: yes
     vars:
       AD_USER_NAME: "ad_user1"
       AD_USER_PASS: "pass123"
+      AD_ADMIN_NAME: "ad_admin1"
+      AD_ADMIN_PASS: "pass123"
 
   - name: setup notebook
     shell: "./setup_notebook.sh '{{ kubeatns }}' '{{ mlflow_out.stdout_lines[-1] }}'"

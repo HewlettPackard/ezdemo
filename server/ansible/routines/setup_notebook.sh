@@ -48,6 +48,14 @@ ${KUBEATNS} delete secret $AD_USER_KC_SECRET || true
 # fi
 # set -e
 
+################################################################################
+# Create ad_user1 secret
+################################################################################
+
+export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
+export AD_USER_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_USER_ID-$AD_USER_NAME'.encode('utf-8')).hexdigest())")
+export AD_USER_KC_SECRET="hpecp-kc-secret-$AD_USER_SECRET_HASH"
+
 export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
 export DATA_BASE64=$(base64 -w 0 <<END
 {
@@ -70,7 +78,128 @@ END
 )
 
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
+PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+
+
+################################################################################
+# Create ad_admin1 secret
+################################################################################
+
+export AD_ADMIN_NAME=ad_admin1
+export AD_ADMIN_ID=$(hpecp user list --query "[?label.name=='$AD_ADMIN_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
+export AD_ADMIN_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_ADMIN_ID-$AD_ADMIN_NAME'.encode('utf-8')).hexdigest())")
+export AD_ADMIN_KC_SECRET="hpecp-kc-secret-$AD_ADMIN_SECRET_HASH"
+
+export AD_ADMIN_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
+export DATA_BASE64=$(base64 -w 0 <<END
+{
+  "data": {
+    "config": "$AD_ADMIN_KUBECONFIG"
+  },
+  "kind": "Secret",
+  "apiVersion": "v1",
+  "metadata": {
+    "labels": {
+      "kubedirector.hpe.com/username": "$AD_ADMIN_NAME",
+      "kubedirector.hpe.com/userid": "$AD_ADMIN_ID",
+      "kubedirector.hpe.com/secretType": "kubeconfig"
+    },
+    "namespace": "${TENANT_NS}",
+    "name": "$AD_ADMIN_KC_SECRET"
+  }
+}
+END
+)
+
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
+PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+
+################################################################################
+# Create parent git config
+################################################################################
+
+export GW=$(kubectl -n mlops-ex-demo describe service gitea-service | grep hpecp-internal-gateway/3000 | awk '{ print $2 }')
+
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
+export AD_ADMIN_ID=$(hpecp user list --query "[?label.name=='ad_admin1'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
+
+export AD_USER_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
+export DATA_BASE64=$(base64 -w 0 <<END
+{
+  "data": {
+    "type": "github",
+    "repoURL": "http://$GW/ad_user1/jupyter-demo.git",
+    "authType": "token",
+    "branch": "main",
+    "workingDirectory": "",
+    "proxyProtocol": "",
+    "proxyHostname": "",
+    "proxyPort": "",
+    "description": ""
+  },
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "namespace": "$TENANT_NS",
+    "name": "demo-repo",
+    "labels": {
+      "kubedirector.hpe.com/cmType": "source-control",
+      "createdByUser": "$AD_ADMIN_ID",
+      "createdByRole": "Admin"
+    }
+  }
+}
+END
+)
+
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
+PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+
+################################################################################
+# Create child git config
+################################################################################
+
+export GW=$(kubectl -n mlops-ex-demo describe service gitea-service | grep hpecp-internal-gateway/3000 | awk '{ print $2 }')
+
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
+export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
+
+export DATA_BASE64=$(base64 -w 0 <<END
+{
+  "data": {
+    "type": "github",
+    "repoURL": "http://$GW/ad_user1/jupyter-demo.git",
+    "authType": "token",
+    "branch": "main",
+    "workingDirectory": "",
+    "proxyProtocol": "",
+    "proxyHostname": "",
+    "proxyPort": "",
+    "username": "ad_user1",
+    "email": "ad_user1@example.com",
+    "token": "pass123",
+    "description": ""
+  },
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "namespace": "$TENANT_NS",
+    "name": "user-demo-repo",
+    "labels": {
+      "kubedirector.hpe.com/cmType": "source-control",
+      "createdByUser": "$AD_USER_ID",
+      "createdByRole": "Member",
+      "parentConfiguration": "demo-repo"
+    }
+  }
+}
+END
+)
+
+CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
 PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
+
+################################################################################
 
 ###
 ### Training Cluster
