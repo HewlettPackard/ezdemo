@@ -157,6 +157,7 @@ metadata:
     "kubedirector.hpe.com/createdBy": "$AD_USER_ID"
 spec:
   app: "jupyter-notebook"
+  namingScheme: "CrNameRole"
   appCatalog: "local"
   connections:
     clusters:
