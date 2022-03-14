@@ -10,6 +10,10 @@
   - name: drain gpu nodes
     shell: kubectl drain --ignore-daemonsets "{{ item.stdout }}"
     with_items: "{{ gnodes.results }}"
+    register: result
+    failed_when:
+      - result.rc == 1
+      - '"cordoned" not in result.stdout'
 
 - hosts: gworkers
   gather_facts: false
