@@ -12,29 +12,30 @@ provider "shell" {
 }
 
 locals {
-  dfnodes = [ for i in range(var.mapr_count) : format("df%02d", i ) ]
+  maprcount = (var.is_mapr ? var.mapr_count : 0)
+  dfnodes = [ for i in range(local.maprcount) : format("df%02d", i ) ]
   wrknodes = [ for i in range(var.worker_count) : format("wrk%02d", i) ]
-  NAMES = concat(["ct", "gw"], local.wrknodes, ["ad"], local.dfnodes)
-  CPUS = concat(["4", "2"], [ for i in range(var.mapr_count) : "8" ], ["1"], [ for i in range(var.mapr_count) : "4" ])
-  MEMS = concat(["8", "8"], [ for i in range(var.mapr_count) : "16" ], ["4"], [ for i in range(var.mapr_count) : "32" ])
-  DISKS = concat(["500", "0"], [ for i in range(var.mapr_count) : "500" ], ["0"], [ for i in range(var.mapr_count) : "100" ])
+  NAMES = concat(["ct", "gw", "ad"], local.wrknodes, local.dfnodes)
+  CPUS = concat(["4", "2", "1"], [ for i in range(var.worker_count) : "8" ], [ for i in range(local.maprcount) : "4" ])
+  MEMS = concat(["8", "8", "4"], [ for i in range(var.worker_count) : "16" ], [ for i in range(local.maprcount) : "32" ])
+  DISKS = concat(["500", "0", "0"], [ for i in range(var.worker_count) : "500" ], [ for i in range(local.maprcount) : "100" ])
 }
 
 resource "shell_script" "centosvm" {
   
-  count = (var.is_runtime ? 5 : 1) + var.mapr_count
+  count = (var.is_runtime ? var.worker_count + 3 : 1) + local.maprcount
   lifecycle_commands {
-    create = file("./create-centos.sh")
+    create = file("./create-vm.sh")
     delete = file("./delete-vm.sh")
   }
 
   interpreter = ["/bin/bash", "-c"]
 
   environment = {
-    NAME        = local.NAMES[var.is_runtime ? count.index : count.index + 3]
-    CPU         = local.CPUS[var.is_runtime ? count.index : count.index + 3]
-    MEM         = local.MEMS[var.is_runtime ? count.index : count.index + 3]
-    DISKSIZE    = local.DISKS[var.is_runtime ? count.index : count.index + 3]
+    NAME        = local.NAMES[var.is_runtime ? count.index : count.index + 2]
+    CPU         = local.CPUS[var.is_runtime ? count.index : count.index + 2]
+    MEM         = local.MEMS[var.is_runtime ? count.index : count.index + 2]
+    DISKSIZE    = local.DISKS[var.is_runtime ? count.index : count.index + 2]
   }
 }
 
@@ -60,7 +61,7 @@ output "worker_count" {
   value = var.worker_count
 }
 output "workers_private_ip" {
-  value = var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 2, var.worker_count) : []
+  value = var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 3, 3 + var.worker_count) : []
 }
 output "gworker_count" {
   value = 0
@@ -69,11 +70,11 @@ output "gworkers_private_ip" {
   value = [ ]
 }
 output "mapr_count" {
-  value = var.mapr_count
+  value = local.maprcount
 }
 output "mapr_private_ips" {
-  value = var.is_mapr ? var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 4, 4 + var.mapr_count) : slice(shell_script.centosvm.*.output.ip_address, 1, 1 + var.mapr_count) : []
+  value = var.is_mapr ? var.is_runtime ? slice(shell_script.centosvm.*.output.ip_address, 3 + var.worker_count, 3 + var.worker_count + local.maprcount) : slice(shell_script.centosvm.*.output.ip_address, 1, 1 + local.maprcount) : []
 }
 output "ad_server_private_ip" {
-  value = element(shell_script.centosvm.*.output.ip_address, var.is_runtime ? 4 : 0)
+  value = element(shell_script.centosvm.*.output.ip_address, var.is_runtime ? 2 : 0)
 }

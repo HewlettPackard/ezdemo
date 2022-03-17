@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+# =============================================================================
+# Copyright 2022 Hewlett Packard Enterprise
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+# =============================================================================
 
 set -euo pipefail
 
@@ -6,7 +27,8 @@ echo "Creating ${NAME} with ${CPU} cores and ${MEM}GB Memory, allocating ${DISKS
 
 BASEDIR=$(pwd)
 VMDIR="vms/${NAME}"
-BASEIMG="${HOME}/Downloads/ubuntu-20.04-server-cloudimg-arm64.img"
+BASEIMG="${HOME}/Downloads/CentOS-7-x86_64-GenericCloud-2009.qcow2"
+CDROM="-cdrom ci.iso"
 
 [ -d "${VMDIR}" ] || mkdir -p "${VMDIR}"
 
@@ -23,7 +45,7 @@ INIT_USER=$(eval "cat <<EOF
 preserve_hostname: False
 hostname: ${NAME}
 fqdn: ${NAME}.local
-ssh_authorized_keys: 
+ssh_authorized_keys:
   - ${SSH_PUB_KEY}
 EOF
 " 2> /dev/null)
@@ -34,11 +56,9 @@ EOF
 " 2> /dev/null)
 
 # Common options for ssd/flash drives
-# DRIVE_OPTIONS="l2-cache-size=8M,cache=none,aio=threads,discard=unmap"
 DRIVE_OPTIONS="if=none,format=qcow2,discard=unmap"
-# Randomize MAC for each VM
-OUI="52:54:00:$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/:$//')"
 IP=$(grep -s "${NAME}" hosts.out | cut -d',' -f2 || echo "")
+MAC=$(grep -s "${NAME}" hosts.out | cut -d',' -f3 || echo "")
 
 pushd "${VMDIR}" > /dev/null
   DATADISKS=""
@@ -57,32 +77,36 @@ pushd "${VMDIR}" > /dev/null
         if [ "${NAME:0:2}" == "df" ]; then
           qemu-img create -f qcow2 "${DISK4}" "${DISKSIZE}G" &> /dev/null
         fi
+    # Randomize MAC for each VM
     fi
+    MAC="52:54:00:$(openssl rand -hex 3 | sed 's/\(..\)/\1:/g; s/:$//')"
   fi
   if [[ "${DISKSIZE}" != "0" ]]; then
     DATADISKS="-drive file=${DISK2},id=disk2,${DRIVE_OPTIONS} -device scsi-hd,drive=disk2,bus=scsi0.0 -drive file=${DISK3},id=disk3,${DRIVE_OPTIONS} -device scsi-hd,drive=disk3,bus=scsi0.0"
-    if [ "${NAME}" == "df" ]; then
+    if [ "${NAME:0:2}" == "df" ]; then
       DATADISKS="${DATADISKS} -drive file=${DISK4},id=disk4,${DRIVE_OPTIONS} -device scsi-hd,drive=disk4,bus=scsi0.0"
     fi
   fi
 
-   sudo /Library/Application\ Support/com.canonical.multipass/bin/qemu-system-aarch64 \
-    -machine virt,highmem=off -accel hvf \
-    -smp "${CPU}" -cpu cortex-a72 \
+  OUI=",mac=${MAC}"
+  sudo /usr/local/bin/qemu-system-x86_64 \
+    -L /opt/homebrew/Cellar/qemu/6.2.0/share/qemu \
+    -M pc,acpi=on,graphics=off,mem-merge=off \
+    -smp "${CPU}" \
     -m "${MEM}G" \
-    -drive file="/Library/Application Support/com.canonical.multipass/bin/../Resources/qemu/edk2-aarch64-code.fd",if=pflash,format=raw,readonly=on \
-    -nic vmnet-macos,mode=shared,model=virtio-net-pci,mac=${OUI} \
+    -nic vmnet-shared,model=vmxnet3${OUI} \
     -device virtio-scsi-pci,id=scsi0 \
     -drive file="${DISK1}",id=disk1,"${DRIVE_OPTIONS}" -device scsi-hd,drive=disk1,bus=scsi0.0 \
     -drive file="${SWAP}",id=swap,format=raw,if=none -device scsi-cd,drive=swap,bus=scsi0.0 ${DATADISKS} \
-    -drive file=ci.iso,id=cd0,format=raw,if=none,readonly=on -device scsi-cd,drive=cd0,bus=scsi0.0 -display none -monitor none -daemonize -serial file:console.out # | tee console.out &
+    ${CDROM} -display none -monitor none -daemonize -serial file:console.out
+
     if [[ "${FIRST_RUN}" == "1" ]]; then
       while [ "${IP}" == "" ]; do
         sleep 2
-        IP=$(grep "| enp0s1 | True |" console.out | grep -v '/64' | cut -d'|' -f4 | tr -d ' ') || true
+        IP=$(grep "|  eth0  | True |" console.out | grep -v '/64' | cut -d'|' -f4 | tr -d ' ') || true
       done
-      echo "${NAME},${IP}" >> ${BASEDIR}/hosts.out
-      ssh-keygen -R ${IP} &> /dev/null
+      echo "${NAME},${IP},${MAC}" >> ${BASEDIR}/hosts.out
+      ssh-keygen -R ${IP} &> /dev/null || true
     fi
 popd > /dev/null
 
