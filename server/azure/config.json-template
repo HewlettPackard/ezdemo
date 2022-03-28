@@ -3,12 +3,5 @@
   "az_appId": "",
   "az_password": "",
   "az_tenant": "",
-  "admin_password": "ChangeMe!",
-  "user": "",
-  "project_id": "",
-  "is_mlops": false,
-  "is_mapr": false,
-  "is_gpu": false,
-  "is_ha": false,
   "region": ""
 }

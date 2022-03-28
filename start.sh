@@ -31,9 +31,10 @@ do
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 
-# echo "${VOLUMES[*]}"
+[[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
+
 printf -v joined ' -v %s' "${VOLUMES[@]}"
-# echo "${joined}"
+
 ## run at the background with web service exposed at 4000
 docker run --name ezdemo --pull always -d -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
 
