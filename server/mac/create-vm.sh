@@ -57,8 +57,8 @@ EOF
 
 # Common options for ssd/flash drives
 DRIVE_OPTIONS="if=none,format=qcow2,discard=unmap"
-IP=$(grep -s "${NAME}" hosts.out | cut -d',' -f2 || echo "")
-MAC=$(grep -s "${NAME}" hosts.out | cut -d',' -f3 || echo "")
+IP=$(cat "${NAME}.ip" | cut -d',' -f1 || echo "")
+MAC=$(cat "${NAME}.ip" | cut -d',' -f2 || echo "")
 
 pushd "${VMDIR}" > /dev/null
   DATADISKS=""
@@ -105,7 +105,7 @@ pushd "${VMDIR}" > /dev/null
         sleep 2
         IP=$(grep "|  eth0  | True |" console.out | grep -v '/64' | cut -d'|' -f4 | tr -d ' ') || true
       done
-      echo "${NAME},${IP},${MAC}" >> ${BASEDIR}/hosts.out
+      echo "${IP},${MAC}" >> ${BASEDIR}/${NAME}.ip
       ssh-keygen -R ${IP} &> /dev/null || true
     fi
 popd > /dev/null

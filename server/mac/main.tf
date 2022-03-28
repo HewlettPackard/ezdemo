@@ -16,8 +16,8 @@ locals {
   dfnodes = [ for i in range(local.maprcount) : format("df%02d", i ) ]
   wrknodes = [ for i in range(var.worker_count) : format("wrk%02d", i) ]
   NAMES = concat(["ct", "gw", "ad"], local.wrknodes, local.dfnodes)
-  CPUS = concat(["4", "2", "1"], [ for i in range(var.worker_count) : "8" ], [ for i in range(local.maprcount) : "4" ])
-  MEMS = concat(["8", "8", "4"], [ for i in range(var.worker_count) : "16" ], [ for i in range(local.maprcount) : "32" ])
+  CPUS = concat(["4", "2", "2"], [ for i in range(var.worker_count) : "4" ], [ for i in range(local.maprcount) : "32" ])
+  MEMS = concat(["32", "8", "8"], [ for i in range(var.worker_count) : "32" ], [ for i in range(local.maprcount) : "64" ])
   DISKS = concat(["500", "0", "0"], [ for i in range(var.worker_count) : "500" ], [ for i in range(local.maprcount) : "100" ])
 }
 

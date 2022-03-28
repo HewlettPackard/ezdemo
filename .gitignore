@@ -132,10 +132,12 @@ yarn.lock
 **/build
 .vscode/settings.json
 **/*.img
+**/mac/
 **/vms/
 **/.DS_Store
 **/run.log
 **/my.tfvars
 **/azure_config.json
 **/aws_config.json
+**/user.settings
 cr-app-hcp-ezdemo-1.0.yaml

@@ -48,8 +48,8 @@ rm -f ~/.kube/config
 
 source outputs.sh ${1}
 # If sockets are created for MCS
-([[ "${IS_MAPR}" == "true" && "${1}" != "mac" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
-([[ "${IS_MAPR}" == "true" && "${1}" != "mac" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
+([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
 rm -f generated/output.json
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini

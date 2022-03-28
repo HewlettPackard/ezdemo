@@ -29,12 +29,6 @@ if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
   exit 1
 fi
 
-if [[ "${1}" == "mac" && "$(uname -s)" != "Darwin" ]]
-then
-  echo "You should be running this on MacOS"
-  exit 1
-fi
-
 set -euo pipefail
 
 [[ -d "./generated" ]] || mkdir generated
@@ -56,6 +50,20 @@ EOF
 " 2> /dev/null)
 
    echo "$CLOUD_INIT" > ./generated/cloud-init.yaml
+fi
+
+. ./user_settings.sh
+cat > ${1}/my.tfvars <<EOF
+user = ${USER_ID}
+project_id = ${PROJECT_ID// /_}
+is_mlops = ${IS_MLOPS}
+is_mapr = ${IS_MAPR}
+is_ha = ${IS_HA}
+is_runtime = ${IS_RUNTIME}
+admin_password = ${ADMIN_PASSWORD}
+EOF
+if [[ "${IS_GPU}" == "true" ]]; then
+  echo "gworker_count = 1" >> ${1}/my.tfvars
 fi
 
 pushd "${1}" > /dev/null

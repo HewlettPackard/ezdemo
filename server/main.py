@@ -21,8 +21,8 @@ ProviderName = {
   # kvm = "KVM"
   # ovirt = "OVirt"
 }
-if (platform == "darwin"):
-  ProviderName["mac"] = "Mac"
+# if (platform == "darwin"):
+#   ProviderName["mac"] = "Mac"
 
 ## Pass environment variable to scripts, tell them they are running under web process
 web_env = os.environ.copy()
@@ -77,7 +77,7 @@ async def destroy(target: str):
 def read_providers():
     return jsonify(list(ProviderName[x] for x in ProviderName))
 
-allowed_files = ['aws/run.log', 'azure/run.log', 'mac/run.log','generated/controller.prv_key']
+allowed_files = ['aws/run.log', 'azure/run.log', 'generated/controller.prv_key']
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):

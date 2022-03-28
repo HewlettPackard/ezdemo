@@ -21,7 +21,26 @@ Terraform is used to create infrastructure resources (better aligned with cloud 
 
 Ansible is used to configure the operating system and applications, including the Ezmeral components, so it is used for Stage 3 and Stage 4.
 
-Dummy processing is possible for Stage 1 and Stage 2, as shown in ***experimental*** MacOS deployment ("mac" target). A .tf file to trigger a shell script and provide the expected output for later stages (used by refresh_files.sh in the beginning of Stage 3).
+Dummy processing is possible for Stage 1 and Stage 2. A .tf file to trigger a shell script and provide the expected output for later stages (used by refresh_files.sh in the beginning of Stage 3).
+
+```terraform
+resource "shell_script" "myshellscript" {
+  
+  count = 5
+  lifecycle_commands {
+    create = file("./create-vm.sh")
+    delete = file("./delete-vm.sh")
+  }
+
+  interpreter = ["/bin/bash", "-c"]
+
+  environment = {
+    NAME        = local.NAMES[count.index]
+    CPU         = local.CPUS[count.index]
+    MEM         = local.MEMS[count.index]
+  }
+}
+```
 
 ### User Interface
 
@@ -43,7 +62,7 @@ Port 4000 is exposed for both static pages (using javascript) and API (server) p
 
 Each deployment target is a provider, such as AWS, Azure etc.
 
-Even though this is designed to be packaged and deployed as a Linux container, it is possible to run this on any Linux and MacOS machine (including WSL and Multipass/Lima). Some providers are only possible on certain operating systems (since no remote deployment is supported for those), such as, to use "mac" as target you should be running this on a MacOS machine. Similarly to use "kvm" target you need to use a Linux machine (and not the container image). Container image is provided for convenience, as you would need to manually install required tools/utilities (such as awscli, jq, ansible etc).
+Even though this is designed to be packaged and deployed as a Linux container, it is possible to run this on any Linux and MacOS machine (including WSL and Multipass/Lima). ~~Some providers are only possible on certain operating systems (since no remote deployment is supported for those), such as, to use "mac" as target you should be running this on a MacOS machine. Similarly to use "kvm" target you need to use a Linux machine (and not the container image).~~ Container image is provided for convenience, as you would need to manually install required tools/utilities (such as awscli, jq, ansible etc).
 
 ### Add New Target
 
