@@ -38,8 +38,7 @@ pushd "${1}" > /dev/null
    TF_IN_AUTOMATION=1 terraform apply ${EZWEB_TF:-} \
       -parallelism 10 \
       -auto-approve=true \
-      -var-file=<(cat ./*.tfvars) \
-      -var="is_runtime=${IS_RUNTIME}"
+      -var-file=<(cat ./*.tfvars)
    # Save output
    TF_IN_AUTOMATION=1 terraform output -json > ../generated/output.json
 popd > /dev/null

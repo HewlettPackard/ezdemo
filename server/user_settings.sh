@@ -21,21 +21,16 @@
 # SOFTWARE.
 # =============================================================================
 
-USAGE="Usage: ${0} $(paste -s -d '|' providers)"
-
-PROVIDERS=($(<providers))
-if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
-  echo $USAGE
-  exit 1
-fi
-
 set -euo pipefail
 
-PROJECT_ID=$(jq 'if has("project_id") then .project_id else "ecp demo" end' "${1}"/config.json)
-IS_VERBOSE=$(jq 'if has("is_verbose") then .is_verbose else false end' "${1}"/config.json)
-IS_MLOPS=$(jq 'if has("is_mlops") then .is_mlops else false end' "${1}"/config.json)
-IS_MAPR=$(jq 'if has("is_mapr") then .is_mapr else false end' "${1}"/config.json)
-IS_HA=$(jq 'if has("is_ha") then .is_ha else false end' "${1}"/config.json)
-ADMIN_PASSWORD=$(jq '.admin_password' "${1}"/config.json)
+USER_ID=$(jq 'if .user == "" then "unknown user" else .user end' user.settings)
+PROJECT_ID=$(jq 'if has("project_id") then .project_id else "ecp demo" end' user.settings)
+IS_VERBOSE=$(jq 'if has("is_verbose") then .is_verbose else false end' user.settings)
+IS_RUNTIME=$(jq 'if has("is_runtime") then .is_runtime else true end' user.settings)
+IS_MLOPS=$(jq 'if has("is_mlops") then .is_mlops else false end' user.settings)
+IS_MAPR=$(jq 'if has("is_mapr") then .is_mapr else false end' user.settings)
+IS_GPU=$(jq 'if has("is_gpu") then .is_gpu else false end' user.settings)
+IS_HA=$(jq 'if has("is_ha") then .is_ha else false end' user.settings)
+ADMIN_PASSWORD=$(jq 'if has("admin_password") then .admin_password else "admin123" end' user.settings)
 
 AD_REALM="SAMDOM.EXAMPLE.COM"

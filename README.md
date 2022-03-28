@@ -2,7 +2,7 @@
 
 Automated installation for Ezmeral Container Platform and MLOps on various platforms (available on AWS and Azure) for demo purposes.
 
-You need a container runtime to run tool. It should work on any container runtime and tested on Docker. Podman doesn't work if you try to map volumes (should work fine without the mounts).
+You need a container runtime to run the tool. It should work on any container runtime and tested on Docker. Podman doesn't work if you try to map volumes (should work fine without the mounts).
 
 ## Usage
 
@@ -17,8 +17,25 @@ do
   target="${file%_*}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
+
+[[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
+
 printf -v joined ' -v %s' "${VOLUMES[@]}"
 docker run --pull always -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
+```
+
+Create your user settings in a separate file named "user.settings" in following format:
+
+```json
+{
+  "project_id": "",
+  "user": "",
+  "admin_password": "ChangeMe!",
+  "is_mlops": false,
+  "is_mapr": false,
+  "is_gpu": false,
+  "is_ha": false
+}
 ```
 
 Create "aws_config.json" or "azure_config.json" in the same folder with your settings and credentials. Template provided below:
@@ -29,13 +46,6 @@ AWS Template;
 {
   "aws_access_key": "",
   "aws_secret_key": "",
-  "project_id": "",
-  "user": "",
-  "admin_password": "ChangeMe!",
-  "is_mlops": false,
-  "is_mapr": false,
-  "is_gpu": false,
-  "is_ha": false,
   "region": ""
 }
 ```
@@ -48,13 +58,6 @@ Azure Template;
   "az_appId": "",
   "az_password": "",
   "az_tenant": "",
-  "project_id": "",
-  "user": "",
-  "admin_password": "ChangeMe!",
-  "is_mlops": false,
-  "is_mapr": false,
-  "is_gpu": false,
-  "is_ha": false,
   "region": ""
 }
 ```
@@ -71,16 +74,16 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ### Run all
 
-```./00-run_all.sh aws|azure|vmware|kvm|mac```
+```./00-run_all.sh aws|azure|vmware|kvm```
 
 ### Run Individaully
 
 At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
 
-- `./01-init.sh aws|azure|vmware|kvm|mac` **MacOS target is experimental, and has undocumented prerequisites**
-- `./02-apply.sh aws|azure|vmware|kvm|mac`
-- `./03-install.sh aws|azure|vmware|kvm|mac`
-- `./04-configure.sh aws|azure|vmware|kvm|mac`
+- `./01-init.sh aws|azure|vmware|kvm`
+- `./02-apply.sh aws|azure|vmware|kvm`
+- `./03-install.sh aws|azure|vmware|kvm`
+- `./04-configure.sh aws|azure|vmware|kvm`
 
 Deployed resources will be available in ./server/ansible/inventory.ini file
 
