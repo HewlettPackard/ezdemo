@@ -1,6 +1,6 @@
 ## Configure mapr centos hosts
 - hosts: mapr
-  gather_facts: no
+  gather_facts: yes
   tasks:
   ### FROM: https://github.com/mapr-emea/mapr-ansible/tree/master/roles
   - name: update sysctl
@@ -20,6 +20,11 @@
         line: net.ipv4.tcp_fin_timeout = 30
     become: yes
     register: sysctl
+
+  - name: update sysctl
+    shell: "sudo sysctl --system"
+    become: yes
+    when: sysctl.changed
 
   - name: get repo files
     shell: "ls /etc/yum.repos.d/CentOS-*"
@@ -62,11 +67,65 @@
       state: latest
     become: yes
 
-  - name: reboot df nodes
-    reboot: 
+  - name: update security
+    lineinfile:
+      dest: "{{ item.file }}"
+      regexp: "{{ item.regex }}"
+      line: "{{ item.line }}"
+      create: true
+    with_items:
+      - regex: ^mapr\ -\ nofile
+        line: mapr - nofile 65536
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ memlock
+        line: mapr - memlock unlimited
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ core
+        line: mapr - core unlimited
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ nice
+        line: mapr - nice -10
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ nproc
+        line: mapr - nproc 64000
+        file: /etc/security/limits.conf
+    become: yes
+    register: sysctl
+
+  - name: disable selinux
+    selinux: state=disabled
+    become: yes
+    register: selinux
+
+  - name: update hugepage
+    shell: |-
+      sudo sed -i 's/GRUB_CMDLINE_LINUX="\(.*\)"$/GRUB_CMDLINE_LINUX="\1 transparent_hugepage=never"/g' /etc/default/grub
+
+  - name: Install packages
+    package: name={{ item }} state=present
+    with_items: ['wget', 'yum-utils', 'unzip', 'openssl', 'chrony', 'rpcbind',
+                'sdparm', 'hdparm', 'redhat-lsb-core', 'lsof', 'net-tools',
+                'curl', 'sudo', 'syslinux', 'perl', 'gnupg2', 'vim',
+                'java-11-openjdk-devel', 'python2'
+                ]
+    become: yes
+
+  - name: Start the services
+    service: name="{{ item }}" state=started enabled=yes
+    with_items: ['rpcbind', 'chronyd']
+    become: yes
+
+  - name: copy private key
+    copy:
+      src: "../../generated/controller.prv_key"
+      dest: "~/controller.prv_key"
+      mode: 0600
+
+  - name: reboot mapr nodes
+    reboot:
       reboot_timeout: 300
       connect_timeout: 5
       pre_reboot_delay: 0
       post_reboot_delay: 30
-    become: yes
-    when: sysctl.changed
+    when: selinux.reboot_required
+    become: True

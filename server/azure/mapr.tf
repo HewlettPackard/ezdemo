@@ -45,8 +45,8 @@ resource "azurerm_linux_virtual_machine" "mapr" {
 /********** Data Disks **********/
 
 locals {
-  maprdisks_count_map = { for k in toset(azurerm_linux_virtual_machine.mapr.*.name) : k => 3 } // 2 disks per VM
-  maprluns                      = { for k in local.maprdisk_lun_map : k.datadisk_name => k.lun }
+  maprdisks_count_map = { for k in toset(azurerm_linux_virtual_machine.mapr.*.name) : k => 2 } // 1 disks per VM
+  maprluns            = { for k in local.maprdisk_lun_map : k.datadisk_name => k.lun }
   maprdisk_lun_map = flatten([
     for vm_name, count in local.maprdisks_count_map : [
       for i in range(count) : {
@@ -63,7 +63,7 @@ resource "azurerm_managed_disk" "maprdatadisk" {
   location             = azurerm_resource_group.resourcegroup.location
   resource_group_name  = azurerm_resource_group.resourcegroup.name
   create_option        = "Empty"
-  disk_size_gb         = 500
+  disk_size_gb         = 100
   storage_account_type = "Standard_LRS"
 }
 resource "azurerm_virtual_machine_data_disk_attachment" "maprdatadisk-attach" {
