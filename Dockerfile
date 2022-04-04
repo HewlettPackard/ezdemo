@@ -31,6 +31,7 @@ COPY server /app/server
 WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 3000
 EXPOSE 4000
 EXPOSE 8443
 EXPOSE 9443
