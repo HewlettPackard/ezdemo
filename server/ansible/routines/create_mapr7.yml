@@ -227,10 +227,16 @@
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
+  - name: copy the license if exists
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0600" owner="root"
+    become: yes
+    ignore_errors: yes
+
   - name: install mapr license
     shell: >
-      echo "YOU NEED TO OBTAIN A LICENSE"
-      echo "AND APPLY USING maprcli license add -license license.dat -is_file true"
+      [[ -f "/tmp/LatestDemoLicense-M7.txt" ]] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+      [[ ! -f "/tmp/LatestDemoLicense-M7.txt" ]] && echo "YOU NEED TO OBTAIN A LICENSE"
+    become: yes
 
 - hosts: localhost
   tasks:
