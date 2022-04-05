@@ -45,7 +45,7 @@ resource "azurerm_linux_virtual_machine" "mapr" {
 /********** Data Disks **********/
 
 locals {
-  maprdisks_count_map = { for k in toset(azurerm_linux_virtual_machine.mapr.*.name) : k => 2 } // 1 disks per VM
+  maprdisks_count_map = { for k in toset(azurerm_linux_virtual_machine.mapr.*.name) : k => 1 } // 1 disks per VM
   maprluns            = { for k in local.maprdisk_lun_map : k.datadisk_name => k.lun }
   maprdisk_lun_map = flatten([
     for vm_name, count in local.maprdisks_count_map : [

@@ -34,7 +34,7 @@
   - set_fact:
       mapr_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
 
-  - shell: "fdisk -l | grep '500 GiB' | cut -d' ' -f2 | tr -d ':'"
+  - shell: "fdisk -l | grep '100 GiB' | cut -d' ' -f2 | tr -d ':'"
     register: mapr_disks
     become: yes 
 
@@ -84,11 +84,6 @@
       line: "{{ item }}"
       create: true
     with_items: "{{ mapr_disks.stdout_lines }}"
-
-  # Configure secure cluster
-  - name: Enable custom security by creating /opt/mapr/conf/.customSecure
-    file: path=/opt/mapr/conf/.customSecure state=touch mode='0644'
-    become: yes
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   vars:
@@ -229,6 +224,13 @@
   - name: Configure.sh secure on other nodes
     shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts | join(',') }} -C {{ mapr_hosts | join(':7222,') }}:7222 -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
+
+- hosts: "{{ groups['mapr'] | first | default([]) }}"
+  tasks:
+  - name: install mapr license
+    shell: >
+      echo "YOU NEED TO OBTAIN A LICENSE"
+      echo "AND APPLY USING maprcli license add -license license.dat -is_file true"
 
 - hosts: localhost
   tasks:
