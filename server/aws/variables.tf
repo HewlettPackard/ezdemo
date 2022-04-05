@@ -21,7 +21,7 @@ variable "gpu_instance_type" { default = "g4dn.4xlarge" } ## 16c 64GB 1T4
 # variable "gpu_instance_type" { default = "p3.2xlarge" } ## 8c 61GB 1v100
 # variable "gpu_instance_type" { default = "p4d.24xlarge" } ## 96c 1152GB 8a100
 
-variable "mapr_count" { default = 3 }
+variable "mapr_count" { default = 5 }
 variable "mapr_instance_type" { default = "m4.4xlarge" } 
 
 # c5.8xlarge (32c64)

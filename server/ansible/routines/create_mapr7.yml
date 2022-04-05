@@ -145,7 +145,7 @@
     register: cldb_key_status
   - name: Configure.sh to generate keys only run on first mapr-cldb node
     shell: |-
-      /opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts | join(',') }} -C {{ mapr_hosts | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
+      /opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
     when: not cldb_key_status.stat.exists
     become: yes
 
@@ -216,27 +216,36 @@
     copy: src="/tmp/maprkeys/{{ item.filename }}" dest="/opt/mapr/conf/{{ item.filename }}" mode="{{ item.mode }}" owner="mapr" group="mapr"
     with_items: "{{ secure_files }}"
     become: yes
+    register: secure_files_copied
 
   - name: restore tokens for dare
     shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz"
     become: yes
-  # run configure on other nodes
+  # run configure on other nodes if it is a fresh installation
+  - set_fact:
+      fresh_cluster: "{{ secure_files_copied.results | json_query(jmespath) }}"
+    vars:
+      jmespath: "[?item.filename == 'maprkeycreds.jceks'].changed"
   - name: Configure.sh secure on other nodes
-    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts | join(',') }} -C {{ mapr_hosts | join(':7222,') }}:7222 -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
+    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
+    when: fresh_cluster | bool
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
-  - name: copy the license if exists
+  - name: copy the license
     copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0600" owner="root"
     become: yes
     ignore_errors: yes
 
   - name: install mapr license
-    shell: >
-      [[ -f "/tmp/LatestDemoLicense-M7.txt" ]] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    shell: |-
+      [[ -f "/tmp/LatestDemoLicense-M7.txt" ]] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
       [[ ! -f "/tmp/LatestDemoLicense-M7.txt" ]] && echo "YOU NEED TO OBTAIN A LICENSE"
     become: yes
+    ignore_errors: yes
+
+### TODO: Install & enable services
 
 - hosts: localhost
   tasks:

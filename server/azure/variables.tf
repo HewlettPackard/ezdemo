@@ -39,7 +39,7 @@ variable "wkr_instance_type" { default = "Standard_B16ms" } ## 16c 64GB
 # variable "wkr_instance_type" { default = "Standard_A8m_v2" } ## 8c 64GB
 variable "ad_instance_type" { default = "Standard_B1ms" } ## 1c 2GB
 
-variable "mapr_count" { default = 3 }
+variable "mapr_count" { default = 5 }
 variable "mapr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 # variable "mapr_instance_type" { default = "Standard_A4m_v2" } ## 4c 32GB
 
