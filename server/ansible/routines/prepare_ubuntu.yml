@@ -1,16 +1,12 @@
 ## Configure mapr ubuntu hosts
 - hosts: "{{ groups['mapr'] }}"
-
   tasks:
-  # - shell: "echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections"
-  - name: Prepare Ubuntu nodes for MapR Installation
-    shell: "update-locale LC_ALL=en_US.utf8"
-    become: yes
-  - shell: "echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag"
-  - lineinfile:
+
+  - name: update sysctl
+    lineinfile:
       dest: /etc/sysctl.conf
-      regexp: "{{item.regex}}"
-      line: "{{item.line}}"
+      regexp: "{{ item.regex }}"
+      line: "{{ item.line }}"
       create: true
     with_items:
       - regex: ^vm\.swappiness
@@ -22,117 +18,102 @@
       - regex: ^net\.ipv4\.tcp_fin_timeout
         line: net.ipv4.tcp_fin_timeout = 30
     become: yes
+    register: sysctl
+
+  - name: update sysctl
+    shell: "sudo sysctl --system"
+    become: yes
+    when: sysctl.changed
+
   - lineinfile:
       path: /etc/hosts
       regexp: 'ip6-|IPv6|::1|127.0.1.1'
       state: absent
-    become: yes 
-  - lineinfile:
-      path: /etc/ssh/sshd_config
-      regexp: '^PasswordAuthentication'
-      line: "PasswordAuthentication yes"
     become: yes
-  - apt: 
+
+  - name: Import key
+    shell: wget -O - https://package.mapr.hpe.com/releases/pub/maprgpg.key | apt-key add -
+    become: yes
+
+  - name: Create MapR Repository
+    lineinfile:
+      path: /etc/apt/sources.list
+      line: deb https://package.mapr.hpe.com/releases/v7.0.0/ubuntu/ binary bionic
+      create: yes
+    become: yes
+
+  - name: Create MapR EEP Repository
+    lineinfile:
+      path: /etc/apt/sources.list
+      line: deb https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/ubuntu/ binary bionic
+      create: yes
+    become: yes
+
+  - name: update packages
+    apt:
       name: "*"
       state: latest
+      update_cache: yes
     become: yes
-  - copy:
-      dest: /usr/share/pam-configs/mkhomedir
-      content: |-
-        Name: activate mkhomedir
-        Default: yes
-        Priority: 900
-        Session-Type: Additional
-        Session:
-                required                        pam_mkhomedir.so umask=0022 skel=/etc/skel
-    become: yes 
-  - name: enable universe
-    shell: "add-apt-repository universe && apt update"
+
+  - name: update security
+    lineinfile:
+      dest: "{{ item.file }}"
+      regexp: "{{ item.regex }}"
+      line: "{{ item.line }}"
+      create: true
+    with_items:
+      - regex: ^mapr\ -\ nofile
+        line: mapr - nofile 65536
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ memlock
+        line: mapr - memlock unlimited
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ core
+        line: mapr - core unlimited
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ nice
+        line: mapr - nice -10
+        file: /etc/security/limits.conf
+      - regex: ^mapr\ -\ nproc
+        line: mapr - nproc 64000
+        file: /etc/security/limits.conf
     become: yes
-  - name: install sssd
-    apt: 
-      name: "{{ pkg_list.split() }}"
-      state: latest
-    vars:
-      # pkg_list: "realmd libnss-sss libpam-sss sssd sssd-tools adcli samba-common-bin oddjob oddjob-mkhomedir packagekit"
-      pkg_list: "sssd-ad sssd-tools realmd adcli"
+    register: sysctl
+
+  - name: update hugepage ## TODO: should skip if already exist
+    lineinfile:
+      path: /etc/default/grub
+      regexp: '(GRUB_CMDLINE_LINUX=.*)"'
+      line: '\1 transparent_hugepage=never"'
+      backrefs: yes
+      state: present
     become: yes
-    register: sssd_install
-  # - name: Configure sssd.conf
-  #   copy: 
-  #     dest: /etc/sssd/sssd.conf 
-  #     content: |-
-  #       [sssd]
-  #       config_file_version = 2
-  #       domains = {{ ad_realm }}
-  #       services = nss, pam, ssh
-  #       [domain/{{ ad_realm }}]
-  #       id_provider = ad
-  #       auth_provider = ad
-  #       access_provider = ad
-  #       chpass_provider = ad
-  #       ldap_id_mapping = true
-  #       use_fully_qualified_names = false
-  #       ldap_schema = rfc2307bis
-  #       ad_server = {{ groups['ad_server'] | first }}
-  #       krb5_realm = {{ ad_realm }}
-  #       # no dynamic dns update
-  #       dyndns_update = false
-  #       dyndns_refresh_interval = 43200
-  #       dyndns_update_ptr = false
-  #       dyndns_ttl = 3600
-  #       ad_enable_gc = true
-  #       ldap_sasl_mech = GSSAPI
-  #       ldap_krb5_keytab = /etc/krb5.keytab
-  #       ldap_krb5_init_creds = true
-  #       ad_gpo_access_control = disabled
-  #       override_homedir = /home/%u
-  #       override_shell = /bin/bash
-  #       # Users and groups are not enumerated to reduce trafic
-  #       enumerate = false
-  #       ldap_access_order = expire
-  #       ldap_account_expire_policy = ad
-  #       ldap_force_upper_case_realm = true
-  #       case_sensitive = false
-  #       ldap_referrals = false
-  #       simple_allow_groups = Domain Users
-  #       # perf
-  #       cache_credentials = true
-  #     mode: 0600
-  #     owner: root
-  #     group: root
-  #   become: yes
-  - file: 
-      path: /etc/samba
-      state: directory
-      mode: 0755
+    register: grub_changed
+
+  - name: Rebuild grub
+    command: update-grub
+    when: grub_changed.changed
     become: yes
-  # - name: Configure smb.conf
-  #   copy: dest=/etc/samba/smb.conf content={{ smb_file }}
-  #   vars:
-  #     mapr_workgroup: "SAMDOM"
-  #     smb_file: |-
-  #       [global]
-  #       security = ads
-  #       workgroup = {{ mapr_workgroup }}
-  #       realm = {{ ad_realm }}
-  #       kerberos method = secrets and keytab
-  #       passdb backend = tdbsam
-  #       unix extensions = yes
-  #       client signing = yes
-  #       client use spnego = yes
-  #   become: yes
-  - reboot: 
+
+  - name: Install prerequisites
+    package: name="syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
+    become: yes
+
+  - name: Enable the rpcbind service
+    service: name=rpcbind enabled=yes
+    become: yes
+
+  - name: copy private key
+    copy:
+      src: "../../generated/controller.prv_key"
+      dest: "~/controller.prv_key"
+      mode: 0600
+
+  - name: reboot mapr nodes
+    reboot:
       reboot_timeout: 300
       connect_timeout: 5
       pre_reboot_delay: 0
       post_reboot_delay: 30
-    when: sssd_install.changed
-    become: yes
-  # - shell: |-
-  #     pam-auth-update --enable mkhomedir
-  #     realm --install=/ discover {{ ad_realm }}
-  #     # echo '5ambaPwd@' | sudo realm --install=/ join --unattended -U Administrator {{ ad_realm }}
-  #     # sudo realm permit -g 'Domain Users' || true
-  #     # echo 'debconf debconf/frontend select Dialog' | sudo debconf-set-selections
-  #   become: yes 
+    become: True

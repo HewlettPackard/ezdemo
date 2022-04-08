@@ -18,18 +18,17 @@
 
     - name: Install ad_auth required tools for RedHat/CentOS 7
       package: 
-        name: sssd,realmd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,krb5-workstation,openldap-clients,policycoreutils-python
+        name: sssd,realmd,oddjob,oddjob-mkhomedir,adcli,samba-common,samba-common-tools,krb5-workstation,openldap-clients,policycoreutils-python,python3-pip
         state: present 
       when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7'
       become: yes
 
-    - name: Install Python pip
-      ignore_errors: yes
-      yum:
-        name: python-pip
-        state: latest
+    - name: Install ad_auth required tools for Ubuntu 2004
+      package: 
+        name: sssd,realmd,oddjob,oddjob-mkhomedir,adcli,samba-common,krb5-user,openldap-utils,policycoreutils-python-utils,python3-pip
+        state: present 
+      when: ansible_facts['os_family'] == 'Debian'
       become: yes
-      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7'
 
     - name: configure sssd
       copy: dest=/etc/sssd/sssd.conf content={{ sssd_file }} mode=0600
@@ -103,7 +102,7 @@
 
           [session_recording]
 
-    - shell: /usr/bin/authselect select sssd with-mkhomedir --force
+    - shell: pam-auth-update --enable mkhomedir
       become: yes
 
     - service: name=oddjobd state=restarted enabled=yes
@@ -111,114 +110,3 @@
 
     - service: name=sssd state=restarted enabled=yes
       become: yes
-
-    ### This is used since no DNS resolution for AD server/domain is available in cloud providers
-    # - name: configure krb5
-    #   lineinfile:
-    #     path: /etc/krb5.conf
-    #     regexp: "{{ item.regex }}"
-    #     line: "{{ item.line }}"
-    #     create: true
-    #   with_items:
-    #     - regex: ^#(\s.*)default_realm =
-    #       line: "    default_realm = {{ ad_realm }}"
-    #     - regex: ^# EXAMPLE.COM
-    #       line: "{{ ad_realm }} = {"
-    #     - regex: ^#     kdc = kerberos.example.com
-    #       line: "     kdc = {{ groups['ad_server'] | first }}"
-    #     - regex: ^#     admin_server = kerberos.example.com
-    #       line: "     admin_server = {{ groups['ad_server'] | first }}"
-    #     - regex: ^# .example.com = 
-    #       line: ".{{ ad_realm | lower }} = {{ ad_realm }}"
-    #     - regex: ^# example.com = 
-    #       line: "{{ ad_realm | lower }} = {{ ad_realm }}"
-    #   become: yes
-
-    # - name: restart sssd
-    #   service:
-    #     name: sssd
-    #     state: restarted
-    #   become: yes
-
-    # - name: Check if machine is bound
-    #   shell: realm discover "{{ ad_realm }}" | grep configured
-    #   register: realmd_bound
-
-    # - name: Join system to AD and put the computer object in the Linux OU
-    #   ignore_errors: yes
-    #   expect:
-    #     command: /bin/bash -c "/usr/sbin/realm join {{ ad_domain }} --user={{ ad_username }}"
-    #     responses:
-    #       Password for *: "{{ ad_password }}"
-    #   when: '"configured: no" in realmd_bound.stdout'
-    #   become: yes
-
-
-    # - name: configure samba
-    #   copy: dest=/etc/samba/smb.conf content={{ smb_file }}
-    #   vars:
-    #     smb_file: |-
-    #       [global]
-    #       security = ads
-    #       workgroup = {{ ad_realm.split('.')[0] }}
-    #       realm = {{ ad_realm }}
-    #       kerberos method = secrets and keytab
-    #       passdb backend = tdbsam
-    #       unix extensions = yes
-    #       client signing = yes
-    #       client use spnego = yes
-
-    #   become: yes
-
-    # - shell: echo '5ambaPwd@' | sudo realm join {{ ad_realm }} -U Administrator
-    #   register: ret
-    #   failed_when: 
-    #     - ret.rc == 1
-    #     - '"Already joined to this domain" not in ret.stderr'
-
-    # - service: name=oddjobd state=restarted enabled=yes
-    #   become: yes 
-
-
-    # - name: Add default_domain_suffix to sssd.conf
-    #   lineinfile: 
-    #     dest: /etc/sssd/sssd.conf
-    #     line: 'default_domain_suffix = "{{ ad_domain }}"'
-    #     insertafter: '^\[sssd\]'
-    #   notify:
-    #     - restart sssd
-    #   when: '"configured: no" in realmd_bound.stdout'
-
-    # - name: disable use_fully_qualified_names, so the user can login without adding the domain
-    #   community.general.ini_file:
-    #     path: /etc/sssd/sssd.conf
-    #     section: 'domain/{{ ad_domain }}'
-    #     option: use_fully_qualified_names
-    #     value: False
-
-    # - name: Restrict access based on specific ad group
-    #   ignore_errors: yes
-    #   command: /bin/bash -c "/usr/sbin/realm permit -g {{ ad_group }}"
-    #   when: '"configured: no" in realmd_bound.stdout'
-
-    # - name: Add ad group to sudoers
-    #   lineinfile:
-    #     dest: /etc/sudoers
-    #     line: '%{{ ad_group }}       ALL=(ALL)       NOPASSWD: ALL'
-    #     insertafter: '^%wheel'
-    #   when: '"configured: no" in realmd_bound.stdout'
-
-    # - name: login as user
-    #   ignore_errors: yes
-    #   expect:
-    #     command: /bin/bash -c "ssh -o StrictHostKeyChecking=no dderichswei@demo.local@localhost"
-    #     responses:
-    #       (?i)password: "{{ ad_password }}"
-      
-    # - name: exchange public ssh key with target - user dderichswei
-    #   ignore_errors: yes
-    #   authorized_key:
-    #     user: dderichswei@demo.local
-    #     state: present
-    #     manage_dir: yes
-    #     key: "{{ lookup('file', '/home/dderichswei/ddlnx/ansible/dd-id_rsa.pub') }}"

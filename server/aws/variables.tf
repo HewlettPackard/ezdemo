@@ -9,8 +9,6 @@ variable "is_ha" { default = false }
 variable "region" { default = "eu-west-2" }
 variable "az" { default = "eu-west-2a" }
 
-# variable "centos8_ami" { default = "ami-05cc99c0a1894da6e" }
-
 variable "gtw_instance_type" { default = "m5.xlarge" } ## 4c16
 variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 

@@ -14,6 +14,7 @@
 ### Install AD
 - name: Install AD server
   import_playbook: routines/install_ad.yml
+  when: install_ad | bool
 
 ######################################################################################################
 # INSTALL FALCO (for workers)
@@ -54,7 +55,8 @@
 # INSTALL MAPR (only for External Data Fabric)
 ######################################################################################################
 - name: Prepare MapR Hosts
-  import_playbook: routines/prepare_centos_mapr.yml
+  # import_playbook: routines/prepare_centos_mapr.yml
+  import_playbook: routines/prepare_ubuntu.yml
   when: is_mapr | bool
 
 - name: Join MapR hosts to AD

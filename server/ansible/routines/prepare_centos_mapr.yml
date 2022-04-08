@@ -58,6 +58,29 @@
     when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
     become: yes
 
+  # MapR Repository for RedHat / CentOS
+  - name: Import RPM key
+    rpm_key: state=present key="https://package.mapr.hpe.com/releases/pub/maprgpg.key"
+    become: yes
+  - name: Create MapR Releases Repository
+    yum_repository:
+      name: maprtech
+      description: MapR Technologies
+      file: external_repos
+      baseurl: "https://package.mapr.hpe.com/releases/v7.0.0/redhat/"
+      gpgcheck: true
+      gpgkey: "https://package.mapr.hpe.com/releases/pub/maprgpg.key"
+    become: yes
+  - name: Create MapR Ecosystem Repository
+    yum_repository:
+      name: maprecosystem
+      description: MapR Technologies
+      file: external_repos
+      baseurl: "https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/redhat/"
+      gpgcheck: true
+      gpgkey: "https://package.mapr.hpe.com/releases/pub/maprgpg.key"
+    become: yes
+
   - name: install python3
     package:
       name: 
@@ -103,10 +126,9 @@
 
   - name: Install packages
     package: name={{ item }} state=present
-    with_items: ['wget', 'yum-utils', 'unzip', 'openssl', 'chrony', 'rpcbind',
-                'sdparm', 'hdparm', 'redhat-lsb-core', 'lsof', 'net-tools',
-                'curl', 'sudo', 'syslinux', 'perl', 'gnupg2', 'vim',
-                'java-11-openjdk-devel', 'python2'
+    with_items: ['wget', 'unzip', 'sdparm', 'redhat-lsb-core', 'lsof',
+                'syslinux', 'perl', 'python2', 'vim',
+                'java-11-openjdk-devel'
                 ]
     become: yes
 

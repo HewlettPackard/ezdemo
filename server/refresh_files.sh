@@ -45,6 +45,8 @@ $(echo ${GWRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 ${AD_PRV_IP}
 [mapr]
 $(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
+[mapr:vars]
+ansible_user=ubuntu
 [all:vars]
 ansible_connection=ssh
 ansible_user=centos
@@ -58,6 +60,7 @@ is_mapr=${IS_MAPR}
 is_ha=${IS_HA}
 is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
+install_ad=${INSTALL_AD}
 ad_realm=${AD_REALM}
 app_version=${APP_VERSION}
 k8s_version=${K8S_VERSION}

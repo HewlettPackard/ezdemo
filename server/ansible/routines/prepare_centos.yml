@@ -1,4 +1,4 @@
-- hosts: all
+- hosts: all:!mapr
   tasks:
   - name: configure yum for ipv4
     lineinfile:
@@ -43,7 +43,7 @@
     when: selinux.reboot_required or package.changed
     become: True
 
-- hosts: all:!gateway
+- hosts: all:!gateway:!mapr
   gather_facts: False
   tasks:
   - name: reboot others

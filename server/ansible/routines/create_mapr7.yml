@@ -21,7 +21,6 @@
       update_password: on_create
       state: present
       append: true
-  #   groups=mapr,root,wheel  
     become: yes
     vars: # password is mapr
       mapr_password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0"
@@ -38,45 +37,28 @@
     register: mapr_disks
     become: yes 
 
-  # RedHat / CentOS
-  - name: Import RPM key
-    rpm_key: state=present key="https://package.mapr.hpe.com/releases/pub/maprgpg.key"
-    become: yes
-  - name: Create MapR Releases Repository
-    yum_repository:
-      name: maprtech
-      description: MapR Technologies
-      file: external_repos
-      baseurl: "https://package.mapr.hpe.com/releases/v7.0.0/redhat/"
-      gpgcheck: true
-      gpgkey: "https://package.mapr.hpe.com/releases/pub/maprgpg.key"
-    become: yes
-  - name: Create MapR Ecosystem Repository
-    yum_repository:
-      name: maprecosystem
-      description: MapR Technologies
-      file: external_repos
-      baseurl: "https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/redhat/"
-      gpgcheck: true
-      gpgkey: "https://package.mapr.hpe.com/releases/pub/maprgpg.key"
-    become: yes
+  - name: check fresh cluster
+    shell: '[ -f /opt/mapr/conf/disktab ] && grep -q "{{ mapr_disks.stdout_lines | first }}" /opt/mapr/conf/disktab'
+    register: cluster_configured
 
-  - name: install mapr
-    package: name="{{ item }}" state=present
-    with_items: ['mapr-librdkafka',
+  - name: install mapr packages
+    package: name="{{ packages | join(',') }}" state=present
+    vars:
+      packages: ['mapr-librdkafka',
                   'mapr-hadoop-util',
                   'mapr-client',
                   'mapr-fileserver',
-                  'mapr-cldb',
-                  'mapr-zookeeper',
+                  'mapr-s3server',
                   'mapr-mastgateway',
                   'mapr-nfs',
                   'mapr-webserver',
-                  'mapr-apiserver',
                   'mapr-gateway',
-                  'mapr-drill'
+                  'mapr-spark',
+                  'mapr-spark-historyserver',
+                  'mapr-spark-thriftserver'
                   ]
     become: yes
+    when: cluster_configured.failed | bool
 
   - name: populate /tmp/disks.txt
     lineinfile:
@@ -84,6 +66,18 @@
       line: "{{ item }}"
       create: true
     with_items: "{{ mapr_disks.stdout_lines }}"
+    when: cluster_configured.failed | bool
+
+- hosts: "{{ groups['mapr'][:3] | default([]) }}"
+  tasks:
+  - name: install cldb and zk
+    package: name="{{ item }}" state=present
+    with_items: [
+      'mapr-cldb',
+      'mapr-zookeeper'
+    ]
+    become: yes
+    when: cluster_configured.failed | bool
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   vars:
@@ -136,28 +130,33 @@
           mode: '0444'
         - filename: ssl_usertruststore.pem
           mode: '0444'
+        - filename: ca/chain-ca.pem
+          mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
 
   tasks:
-  - name: Check if /opt/mapr/conf/maprkeycreds.jceks exists
-    stat: path=/opt/mapr/conf/maprkeycreds.jceks
-    register: cldb_key_status
-  - name: Configure.sh to generate keys only run on first mapr-cldb node
+  # - name: Check if /opt/mapr/conf/maprkeycreds.jceks exists
+  #   stat: path=/opt/mapr/conf/maprkeycreds.jceks
+  #   register: cldb_key_status
+  - name: Configure.sh to generate keys on first mapr-cldb node only
     shell: |-
       /opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
-    when: not cldb_key_status.stat.exists
+    # when: not cldb_key_status.stat.exists
+    when: cluster_configured.failed | bool
     become: yes
 
   - name: pack tokens
     shell: "cd /opt/mapr/conf && tar czvf tokens.tgz tokens"
     become: yes
+    when: cluster_configured.failed | bool
 
   - name: save keys from first node
     fetch: src="/opt/mapr/conf/{{ item.filename }}" dest="/tmp/maprkeys/" flat=yes
     with_items: "{{ secure_files }}"
     become: yes
-
+    when: cluster_configured.failed | bool
+  
 - hosts: "{{ groups['mapr'][1:] | default([]) }}"
   vars:
     secure_files: 
@@ -209,6 +208,8 @@
           mode: '0444'
         - filename: ssl_usertruststore.pem
           mode: '0444'
+        - filename: chain-ca.pem
+          mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
   tasks:
@@ -216,36 +217,75 @@
     copy: src="/tmp/maprkeys/{{ item.filename }}" dest="/opt/mapr/conf/{{ item.filename }}" mode="{{ item.mode }}" owner="mapr" group="mapr"
     with_items: "{{ secure_files }}"
     become: yes
-    register: secure_files_copied
+    when: cluster_configured.failed | bool
 
   - name: restore tokens for dare
-    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz"
+    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz; mkdir ca; mv chain-ca.pem ca/"
     become: yes
-  # run configure on other nodes if it is a fresh installation
-  - set_fact:
-      fresh_cluster: "{{ secure_files_copied.results | json_query(jmespath) }}"
-    vars:
-      jmespath: "[?item.filename == 'maprkeycreds.jceks'].changed"
+    when: cluster_configured.failed | bool
+
+  - package: name="mapr-collectd, mapr-grafana, mapr-fluentd, mapr-elasticsearch" state=present
+    become: yes
+    when: cluster_configured.failed | bool
+
+  - name: install ecosystem components
+    package: name="{{ packages | join(',') }}" state=present
+    vars: 
+      packages: [
+        'mapr-kafka', 'mapr-livy', 'mapr-drill',
+        'mapr-hive', 'mapr-hiveserver2', 'mapr-hivemetastore', 'mapr-hivewebhcat',
+        'mapr-ksql','mapr-schema-registry', 'mapr-kafka-rest',
+        'mapr-kafka-connect-jdbc',  'mapr-kafka-connect-hdfs',
+        'mapr-airflow', 'mapr-airflow-webserver', 'mapr-airflow-scheduler'
+      ]
+    become: yes
+    when: cluster_configured.failed | bool
+
   - name: Configure.sh secure on other nodes
-    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
+    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
+    when: cluster_configured.failed | bool
     become: yes
-    when: fresh_cluster | bool
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
+  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana" state=present # metrics monitoring
+    become: yes
+    when: cluster_configured.failed | bool
   - name: copy the license
-    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0600" owner="root"
-    become: yes
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644" owner="root"
     ignore_errors: yes
-
+    when: cluster_configured.failed | bool
   - name: install mapr license
-    shell: |-
-      [[ -f "/tmp/LatestDemoLicense-M7.txt" ]] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-      [[ ! -f "/tmp/LatestDemoLicense-M7.txt" ]] && echo "YOU NEED TO OBTAIN A LICENSE"
+    shell: |
+      [ -f /tmp/LatestDemoLicense-M71.txt ] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    when: cluster_configured.failed | bool
+  - name: re-run configure.sh
+    shell: /opt/mapr/server/configure.sh -R -ES {{ mapr_hosts[1:] | join(',') }}
     become: yes
-    ignore_errors: yes
-
-### TODO: Install & enable services
+  - name: configure spark
+    shell: |
+      echo mapr | maprlogin password -user mapr
+      hadoop fs -mkdir /apps/spark
+      hadoop fs -chmod 777 /apps/spark
+  - name: configure delta - not final
+    shell: |
+      wget https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.1.0/delta-core_2.12-1.1.0.jar
+      # /opt/mapr/spark/spark-3.2.0/bin/spark-shell --jars ~/delta-core_2.12-1.1.0.jar \
+      #   --conf "spark.sql.extensions": io.delta.sql.DeltaSparkSessionExtension \
+      #   --conf "spark.sql.catalog.spark_catalog": org.apache.spark.sql.delta.catalog.DeltaCatalog
+      pip install pyspark==3.1.2
+      pip install importlib-metadata
+      pip install delta_spark
+      # pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    become: yes
+  - name: configure s3
+    shell: |
+      mkdir -p /home/mapr/.mc/certs/CAs
+      ln -s /opt/mapr/conf/ca/chain-ca.pem /home/mapr/.mc/certs/CAs/chain-ca.pem || true
+      chown -R mapr:mapr /home/mapr/.mc/certs/CAs
+      export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
+      ${JAVA_HOME}/bin/keytool -noprompt -importcert -file /opt/mapr/conf/ca/chain-ca.pem -alias maprca -storepass changeit -cacerts || true
+    become: yes
 
 - hosts: localhost
   tasks:

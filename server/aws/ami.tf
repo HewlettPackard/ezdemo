@@ -15,3 +15,12 @@ data "aws_ami" "ec2_centos8_ami" {
     values = ["47k9ia2igxpcce2bzo8u3kj03"]
   }
 }
+data "aws_ami" "ec2_ubuntu2004_ami" {
+  most_recent      = true
+  owners           = ["aws-marketplace"]
+  filter {
+    name   = "product-code"
+    values = ["a8jyynf4hjutohctm41o2z18m"]
+  }
+}
+

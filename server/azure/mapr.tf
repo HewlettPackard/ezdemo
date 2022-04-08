@@ -32,9 +32,13 @@ resource "azurerm_linux_virtual_machine" "mapr" {
       storage_account_type = "Standard_LRS"
   }
   source_image_reference {
-      publisher = "OpenLogic"
-      offer     = "CentOS"
-      sku       = "8_4"
+      # publisher = "OpenLogic"
+      # offer     = "CentOS"
+      # sku       = "8_4"
+      # version   = "latest"
+      publisher = "Canonical"
+      offer     = "0001-com-ubuntu-server-focal"
+      sku       = "20_04-lts-gen2"
       version   = "latest"
   }
   boot_diagnostics {
