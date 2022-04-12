@@ -5,7 +5,7 @@
   - name: Create MapR Group
     group:
       name: "mapr"
-      gid: 5000
+      gid: "5000"
       state: present
     become: yes
 
@@ -16,14 +16,12 @@
       uid: "5000"
       group: "mapr"
       groups: "mapr"
-      password: "{{ mapr_password }}"
+      password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0" # password is mapr
       createhome: true
       update_password: on_create
       state: present
       append: true
     become: yes
-    vars: # password is mapr
-      mapr_password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0"
 
   - name: get hostnames
     shell: getent hosts "{{ item }}" | awk '{ print $2 }'
@@ -40,6 +38,7 @@
   - name: check fresh cluster
     shell: '[ -f /opt/mapr/conf/disktab ] && grep -q "{{ mapr_disks.stdout_lines | first }}" /opt/mapr/conf/disktab'
     register: cluster_configured
+    ignore_errors: yes
 
   - name: install mapr packages
     package: name="{{ packages | join(',') }}" state=present
@@ -71,11 +70,7 @@
 - hosts: "{{ groups['mapr'][:3] | default([]) }}"
   tasks:
   - name: install cldb and zk
-    package: name="{{ item }}" state=present
-    with_items: [
-      'mapr-cldb',
-      'mapr-zookeeper'
-    ]
+    package: name="mapr-cldb, mapr-zookeeper" state=present
     become: yes
     when: cluster_configured.failed | bool
 
@@ -224,7 +219,8 @@
     become: yes
     when: cluster_configured.failed | bool
 
-  - package: name="mapr-collectd, mapr-grafana, mapr-fluentd, mapr-elasticsearch" state=present
+  - name: enable monitoring
+    package: name="mapr-collectd, mapr-grafana, mapr-fluentd, mapr-elasticsearch" state=present
     become: yes
     when: cluster_configured.failed | bool
 
@@ -248,36 +244,33 @@
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
-  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana" state=present # metrics monitoring
+  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana" state=present
     become: yes
     when: cluster_configured.failed | bool
+
   - name: copy the license
-    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644" owner="root"
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
     ignore_errors: yes
-    when: cluster_configured.failed | bool
+
   - name: install mapr license
     shell: |
-      [ -f /tmp/LatestDemoLicense-M71.txt ] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-    when: cluster_configured.failed | bool
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    ignore_errors: yes
+
   - name: re-run configure.sh
     shell: /opt/mapr/server/configure.sh -R -ES {{ mapr_hosts[1:] | join(',') }}
     become: yes
+
   - name: configure spark
     shell: |
-      echo mapr | maprlogin password -user mapr
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
-  - name: configure delta - not final
-    shell: |
-      wget https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.1.0/delta-core_2.12-1.1.0.jar
-      # /opt/mapr/spark/spark-3.2.0/bin/spark-shell --jars ~/delta-core_2.12-1.1.0.jar \
-      #   --conf "spark.sql.extensions": io.delta.sql.DeltaSparkSessionExtension \
-      #   --conf "spark.sql.catalog.spark_catalog": org.apache.spark.sql.delta.catalog.DeltaCatalog
-      pip install pyspark==3.1.2
-      pip install importlib-metadata
-      pip install delta_spark
-      # pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+
+  - name: configure delta
+    shell: pip install delta_spark
+    # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
     become: yes
+
   - name: configure s3
     shell: |
       mkdir -p /home/mapr/.mc/certs/CAs

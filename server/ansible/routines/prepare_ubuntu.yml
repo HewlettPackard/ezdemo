@@ -1,7 +1,6 @@
 ## Configure mapr ubuntu hosts
 - hosts: "{{ groups['mapr'] }}"
   tasks:
-
   - name: update sysctl
     lineinfile:
       dest: /etc/sysctl.conf
@@ -21,7 +20,7 @@
     register: sysctl
 
   - name: update sysctl
-    shell: "sudo sysctl --system"
+    shell: "sysctl --system"
     become: yes
     when: sysctl.changed
 
@@ -56,32 +55,31 @@
       update_cache: yes
     become: yes
 
-  - name: update security
+  - name: update limits
     lineinfile:
-      dest: "{{ item.file }}"
+      dest: /etc/security/limits.conf
       regexp: "{{ item.regex }}"
       line: "{{ item.line }}"
       create: true
     with_items:
       - regex: ^mapr\ -\ nofile
         line: mapr - nofile 65536
-        file: /etc/security/limits.conf
       - regex: ^mapr\ -\ memlock
         line: mapr - memlock unlimited
-        file: /etc/security/limits.conf
       - regex: ^mapr\ -\ core
         line: mapr - core unlimited
-        file: /etc/security/limits.conf
       - regex: ^mapr\ -\ nice
         line: mapr - nice -10
-        file: /etc/security/limits.conf
       - regex: ^mapr\ -\ nproc
         line: mapr - nproc 64000
-        file: /etc/security/limits.conf
     become: yes
     register: sysctl
 
-  - name: update hugepage ## TODO: should skip if already exist
+  - name: check transparent_hugepage
+    shell: grep -s transparent_hugepage /etc/default/grub | wc -l
+    register: grub_needs_update
+
+  - name: update hugepage
     lineinfile:
       path: /etc/default/grub
       regexp: '(GRUB_CMDLINE_LINUX=.*)"'
@@ -90,6 +88,7 @@
       state: present
     become: yes
     register: grub_changed
+    when: grub_needs_update.stdout == "0"
 
   - name: Rebuild grub
     command: update-grub
@@ -100,15 +99,15 @@
     package: name="syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
     become: yes
 
-  - name: Enable the rpcbind service
-    service: name=rpcbind enabled=yes
-    become: yes
+  # - name: Enable the rpcbind service
+  #   service: name=rpcbind enabled=yes
+  #   become: yes
 
-  - name: copy private key
-    copy:
-      src: "../../generated/controller.prv_key"
-      dest: "~/controller.prv_key"
-      mode: 0600
+  # - name: copy private key
+  #   copy:
+  #     src: "../../generated/controller.prv_key"
+  #     dest: "~/controller.prv_key"
+  #     mode: 0600
 
   - name: reboot mapr nodes
     reboot:
