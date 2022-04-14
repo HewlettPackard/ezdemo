@@ -47,9 +47,16 @@ rm -f ~/.hpecp_tenant.conf
 rm -f ~/.kube/config
 
 source outputs.sh ${1}
+
 # If sockets are created for MCS
-([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-admin -O exit centos@${GATW_PRV_DNS}) || true
-([[ "${IS_MAPR}" == "true" ]] && ssh -S /tmp/MCS-socket-installer -O exit centos@${GATW_PRV_DNS}) || true
+if [[ "${IS_MAPR}" == "true" ]]
+then
+  for socket_file in "admin" "installer" "airflow" "kibana"
+  do
+    ssh -S /tmp/MCS-socket-${socket_file} -O exit centos@${GATW_PRV_DNS} || true
+  done
+fi
+
 rm -f generated/output.json
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini

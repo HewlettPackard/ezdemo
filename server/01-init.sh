@@ -53,13 +53,22 @@ EOF
 fi
 
 . ./user_settings.sh
+
+if [ "${IS_HA}" == "true" ]
+then
+   MAPR_COUNT=5
+else
+   MAPR_COUNT=1
+fi
+
 cat > ${1}/my.tfvars <<EOF
 user = ${USER_ID}
 project_id = ${PROJECT_ID// /_}
-is_mlops = ${IS_MLOPS}
-is_mapr = ${IS_MAPR}
-is_ha = ${IS_HA}
 is_runtime = ${IS_RUNTIME}
+is_mlops = ${IS_MLOPS}
+is_ha = ${IS_HA}
+is_mapr = ${IS_MAPR}
+mapr_count = ${MAPR_COUNT}
 admin_password = ${ADMIN_PASSWORD}
 EOF
 if [[ "${IS_GPU}" == "true" ]]; then
