@@ -48,13 +48,6 @@
       create: yes
     become: yes
 
-  - name: update packages
-    apt:
-      name: "*"
-      state: latest
-      update_cache: yes
-    become: yes
-
   - name: update limits
     lineinfile:
       dest: /etc/security/limits.conf
@@ -95,19 +88,16 @@
     when: grub_changed.changed
     become: yes
 
+  - name: update packages
+    apt:
+      name: "*"
+      state: latest
+      update_cache: yes
+    become: yes
+
   - name: Install prerequisites
     package: name="syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
     become: yes
-
-  # - name: Enable the rpcbind service
-  #   service: name=rpcbind enabled=yes
-  #   become: yes
-
-  # - name: copy private key
-  #   copy:
-  #     src: "../../generated/controller.prv_key"
-  #     dest: "~/controller.prv_key"
-  #     mode: 0600
 
   - name: reboot mapr nodes
     reboot:

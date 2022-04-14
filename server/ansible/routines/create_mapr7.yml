@@ -53,8 +53,7 @@
                   'mapr-webserver',
                   'mapr-gateway',
                   'mapr-spark',
-                  'mapr-spark-historyserver',
-                  'mapr-spark-thriftserver'
+                  'mapr-spark-historyserver'
                   ]
     become: yes
     when: cluster_configured.failed | bool
@@ -229,7 +228,7 @@
     vars: 
       packages: [
         'mapr-kafka', 'mapr-livy', 'mapr-drill',
-        'mapr-hive', 'mapr-hiveserver2', 'mapr-hivemetastore', 'mapr-hivewebhcat',
+        'mapr-hive', 'mapr-hiveserver2', 'mapr-hivewebhcat',
         'mapr-ksql','mapr-schema-registry', 'mapr-kafka-rest',
         'mapr-kafka-connect-jdbc',  'mapr-kafka-connect-hdfs',
         'mapr-airflow', 'mapr-airflow-webserver', 'mapr-airflow-scheduler'
@@ -244,7 +243,7 @@
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
-  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana" state=present
+  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver" state=present
     become: yes
     when: cluster_configured.failed | bool
 
@@ -256,10 +255,6 @@
     shell: |
       [ -f /tmp/LatestDemoLicense-M7.txt ] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
     ignore_errors: yes
-
-  - name: re-run configure.sh
-    shell: /opt/mapr/server/configure.sh -R -ES {{ mapr_hosts[1:] | join(',') }}
-    become: yes
 
   - name: configure spark
     shell: |
@@ -286,14 +281,32 @@
     stat: path=/tmp/MCS-socket-admin
     register: socket_file
     
-  - name: MCS tunnel admin
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-admin -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
+  # - name: MCS tunnel admin
+  #   shell: "cd ../..; ssh -M -S /tmp/MCS-socket-admin -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
+  #   when: not socket_file.stat.exists
 
-  - name: MCS tunnel installer
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-installer -fNT -L 0.0.0.0:9443:{{ groups['mapr'] | first }}:9443 centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
+  # - name: MCS tunnel installer
+  #   shell: "cd ../..; ssh -M -S /tmp/MCS-socket-installer -fNT -L 0.0.0.0:9443:{{ groups['mapr'] | first }}:9443 centos@{{ groups['gateway'] | first }}"
+  #   when: not socket_file.stat.exists
 
-  - name: MCS tunnel grafana
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-grafana -fNT -L 0.0.0.0:3000:{{ groups['mapr'] | first }}:3000 centos@{{ groups['gateway'] | first }}"
+  # - name: MCS tunnel grafana
+  #   shell: "cd ../..; ssh -M -S /tmp/MCS-socket-grafana -fNT -L 0.0.0.0:3000:{{ groups['mapr'] | first }}:3000 centos@{{ groups['gateway'] | first }}"
+  #   when: not socket_file.stat.exists
+
+  # - name: MCS tunnel airflow
+  #   shell: "cd ../..; ssh -M -S /tmp/MCS-socket-airflow -fNT -L 0.0.0.0:8780:{{ groups['mapr'] | first }}:8780 centos@{{ groups['gateway'] | first }}"
+  #   when: not socket_file.stat.exists
+
+  - name: MCS tunnel for ports
+    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
     when: not socket_file.stat.exists
+    with_items:
+      - port: 8443
+        description: admin
+      - port: 9443
+        description: installer
+      - port: 8780
+        description: airflow
+      - port: 5601
+        description: kibana
+
