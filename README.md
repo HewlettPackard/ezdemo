@@ -34,7 +34,10 @@ Create your user settings in a separate file named "user.settings" in following 
   "is_mlops": false,
   "is_mapr": false,
   "is_gpu": false,
-  "is_ha": false
+  "is_ha": false,
+  "is_runtime" : true,
+  "is_verbose": true,
+  "install_ad" : true
 }
 ```
 
