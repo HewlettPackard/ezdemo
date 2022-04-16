@@ -1,7 +1,9 @@
 ansible
-Flask[async]
-Flask-Cors
+netaddr
+ovirt-engine-sdk-python
 hpecp
 Jinja2
+Flask[async]
+Flask-Cors
 Werkzeug
 waitress

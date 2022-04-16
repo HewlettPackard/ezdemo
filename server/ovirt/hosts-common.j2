@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # =============================================================================
 # Copyright 2022 Hewlett Packard Enterprise
 #
@@ -21,6 +20,57 @@
 # SOFTWARE.
 # =============================================================================
 
-set -euo pipefail
+####
+#
+[master]
+{{ network | ansible.utils.ipmath(1) }}
 
-exit 0
+[controller]
+{{ network | ansible.utils.ipmath(1) }}
+
+[gateway]
+{{ network | ansible.utils.ipmath(2) }}
+
+[picasso]
+{{ network | ansible.utils.ipmath(6) }}
+{{ network | ansible.utils.ipmath(7) }}
+{{ network | ansible.utils.ipmath(8) }}
+
+# exclude Picasso nodes here
+[k8s]
+{{ network | ansible.utils.ipmath(11) }}
+{{ network | ansible.utils.ipmath(12) }}
+{{ network | ansible.utils.ipmath(13) }}
+{{ network | ansible.utils.ipmath(14) }}
+{{ network | ansible.utils.ipmath(15) }}
+{{ network | ansible.utils.ipmath(16) }}
+{{ network | ansible.utils.ipmath(17) }}
+
+[epic]
+
+[mapr]
+
+[all:vars]
+
+####################
+# Define DC specific tasks
+#
+DC={{ dc }}
+
+###
+# define vm size for the different roles
+vm_contoller_memory='32 GiB'
+vm_controller_cpu_cores='4'
+vm_controller_cpu_socket='4'
+
+vm_gateway_memory='8 GiB'
+vm_gateway_cpu_cores='4'
+vm_gateway_cpu_socket='4'
+
+vm_picasso_memory='64 GiB'
+vm_picasso_cpu_cores='4'
+vm_picasso_cpu_socket='4'
+
+vm_k8s_memory='32 GiB'
+vm_k8s_cpu_cores='4'
+vm_k8s_cpu_socket='4'
