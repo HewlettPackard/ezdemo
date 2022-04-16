@@ -32,6 +32,7 @@ do
 done
 
 [[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
+[[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
 
 printf -v joined ' -v %s' "${VOLUMES[@]}"
 

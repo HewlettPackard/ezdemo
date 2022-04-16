@@ -1,8 +1,8 @@
 import React, { Fragment } from 'react';
 import { Grommet, Box, Card, CardFooter, CheckBox, Button, Text, TextInput, Form, FormField, 
-  Footer, Anchor, RadioButtonGroup, TextArea, Select } from 'grommet';
-import { hpe } from "grommet-theme-hpe";
-import { Home, Moon, Sun, Console, Desktop, StatusGood, StatusCritical, Run, Trash, HostMaintenance, System } from 'grommet-icons';
+  Footer, Anchor, TextArea, Select, CardHeader, CardBody } from 'grommet';
+import { hpe } from 'grommet-theme-hpe';
+import * as Icons from 'grommet-icons';
 import regions from './regions';
 
 function App() {
@@ -21,17 +21,17 @@ function App() {
   const [gwready, setGwready] = React.useState(false);
   const [MCSready, setMCSready] = React.useState(false);
   const [prvkey, setPrvkey] = React.useState(false);
-  // const [tfstate, setTfstate] = React.useState(false);
   const outputRef = React.useRef(undefined);
+  const srvUrl = 'http://localhost:4000'
  
   React.useEffect(() => {
     const fetchData = async () => {
-      fetch('/providers')
+      fetch(`${srvUrl}/providers`)
       .then(res => res.json())
       .then(
         (result) => {
-          setIsLoaded(true);
           setProviders(result);
+          setIsLoaded(true);
         },
         (error) => {
           setIsLoaded(true);
@@ -61,20 +61,20 @@ function App() {
     return response.ok;
   }
   
-  const configureProvider = (val) => {
-    setProvider(val);
-    setShowconfig(true);
-    checkExistingRun(val).then(res => { if (res) setLogfile(true) } );
-    fetchData(`/${val.toLowerCase()}/config`)
-      .then(response => {
-        if (! response.ok) setError(response.statusText)
-        return response.json();
-      })
-      .then(
-        (result) => { setConfig(result); },
-        (error) => { console.error(error); setError(error.message) }
-      );
-  }
+  // const configureProvider = (val) => {
+  //   setProvider(val);
+  //   setShowconfig(true);
+  //   checkExistingRun(val).then(res => { if (res) setLogfile(true) } );
+  //   fetchData(`/${val.toLowerCase()}/config`)
+  //     .then(response => {
+  //       if (! response.ok) setError(response.statusText)
+  //       return response.json();
+  //     })
+  //     .then(
+  //       (result) => { setConfig(result); },
+  //       (error) => { console.error(error); setError(error.message) }
+  //     );
+  // }
 
   const processResponse = (responseBody) => {
     setSpin(true); // start spinning
@@ -100,7 +100,7 @@ function App() {
             if (textVal.includes('...ignoring')) setError(undefined);
             // Capture the gateway dns name
             if (textVal.includes('gateway_public_dns = [')) {
-              setGwurl(textVal.split('gateway_public_dns = [')[1].split('"')[1]); // extract the IP
+              setGwurl(textVal.split('gateway_public_dns = [')[1].split("'")[1]); // extract the IP
               // setTfstate(true);
             }
             // when gateway installation is complete
@@ -132,22 +132,15 @@ function App() {
     postData(`/${provider.toLowerCase()}/deploy`, config)
     .then(response => response.body)
     .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
+    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
     .then(result => setLogfile(result));
 
   const destroy = () =>
     postData(`/${provider.toLowerCase()}/destroy`, config)
     .then(response => response.body)
     .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
+    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
     .then(result => setGwurl(undefined) );
-
-  // const streamlog = () =>
-  //   fetchData(`/${provider.toLowerCase()}/log`)
-  //   .then(response => response.body)
-  //   .then(rb => processResponse(rb))
-  //   .then(stream => new Response(stream, { headers: { "Content-Type": "text/html" } }).text())
-  //   .then(result => console.dir(result));
 
   const reset = () => {
     // configureProvider(providers[0]);
@@ -162,14 +155,26 @@ function App() {
     setError(undefined);
   }
 
+  const Identifier = ({ children, title, subTitle, size, ...rest }) => (
+      <Box gap="small" align="center" direction="row" pad="small" {...rest}>
+        {children}
+        <Box>
+          <Text size={size} weight="bold">
+            {title}
+          </Text>
+          <Text size={size}>{subTitle}</Text>
+        </Box>
+      </Box>
+    );
+
   return (
     <Grommet theme={hpe} themeMode={theme} full>
       <Box fill>
       {/* Navigation Bar */}
       <Box direction='row' justify='between'>
-        <Button icon={ <Home /> } onClick={ () => reset() } />
+        <Button icon={ <Icons.Home /> } onClick={ () => reset() } />
         {/* Providers */}
-        <Box animation='zoomIn'>
+        {/* <Box animation='zoomIn'>
           { providers && <RadioButtonGroup id='target-id' 
             name='target' 
             direction='row'
@@ -178,47 +183,64 @@ function App() {
             value={ provider }
             onChange={ e => configureProvider(e.target.value) } 
           />}
-        </Box>
+        </Box> */}
         <Box direction='row' justify='end'>
           <CheckBox
             toggle reverse
-            label={ theme === 'dark' ? <Moon /> : <Sun /> }
+            label={ theme === 'dark' ? <Icons.Moon /> : <Icons.Sun /> }
             checked={ theme === 'dark' ? false : true }
             onChange={ () => setTheme(theme === 'dark' ? 'light' : 'dark')}
           />
           { <CheckBox 
             toggle reverse
-            label={ showoutput ? <Console /> : <Desktop /> }
+            label={ showoutput ? <Icons.Console /> : <Icons.Desktop /> }
             checked={ showoutput ? true : false }
             onChange={ () => setShowoutput(!showoutput) }
           /> }
           { <CheckBox 
             toggle reverse
-            label={ showconfig ? <HostMaintenance /> : <System /> }
+            label={ showconfig ? <Icons.HostMaintenance /> : <Icons.System /> }
             checked={ showconfig ? true : false }
             onChange={ () => setShowconfig(!showconfig) }
           /> }
         </Box>
       </Box>
+      <Box animation='zoomIn' direction='row'>
+      {
+        providers &&
+          providers.map(p =>
+            <Card key={p} flex margin='small' onClick={() => { alert('Card was Clicked!'); }}>
+              <CardHeader pad='medium'>{p}</CardHeader>
+              <CardBody pad='medium'>
+                <Identifier
+                  title={p.title}
+                  subTitle={p.subTitle}
+                  size="small"
+                 />
+              </CardBody>
+              <CardFooter pad={{horizontal: 'small'}} background='light-2'>
+                <Button
+                icon={<Icons.Favorite color='red' />} hoverIndicator
+                />
+              </CardFooter>
+            </Card>
+        )
+      }
+      </Box>
       {/* Configure */}
-      {/* <Button 
-          alignSelf='end' 
-          plain pad='xsmall'
-          label={ showconfig ? 'Hide config' : 'Show config' } 
-          onClick={ () => setShowconfig(!showconfig) } />  */}
       { showconfig && provider &&
-        <Card margin="small" flex animation='zoomIn' overflow="auto">
+        <Card margin='small' flex animation='zoomIn' overflow='auto'>
           <Form
             value= { config }
             validate='change' 
             onChange= { (value) => setConfig(value) }
             >
               { Object.keys(config).filter(k => !k.includes('is_') && !k.includes('region')).map( key => 
-                  <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
+                  <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin='small'>
                         <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
                   </FormField>
                 )}
-                { (provider.toLowerCase() === "aws" || provider.toLowerCase() === "azure") && <FormField name='region' htmlfor='region' label='region' key='region' required={ true } margin="small">
+                { (provider.toLowerCase() === 'aws' || provider.toLowerCase() === 'azure') && <FormField name='region' htmlfor='region' label='region' key='region' required={ true } margin='small'>
                         <Select placeholder='Region' id='region' name='region' 
                           options={regions[provider.toLowerCase()]}
                           onChange={({ option }) => setConfig( old => ( {...old, 'region': option }) )  }
@@ -233,7 +255,7 @@ function App() {
                     { config['is_gpu'] !== undefined && <CheckBox toggle reverse label='GPU Worker' checked={ config['is_gpu'] } onChange={ () => setConfig( old => ( {...old, 'is_gpu': !old['is_gpu'] }) ) } /> }
                     <CheckBox toggle reverse label='Standalone DF' checked={ config['is_mapr'] } onChange={ () => setConfig( old => ( {...old, 'is_mapr': !old['is_mapr'] }) ) } />
                     {/* { Object.keys(config).map( key => 
-                      <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin="small">
+                      <FormField name={key} htmlfor={key} label={ key.replace('is_', '') } key={key} required={ !key.includes('is_') } margin='small'>
                           { key.includes('is_') ?
                             <CheckBox toggle reverse key={key} label={key.replace('is_','')} checked={ config[key] } onChange={ (e) => setConfig( old => ( {...old, [key]: !old[key] }) ) } />
                             :
@@ -246,11 +268,11 @@ function App() {
             </Form>
         </Card> }
       {/* Run */}
-      { provider && (! Object.values(config).some(v => v===""))
+      { provider && (! Object.values(config).some(v => v===''))
         && <Box animation='zoomIn' direction='row' justify='between' margin='none'>
         <Button 
           label={ 'Deploy on ' + provider } 
-          icon={ <Run /> } 
+          icon={ <Icons.Run /> } 
           onClick={ () => window.confirm('Installation will start') && deploy() } 
           margin='none' 
         />
@@ -258,7 +280,7 @@ function App() {
       </Box>}
 
         { showoutput && 
-          <Card margin="small" flex animation='zoomIn' overflow="auto">
+          <Card margin='small' flex animation='zoomIn' overflow='auto'>
             <TextArea 
               readOnly 
               fill flex
@@ -272,18 +294,18 @@ function App() {
 
       {/* Footer */}
       { showoutput && <Box justify='end'>
-        <Footer background='brand' pad="xsmall">
+        <Footer background='brand' pad='xsmall'>
           <Fragment>
-            { error ? <StatusCritical color='status-critical' /> : <StatusGood color='status-ok' /> }
+            { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
             { error && <Text color='red'>{ error }</Text> }
-            { gwurl && <Anchor label='ECP Gateway' href={ "https://" + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
-            { config['is_mapr'] && MCSready && <Anchor label='MCS' href="https://localhost:8443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Management Console" /> }
-            { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href="https://localhost:9443" target='_blank' rel='noreferrer' disabled={ !MCSready } tip="External Data Fabric Installer" /> }
+            { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
+            { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
+            { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
             { logfile && <Anchor label='Log' href={`/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
             { prvkey && <Anchor label='PrvKey' href={'/key'} target='_blank' rel='noreferrer' /> }
-            {/* { tfstate && <Anchor label="TF State" href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
+            {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
             { prvkey && <Button label='Destroy' alignSelf='end'
-              icon={ <Trash color="status-critical" /> } 
+              icon={ <Icons.Trash color='status-critical' /> } 
               tip='Destroy the environment' 
               onClick={ () => window.confirm('All will be deleted') && destroy() } 
             /> }

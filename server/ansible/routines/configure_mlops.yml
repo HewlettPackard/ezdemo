@@ -67,7 +67,6 @@
     shell: "./setup_gitea.sh '{{ kubeatns }}'"
     register: result
     failed_when: ( result.rc not in [ 0, 7 ] )
-    # ignore_errors: yes
 
   - name: setup mlflow
     shell: "./setup_mlflow.sh '{{ kubeatns }}' '{{ admin_password }}'"

@@ -9,16 +9,16 @@
           src: /etc/docker/daemon.json
         register: imported_var
 
-      - debug:
-          msg: "{{ imported_var.content|b64decode|from_json }}"
+      # - debug:
+      #     msg: "{{ imported_var.content|b64decode|from_json }}"
 
       - name: append more key/values
         set_fact:
           imported_var: "{{ imported_var.content|b64decode|from_json | default([]) | combine({ 'registry-mirrors': ['http://192.168.10.3:5000','http://192.168.10.3:5000'] }) }}"
         when: ad_username is not defined
 
-      - debug:
-          var: imported_var
+      # - debug:
+      #     var: imported_var
 
       - name: write var to file
         copy: 

@@ -27,6 +27,4 @@ ansible-playbook -i ansible.ini runme.yml
 
 ansible-inventory -i ansible.ini --list
 
-# printf '{"hostname":"%s","ip_address":"%s"}' "${NAME}" "${IP}"
-
 exit 0

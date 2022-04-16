@@ -17,9 +17,9 @@ CORS(app)
 ProviderName = {
   "aws": "AWS",
   "azure": "Azure",
-  # vmware = "VMWare"
-  # kvm = "KVM"
-  # ovirt = "OVirt"
+  "vmware": "VMWare",
+  "kvm": "KVM",
+  "ovirt": "OVirt"
 }
 # if (platform == "darwin"):
 #   ProviderName["mac"] = "Mac"
