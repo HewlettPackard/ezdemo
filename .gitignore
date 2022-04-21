@@ -142,5 +142,6 @@ yarn.lock
 **/user.settings
 cr-app-hcp-ezdemo-1.0.yaml
 **/LatestDemoLicense-M7.txt
+**/LatestDemoLicense-M7.txt.old
 server/ovirt/ansible-hosts
 server/ovirt/*.ini

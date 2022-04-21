@@ -96,7 +96,7 @@
     become: yes
 
   - name: Install prerequisites
-    package: name="syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
+    package: name="python3-pip, syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
     become: yes
 
   - name: reboot mapr nodes

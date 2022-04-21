@@ -243,6 +243,10 @@
     become: yes
     when: cluster_configured.failed | bool
 
+  - name: re-Configure.sh
+    shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
+    become: yes
+
   - name: copy the license
     copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
     ignore_errors: yes
@@ -254,11 +258,12 @@
 
   - name: configure spark
     shell: |
+      echo mapr | maprlogin password -user mapr 
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
 
   - name: configure delta
-    shell: pip install delta_spark
+    shell: pip3 install delta_spark
     # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
     become: yes
 
