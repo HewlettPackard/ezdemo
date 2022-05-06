@@ -34,4 +34,4 @@ variable "wkr_instance_type" {
 variable "ad_instance_type" { default = "t2.small" }
 
 variable "client_cidr_block" { default = "0.0.0.0/0" } ### Access possible via gateway only - for limited ports
-
+variable "extra_tags" { default = {"cost_center": "Sales"} }

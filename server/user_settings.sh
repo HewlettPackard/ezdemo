@@ -33,6 +33,6 @@ IS_GPU=$(jq 'if has("is_gpu") then .is_gpu else false end' user.settings)
 IS_HA=$(jq 'if has("is_ha") then .is_ha else false end' user.settings)
 INSTALL_AD=$(jq 'if has("install_ad") then .install_ad else true end' user.settings)
 ADMIN_PASSWORD=$(jq 'if has("admin_password") then .admin_password else "admin123" end' user.settings)
-EXTRA_TAGS=$(jq 'if has("extra_tags") then .extra_tags else "cost_center=Sales" end' user.settings)
+EXTRA_TAGS=$(jq 'if has("extra_tags") then .extra_tags else {"cost_center":"Sales"} end' user.settings)
 
 AD_REALM="SAMDOM.EXAMPLE.COM"
