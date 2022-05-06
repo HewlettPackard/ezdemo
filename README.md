@@ -11,17 +11,21 @@ Download the [start script](https://raw.githubusercontent.com/hpe-container-plat
 ```bash
 #!/usr/bin/env bash
 VOLUMES=()
-CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json")
+CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json" "ovirt_config.json")
+
 for file in "${CONFIG_FILES[@]}"
 do
   target="${file%_*}"
+  # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 
 [[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
-
+[[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
 printf -v joined ' -v %s' "${VOLUMES[@]}"
-docker run --pull always -d -p 4000:4000 -p 8443:8443 ${joined} erdincka/ezdemo:latest
+
+## run at the background with web service exposed at 4000, mapr grafana at 3000, mcs at 8443, mcs installer at 9443
+docker run --name ezdemo --pull always -d -p 3000:3000 -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
 ```
 
 Create your user settings in a separate file named "user.settings" in following format:
@@ -65,7 +69,7 @@ Azure Template;
 }
 ```
 
-Once the container starts, you can either use the WebUI on <http://localhost:4000/> or run scripts manually within the container.
+Once the container starts, you can ~~either use the WebUI on <http://localhost:4000/> or~~ run scripts manually within the container.
 
 ## Advanced Usage
 

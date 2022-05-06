@@ -66,6 +66,12 @@
     with_items: "{{ mapr_disks.stdout_lines }}"
     when: cluster_configured.failed | bool
 
+  - name: create tokens for root
+    shell: echo mapr | maprlogin password -user mapr
+    become: yes
+  - name: create tokens for user
+    shell: echo mapr | maprlogin password -user mapr
+
 - hosts: "{{ groups['mapr'][:3] | default([]) }}"
   tasks:
   - name: install cldb and zk
@@ -125,6 +131,10 @@
         - filename: ssl_usertruststore.pem
           mode: '0444'
         - filename: ca/chain-ca.pem
+          mode: '0644'
+        - filename: ca/signing-ca.pem
+          mode: '0644'
+        - filename: ca/root-ca.pem
           mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
@@ -210,12 +220,12 @@
     when: cluster_configured.failed | bool
 
   - name: restore tokens for dare
-    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz; mkdir ca; mv chain-ca.pem ca/"
+    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz; mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
     become: yes
     when: cluster_configured.failed | bool
 
   - name: enable monitoring
-    package: name="mapr-collectd, mapr-grafana, mapr-fluentd, mapr-elasticsearch" state=present
+    package: name="mapr-collectd, mapr-grafana, mapr-fluentd" state=present
     become: yes
     when: cluster_configured.failed | bool
 
@@ -239,7 +249,7 @@
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
-  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver" state=present
+  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver, mapr-elasticsearch" state=present
     become: yes
     when: cluster_configured.failed | bool
 
@@ -253,18 +263,17 @@
 
   - name: install mapr license
     shell: |
-      [ -f /tmp/LatestDemoLicense-M7.txt ] && echo mapr | maprlogin password -user mapr && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
     ignore_errors: yes
 
   - name: configure spark
     shell: |
-      echo mapr | maprlogin password -user mapr 
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
 
   - name: configure delta
     shell: pip3 install delta_spark
-    # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+    # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
     become: yes
 
   - name: configure s3
