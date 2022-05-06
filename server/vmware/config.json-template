@@ -1,16 +1,4 @@
 {
-  "vsphere_server": "",
-  "vsphere_user": "",
-  "vsphere_password": "",
-  "vsphere_cluster": "",
-  "vsphere_datacenter": "",
-  "vsphere_resourcepool": "",
-  "vsphere_datastore": "",
-  "vsphere_network": "",
-  "domain": "",
-  "is_mlops": false,
-  "user": "",
-  "admin_password": "ChangeMe!",
-  "is_mapr": false,
-  "project_id": ""
+  "dc": "",
+  "network": ""
 }

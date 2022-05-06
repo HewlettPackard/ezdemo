@@ -1,0 +1,257 @@
+#######################
+# Controller Deployment
+#######################
+
+- hosts: localhost
+  gather_facts: no
+  vars:
+    controller_ips: "{{ groups['controller'] | list }}"
+
+  tasks:
+  - name: Obtain SSO token with using username/password credentials
+    ovirt.ovirt.ovirt_auth:
+      url: '{{ ovirt_host }}'
+      username: '{{ ovirt_username }}'
+      #ca_file: ca.pem
+      password: '{{ ovirt_password }}'
+
+  - name: create HPECP-CONTROLLER VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: present
+      name: "{{ item }}-HPECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: '{{ vm_template }}'
+      cluster: '{{ ovirt_cluster }}'
+      memory: '{{ vm_contoller_memory }}'
+      memory_guaranteed: 8 GiB
+      memory_max: '{{ vm_contoller_memory }}'
+      cpu_cores: '{{ vm_controller_cpu_cores }}'
+      cpu_sockets: '{{ vm_controller_cpu_socket }}'
+      type: server
+      operating_system: rhel_7x64
+      ballooning_enabled: yes
+      storage_domain: '{{ vm_storage_os_domain }}'
+      cloud_init:
+        authorized_ssh_keys: '{{ vm_user_ssh_key }}'
+        dns_servers: '{{ vm_dns }}'
+        dns_search: '{{ vm_dnssearch }}'
+        host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
+        nic_boot_protocol: static
+        nic_ip_address: "{{ item }}"
+        nic_netmask: '{{ vm_netmask }}'
+        nic_gateway: '{{ vm_gateway }}'
+        nic_name: '{{ vm_nic }}'
+        user_name: '{{ vm_create_user }}'
+        root_password: '{{ vm_user_password }}'
+      cloud_init_persist: yes
+      description: 'HPE Ezmeral Container Platform'
+    with_items: "{{ controller_ips }}"
+
+  - name: create additional Disks for Controller
+    ovirt.ovirt.ovirt_disk:
+      auth: "{{ ovirt_auth }}"
+      name: "{{ item }}-HPECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}-ephermal"
+      vm_name: "{{ item }}-HPECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      size: 400 GiB
+      format: cow
+      interface: virtio
+      storage_domain: '{{ vm_storage_ephermal_domain }}'
+      sparse: yes
+    with_items: "{{ controller_ips }}"
+
+  - name: run HPECP-CONTROLLER VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: running
+      name: "{{ item }}-HPECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+    with_items: "{{ controller_ips }}"
+
+#######################
+# GATEWAY Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    gateway_ips: "{{ groups['gateway'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: create Gateway VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: running
+      name: "{{ item }}-HPECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: '{{ vm_template }}'
+      cluster: '{{ ovirt_cluster }}'
+      memory: '{{ vm_gateway_memory }}'
+      memory_guaranteed: 4 GiB
+      memory_max: '{{ vm_gateway_memory }}'
+      cpu_cores: '{{ vm_gateway_cpu_cores }}'
+      cpu_sockets: '{{ vm_gateway_cpu_socket }}'
+      type: server
+      operating_system: rhel_7x64
+      ballooning_enabled: yes
+      storage_domain: '{{ vm_storage_os_domain }}'
+      cloud_init:
+        authorized_ssh_keys: '{{ vm_user_ssh_key }}'
+        dns_servers: '{{ vm_dns }}'
+        dns_search: '{{ vm_dnssearch }}'
+        host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
+        nic_boot_protocol: static
+        nic_ip_address: "{{ item }}"
+        nic_netmask: '{{ vm_netmask }}'
+        nic_gateway: '{{ vm_gateway }}'
+        nic_name: '{{ vm_nic }}'
+        user_name: '{{ vm_create_user }}'
+        root_password: '{{ vm_user_password }}'
+      cloud_init_persist: yes
+      description: 'HPE Ezmeral Container Platform'
+    with_items: "{{ gateway_ips }}"
+
+#######################
+# PICASSO Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    picasso_ips: "{{ groups['picasso'] | list }}"
+
+  gather_facts: no
+  tasks:
+  - name: create HPECP-K8S-PICASSO VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: present
+      name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: '{{ vm_template }}'
+      cluster: '{{ ovirt_cluster }}'
+      memory: '{{ vm_picasso_memory }}'
+      memory_guaranteed: 8 GiB
+      memory_max: '{{ vm_picasso_memory }}'
+      cpu_cores: '{{ vm_picasso_cpu_cores }}'
+      cpu_sockets: '{{ vm_picasso_cpu_socket }}'
+      type: server
+      operating_system: rhel_7x64
+      ballooning_enabled: yes
+      storage_domain: '{{ vm_storage_os_domain }}'
+      cloud_init:
+        authorized_ssh_keys: '{{ vm_user_ssh_key }}'
+        dns_servers: '{{ vm_dns }}'
+        dns_search: '{{ vm_dnssearch }}'
+        host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
+        nic_boot_protocol: static
+        nic_ip_address: "{{ item }}"
+        nic_netmask: '{{ vm_netmask }}'
+        nic_gateway: '{{ vm_gateway }}'
+        nic_name: '{{ vm_nic }}'
+        user_name: '{{ vm_create_user }}'
+        root_password: '{{ vm_user_password }}'
+      cloud_init_persist: yes
+      description: 'HPE Ezmeral Container Platform'
+    with_items: "{{ picasso_ips }}"
+
+  - name: create ephermal Disks for Picasso
+    ovirt.ovirt.ovirt_disk:
+      auth: "{{ ovirt_auth }}"
+      name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}-ephermal"
+      vm_name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      size: 400 GiB
+      format: cow
+      interface: virtio
+      storage_domain: '{{ vm_storage_ephermal_domain }}'
+      sparse: yes
+    with_items: "{{ picasso_ips }}"
+
+  - name: create persistent Disks for Picasso
+    ovirt.ovirt.ovirt_disk:
+      auth: "{{ ovirt_auth }}"
+      name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}-persistent"
+      vm_name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      size: 500 GiB
+      format: cow
+      interface: virtio
+      storage_domain: '{{ vm_storage_domain }}'
+      sparse: yes
+    with_items: "{{ picasso_ips }}"
+
+  - name: start HPECP-K8S-PICASSO VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: running
+      name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+    with_items: "{{ picasso_ips }}"
+
+
+#######################
+# K8s Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    k8s_ips: "{{ groups['k8s'] | list }}"
+
+  gather_facts: no
+  tasks:
+  - name: create HPECP-K8S VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: present
+      name: "{{ item }}-HPECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: '{{ vm_template }}'
+      cluster: '{{ ovirt_cluster }}'
+      memory: '{{ vm_k8s_memory }}'
+      memory_guaranteed: 8 GiB
+      memory_max: '{{ vm_k8s_memory }}'
+      cpu_cores: '{{ vm_k8s_cpu_cores }}'
+      cpu_sockets: '{{ vm_k8s_cpu_socket }}'
+      type: server
+      operating_system: rhel_7x64
+      ballooning_enabled: yes
+      storage_domain: '{{ vm_storage_os_domain }}'
+      cloud_init:
+        authorized_ssh_keys: '{{ vm_user_ssh_key }}'
+        dns_servers: '{{ vm_dns }}'
+        dns_search: '{{ vm_dnssearch }}'
+        host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
+        nic_boot_protocol: static
+        nic_ip_address: "{{ item }}"
+        nic_netmask: '{{ vm_netmask }}'
+        nic_gateway: '{{ vm_gateway }}'
+        nic_name: '{{ vm_nic }}'
+        user_name: '{{ vm_create_user }}'
+        root_password: '{{ vm_user_password }}'
+      cloud_init_persist: yes
+      description: 'HPE Ezmeral Container Platform'
+    with_items: "{{ k8s_ips }}"
+
+  - name: create ephermal Disks for K8S VMs
+    ovirt.ovirt.ovirt_disk:
+      auth: "{{ ovirt_auth }}"
+      name: "{{ item }}-HPECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}-ephermal"
+      vm_name: "{{ item }}-HPECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      size: 400 GiB
+      format: cow
+      interface: virtio
+      storage_domain: '{{ vm_storage_ephermal_domain }}'
+      sparse: yes
+    with_items: "{{ k8s_ips }}"
+
+  - name: run HPECP-K8S VMs
+    ovirt.ovirt.ovirt_vm:
+      auth: "{{ ovirt_auth }}"
+      state: running
+      name: "{{ item }}-HPECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+    with_items: "{{ k8s_ips }}"
+
+- hosts: all
+  gather_facts: no
+  tasks:
+  - name: Wait 600 seconds for target connection to become reachable/usable
+    wait_for_connection:
+
+######################################################################################################
+# oVirt DEPLOYMENT END
+######################################################################################################
+
+

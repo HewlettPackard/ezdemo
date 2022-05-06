@@ -1,0 +1,55 @@
+#################
+#
+# LDAP Integration
+#
+# 
+# 29. January, DD: exchanged koichirok.authconfig-module with the os command authconfig - no additional module is required anymore
+#
+
+
+- hosts: all
+  gather_facts: no
+  vars:
+  # roles:
+  #   - koichirok.authconfig-module
+
+  tasks:
+    
+    - name: Install required yum packages 
+      yum: 
+        name: openldap-clients,nss-pam-ldapd
+        state: present 
+#      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7'
+#
+# should work also on redhat 8
+
+    # - name: configure ldap client
+    #   authconfig: enableldap=yes enableldapauth=yes enableldaptls=no ldapserver={{ ldap_server }} ldapbasedn={{ ldap_basedn }} enablemkhomedir=yes
+    - name: execute authconfig 
+      command: "authconfig --enableldap --enableldapauth --ldapserver={{ ldap_server }} --ldapbasedn={{ ldap_basedn }} --enablemkhomedir --update"
+
+    - name: configure ldap sudo access
+      become: yes
+      register: sudoaccess
+      blockinfile:
+        create: yes
+        path: /etc/sudo-ldap.conf
+        block: |
+          uri {{ ldap_server }}
+          sudoers_base {{ sudoers_base }}     
+
+    - name: reconfigure nsswitch.conf to support ldap
+      register: sudoaccess
+      blockinfile:
+        create: yes
+        path: /etc/nsswitch.conf
+        block: |
+          sudoers: files ldap
+
+    - name: add sudoers group into sudoers file
+      become: yes
+      blockinfile:
+        create: yes
+        path: /etc/sudoers
+        block: |
+          %sudoers ALL=(ALL) NOPASSWD: ALL

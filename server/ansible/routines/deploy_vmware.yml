@@ -1,0 +1,289 @@
+---
+######################################################################################################
+# VMWARE DEPLOYMENT 
+######################################################################################################
+
+
+
+
+#######################
+# Controller Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    controller_ips: "{{ groups['controller'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Create a VM folder on given datacenter
+    community.vmware.vcenter_folder:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      datacenter_name: "{{ datacenter_name }}"
+      folder_name: "{{vcenter_folder}}"
+      folder_type: vm
+      state: present
+    register: vm_folder_creation_result
+    delegate_to: localhost
+
+  - name: Clone the Controller template {{ template_name }}
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-HPECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: 32768
+        num_cpus: 12
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_netmask }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 310
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    with_items: "{{ controller_ips }}"
+    delegate_to: localhost
+
+
+
+#######################
+# GATEWAY Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    gateway_ips: "{{ groups['gateway'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Clone the Gateway template {{ template_name }}
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-HPECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: 8192
+        num_cpus: 12
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_netmask }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 310
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    with_items: "{{ gateway_ips }}"
+    delegate_to: localhost
+
+#######################
+# EPIC Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    epic_ips: "{{ groups['epic'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Clone the EPIC template {{ template_name }}
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-HPECP-EPIC-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: 16384
+        num_cpus: 12
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_netmask }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 310
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    with_items: "{{ epic_ips }}"
+    delegate_to: localhost
+
+
+#######################
+# PICASSO Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    epic_ips: "{{ groups['picasso'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Clone the PICASSO template {{ template_name }}
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-HPECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: 65536
+        num_cpus: 16
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_netmask }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 310
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 500
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    with_items: "{{ epic_ips }}"
+    delegate_to: localhost
+
+#######################
+# K8S Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    epic_ips: "{{ groups['k8s'] | list }}"
+
+
+  gather_facts: no
+  tasks:
+
+  - name: Clone the k8s template {{ template_name }}
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-HPECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: 32768
+        num_cpus: 12
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_netmask }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 310
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    with_items: "{{ epic_ips }}"
+    delegate_to: localhost
+
+- hosts: all
+  gather_facts: no
+  tasks:
+  - name: Wait 600 seconds for target connection to become reachable/usable
+    wait_for_connection:
+        
+######################################################################################################
+# VMWARE DEPLOYMENT END
+######################################################################################################
+
+
+
+

@@ -1,0 +1,180 @@
+ ###################################
+# Proxy Settings
+#
+# for feature improvements contact: dirk.derichsweiler@hpe.com
+#
+# start with: ansible-playbook -i hosts proxy.yaml --ask-become-pass
+
+
+- hosts: all
+  gather_facts: yes
+  vars:
+
+
+  tasks:
+
+  - name: change resolv.conf if 192.168.122.1 is found.
+    lineinfile:
+      path: /etc/resolv.conf
+      # String to Search
+      regexp: "192.168.122.1" 
+      # State is set to Absent to remove if the Searching Line is found
+      state: absent
+
+  # - name: Remove file /etc/yum.repos.d/CentOS-Base.repo file (delete this step, if not required) 
+  #   ansible.builtin.file:
+  #     path: /etc/yum.repos.d/CentOS-Base.repo
+  #     state: absent
+
+  # - name: create /etc/yum.repos.d/CentOS-Base.repo
+  #   become: yes
+  #   blockinfile:
+  #     create: yes
+  #     path: /etc/yum.repos.d/CentOS-Base.repo 
+  #     block: |
+  #         # CentOS-Base.repo
+  #         #
+  #         # The mirror system uses the connecting IP address of the client and the
+  #         # update status of each mirror to pick mirrors that are updated to and
+  #         # geographically close to the client.  You should use this for CentOS updates
+  #         # unless you are manually picking other mirrors.
+  #         #
+  #         # If the mirrorlist= does not work for you, as a fall back you can try the 
+  #         # remarked out baseurl= line instead.
+  #         #
+  #         #
+
+  #         [base]
+  #         name=CentOS-$releasever - Base
+  #         #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
+  #         baseurl=http://16.105.109.28/centos/$releasever/os/$basearch/
+  #         gpgcheck=1
+  #         gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+  #         #released updates 
+  #         [updates]
+  #         name=CentOS-$releasever - Updates
+  #         #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates&infra=$infra
+  #         baseurl=http://16.105.109.28/centos/$releasever/updates/$basearch/
+  #         gpgcheck=1
+  #         gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+  #         #additional packages that may be useful
+  #         [extras]
+  #         name=CentOS-$releasever - Extras
+  #         #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
+  #         baseurl=http://16.105.109.28/centos/$releasever/extras/$basearch/
+  #         gpgcheck=1
+  #         gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+  #         #additional packages that extend functionality of existing packages
+  #         [centosplus]
+  #         name=CentOS-$releasever - Plus
+  #         #mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
+  #         baseurl=http://16.105.109.28/centos/$releasever/centosplus/$basearch/
+  #         gpgcheck=1
+  #         enabled=0
+  #         gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+
+  - name: Remove file /etc/environment file (delete this step, if not required) 
+    ansible.builtin.file:
+      path: /etc/environment
+      state: absent
+
+  # - name: import certificate
+  #   ansible.builtin.copy:
+  #     src: ~/ansible/hpecp/webproxy.crt
+  #     dest: /etc/pki/ca-trust/source/anchors/webproxy.crt
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+  #     backup: no
+
+  # - name: execute update-ca
+  #   ansible.builtin.command: update-ca-trust
+
+  - name: create web proxy setup to allow Docker to pull images from various public registries
+    file:
+      path: /etc/systemd/system/docker.service.d
+      state: directory
+
+
+  - name: create web proxy setup to allow Docker to pull images from various public registries
+    become: yes
+    register: proxy
+    blockinfile:
+      create: yes
+      path: /etc/systemd/system/docker.service.d/docker-proxy.conf 
+      block: |
+        [Service]
+        Environment="HTTP_PROXY={{ http_proxy }}"
+        Environment="HTTPS_PROXY={{ https_proxy }}"
+        Environment="NO_PROXY={{ no_proxy }}"
+
+  # - name: Remove file /etc/systemd/system/docker.service.d/docker-proxy.conf 
+  #   ansible.builtin.file:
+  #     path: /etc/systemd/system/docker.service.d/docker-proxy.conf 
+  #     state: absent
+
+
+  - name: Proxy Server set-up for YUM packaging service
+    become: yes
+    blockinfile:
+      create: no
+      path: /etc/yum.conf
+      block: |
+        proxy = {{ https_proxy }}
+
+  - name: add Proxy settings to the environment
+    become: yes
+    register: proxy
+    blockinfile:
+      create: yes
+      path: /etc/profile.d/set_proxy.sh
+      block: |
+        export http_proxy={{ http_proxy }}
+        export https_proxy={{ https_proxy }}
+        export ftp_proxy={{ ftp_proxy }}
+        export no_proxy="{{ no_proxy }}"
+        export HTTP_PROXY={{ http_proxy }}
+        export HTTPS_PROXY={{ https_proxy }}
+        export FTP_PROXY={{ ftp_proxy }}
+        export NO_PROXY="{{ no_proxy }}"
+
+  - name: kubeadm is using /etc/environment (just for testing, delete it)
+    become: yes
+    register: proxy
+    blockinfile:
+      create: yes
+      path: /etc/environment
+      block: |
+        http_proxy={{ http_proxy }}
+        https_proxy={{ https_proxy }}
+        ftp_proxy={{ ftp_proxy }}
+        no_proxy="{{ no_proxy }}"
+        HTTP_PROXY={{ http_proxy }}
+        HTTPS_PROXY={{ https_proxy }}
+        FTP_PROXY={{ ftp_proxy }}
+        NO_PROXY="{{ no_proxy }}"
+
+
+  # - name: Copy a new "environment" file into place, backing up the original if it differs from the copied version
+  #   ansible.builtin.copy:
+  #     src: ~/ansible/hpecp/environment
+  #     dest: /etc/environment
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+  #     backup: no
+        
+  - name: Unconditionally reboot the machine with all defaults
+    reboot:
+    when: proxy.changed
+
+  - name: Upgrade the OS (yum upgrade)
+    become: yes
+    yum: name=* state=latest
+    when: ansible_os_family == "RedHat"
+
+
