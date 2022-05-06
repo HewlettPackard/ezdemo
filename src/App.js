@@ -61,20 +61,20 @@ function App() {
     return response.ok;
   }
   
-  // const configureProvider = (val) => {
-  //   setProvider(val);
-  //   setShowconfig(true);
-  //   checkExistingRun(val).then(res => { if (res) setLogfile(true) } );
-  //   fetchData(`/${val.toLowerCase()}/config`)
-  //     .then(response => {
-  //       if (! response.ok) setError(response.statusText)
-  //       return response.json();
-  //     })
-  //     .then(
-  //       (result) => { setConfig(result); },
-  //       (error) => { console.error(error); setError(error.message) }
-  //     );
-  // }
+  const configureProvider = (val) => {
+    setProvider(val);
+    setShowconfig(true);
+    checkExistingRun(val).then(res => { if (res) setLogfile(true) } );
+    fetchData(`/${val.toLowerCase()}/config`)
+      .then(response => {
+        if (! response.ok) setError(response.statusText)
+        return response.json();
+      })
+      .then(
+        (result) => { setConfig(result); },
+        (error) => { console.error(error); setError(error.message) }
+      );
+  }
 
   const processResponse = (responseBody) => {
     setSpin(true); // start spinning
@@ -209,7 +209,7 @@ function App() {
       {
         providers &&
           providers.map(p =>
-            <Card key={p} flex margin='small' onClick={() => { alert('Card was Clicked!'); }}>
+            <Card key={p} flex margin='small' onClick={() => { configureProvider(p) }}>
               <CardHeader pad='medium'>{p}</CardHeader>
               <CardBody pad='medium'>
                 <Identifier
@@ -293,22 +293,23 @@ function App() {
         }
 
       {/* Footer */}
-      { showoutput && <Box justify='end'>
+      { <Box justify='end'>
         <Footer background='brand' pad='xsmall'>
-          <Fragment>
-            { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
-            { error && <Text color='red'>{ error }</Text> }
-            { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
-            { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
-            { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
-            { logfile && <Anchor label='Log' href={`/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
-            { prvkey && <Anchor label='PrvKey' href={'/key'} target='_blank' rel='noreferrer' /> }
-            {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
-            { prvkey && <Button label='Destroy' alignSelf='end'
-              icon={ <Icons.Trash color='status-critical' /> } 
-              tip='Destroy the environment' 
-              onClick={ () => window.confirm('All will be deleted') && destroy() } 
-            /> }
+            <Fragment>
+              <Anchor label='New UI' href='/newui/' />
+              { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
+              { error && <Text color='red'>{ error }</Text> }
+              { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
+              { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
+              { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
+              { logfile && <Anchor label='Log' href={`/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
+              { prvkey && <Anchor label='PrvKey' href={'/key'} target='_blank' rel='noreferrer' /> }
+              {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
+              { prvkey && <Button label='Destroy' alignSelf='end'
+                icon={ <Icons.Trash color='status-critical' /> } 
+                tip='Destroy the environment' 
+                onClick={ () => window.confirm('All will be deleted') && destroy() } 
+              /> }
           </Fragment>
           <Box direction='row'>
             <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
