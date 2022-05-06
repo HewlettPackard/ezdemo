@@ -25,6 +25,9 @@ RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/
 ## clean temp files
 RUN rm -rf aws* terraform.zip kubectl minica /usr/local/go /usr/local/aws-cli/v2/current/dist/awscli/examples
 
+RUN curl -C - -o terratag_0.1.37_linux_arm64.tar.gz -L  https://github.com/env0/terratag/releases/download/v0.1.37/terratag_0.1.37_linux_amd64.tar.gz && tar -xzf terratag_0.1.37_linux_amd64.tar.gz terratag \ 
+    && mv terratag /usr/local/bin && rm -rf terratag_0.1.37_linux_amd64.tar.gz
+
 WORKDIR /app
 COPY --from=builder /app/build /app/build
 COPY server /app/server
