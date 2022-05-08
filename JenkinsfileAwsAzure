@@ -1,0 +1,86 @@
+pipeline {
+    agent any
+        stages {
+            stage('Parameters'){
+                steps {
+                    script {
+                    properties([
+                            parameters([
+                                [$class: 'ChoiceParameter', 
+                                    choiceType: 'PT_SINGLE_SELECT', 
+                                    description: 'Select the Public Cloud from the Dropdown List', 
+                                    filterLength: 1, 
+                                    filterable: false, 
+                                    name: 'Env', 
+                                    script: [
+                                        $class: 'GroovyScript', 
+                                        fallbackScript: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: 
+                                                "return['Could not get the Lists of Public clouds']"
+                                        ], 
+                                        script: [
+                                            classpath: [], 
+                                            sandbox: false, 
+                                            script: 
+                                                "return['aws','azure','gcp']"
+                                        ]
+                                    ]
+                                ],
+                                [$class: 'CascadeChoiceParameter', 
+                                    choiceType: 'PT_SINGLE_SELECT', 
+                                    description: 'Dependent Parameter based on Public Cloud types',
+                                    name: 'demo_dependent', 
+                                    referencedParameters: 'Env', 
+                                    script: 
+                                        [$class: 'GroovyScript', 
+                                        fallbackScript: [
+                                                classpath: [], 
+                                                sandbox: false, 
+                                                script: "return['Could not get demo_dependent Param']"
+                                                ], 
+                                        script: [
+                                                classpath: [], 
+                                                sandbox: false, 
+                                                script: '''
+                                                if (Env.equals("aws")){
+                                                    return["aws_demo_dependent_value1", "aws_demo_dependent_value2", "aws_demo_dependent_value3"]
+                                                }
+                                                else if(Env.equals("azure")){
+                                                    return["azure_demo_dependent_value1", "azure_demo_dependent_value2", "azure_demo_dependent_value3"]
+                                                }
+                                                else if(Env.equals("gcp")){
+                                                    return["gcp_demo_dependent_value1", "gcp_demo_dependent_value2", "gcp_demo_dependent_value3"]
+                                                }
+                                                '''
+                                                ]    
+                                        ]
+                                ],
+                                choice(
+                                choices: ['ONE', 'TWO'], 
+                                name: 'PARAMETER_01'),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'BOOLEAN'
+                                ),
+                                text(
+                                defaultValue: '''
+                                this is a multi-line 
+                                string parameter example
+                                ''', 
+                                name: 'MULTI-LINE-STRING'
+                                ),
+                                string(
+                                defaultValue: 'scriptcrunch', 
+                                name: 'STRING-PARAMETER', 
+                                trim: true
+                                )
+                            ])
+                        ])
+                    }
+                }
+            }
+        }   
+}
