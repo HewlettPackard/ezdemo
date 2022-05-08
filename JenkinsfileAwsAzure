@@ -1,9 +1,15 @@
 pipeline {
     agent any
         stages {
-            stage('Parameters'){
+            // Stage to clone repository to our workspace.
+            stage('Clone repository'){
+            checkout scm
+            }
+            // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
+            stage('Set Parameters For the Pipeline'){
                 steps {
                     script {
+                    
                     properties([
                             parameters([
                                 [$class: 'ChoiceParameter', 
@@ -13,7 +19,7 @@ pipeline {
                                     filterable: false, 
                                     name: 'Env', 
                                     script: [
-                                        $class: 'GroovyScript', 
+                                        $class: 'bash', 
                                         fallbackScript: [
                                             classpath: [], 
                                             sandbox: false, 
@@ -30,8 +36,8 @@ pipeline {
                                 ],
                                 [$class: 'CascadeChoiceParameter', 
                                     choiceType: 'PT_SINGLE_SELECT', 
-                                    description: 'Dependent Parameter based on Public Cloud types',
-                                    name: 'demo_dependent', 
+                                    description: 'AWS regions for Public Cloud types',
+                                    name: 'regions', 
                                     referencedParameters: 'Env', 
                                     script: 
                                         [$class: 'GroovyScript', 
@@ -45,42 +51,204 @@ pipeline {
                                                 sandbox: false, 
                                                 script: '''
                                                 if (Env.equals("aws")){
-                                                    return["aws_demo_dependent_value1", "aws_demo_dependent_value2", "aws_demo_dependent_value3"]
+                                                    return["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"]
                                                 }
                                                 else if(Env.equals("azure")){
-                                                    return["azure_demo_dependent_value1", "azure_demo_dependent_value2", "azure_demo_dependent_value3"]
+                                                    return["eastus","eastus2","centralus","westus","westus2","canadacentral","canadaeast","northeurope","westeurope","ukwest","uksouth","francecentral","germanynorth","centralindia","japaneast","australiacentral","uaenorth","southafricawest"]
                                                 }
                                                 else if(Env.equals("gcp")){
-                                                    return["gcp_demo_dependent_value1", "gcp_demo_dependent_value2", "gcp_demo_dependent_value3"]
+                                                    return["TBD1", "TBD2", "TBD3"]
                                                 }
                                                 '''
                                                 ]    
                                         ]
                                 ],
-                                choice(
-                                choices: ['ONE', 'TWO'], 
-                                name: 'PARAMETER_01'),
+                                [$class: 'CascadeChoiceParameter', 
+                                    choiceType: 'PT_SINGLE_SELECT', 
+                                    description: 'AWS regions for Public Cloud types',
+                                    name: 'regions', 
+                                    referencedParameters: 'Env', 
+                                    script: 
+                                        [$class: 'GroovyScript', 
+                                        fallbackScript: [
+                                                classpath: [], 
+                                                sandbox: false, 
+                                                script: "return['Could not get demo_dependent Param']"
+                                                ], 
+                                        script: [
+                                                classpath: [], 
+                                                sandbox: false, 
+                                                script: '''
+                                                if (Env.equals("aws")){
+                                                    return["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"]
+                                                }
+                                                else if(Env.equals("azure")){
+                                                    return["eastus","eastus2","centralus","westus","westus2","canadacentral","canadaeast","northeurope","westeurope","ukwest","uksouth","francecentral","germanynorth","centralindia","japaneast","australiacentral","uaenorth","southafricawest"]
+                                                }
+                                                else if(Env.equals("gcp")){
+                                                    return["TBD1", "TBD2", "TBD3"]
+                                                }
+                                                '''
+                                                ]    
+                                        ]
+                                ],
+                                string(
+                                defaultValue: 'ezcp_jenkins', 
+                                name: 'ProjectId', 
+                                trim: true
+                                ),
+                                string(
+                                defaultValue: 'admin', 
+                                name: 'ecp_user', 
+                                trim: true
+                                ),
+                                string(
+                                defaultValue: 'admin123', 
+                                name: 'ecp_password', 
+                                trim: true
+                                ),
                                 booleanParam(
                                 defaultValue: true, 
                                 description: '', 
-                                name: 'BOOLEAN'
+                                name: 'is_mlops'
                                 ),
-                                text(
-                                defaultValue: '''
-                                this is a multi-line 
-                                string parameter example
-                                ''', 
-                                name: 'MULTI-LINE-STRING'
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_mapr'
                                 ),
-                                string(
-                                defaultValue: 'scriptcrunch', 
-                                name: 'STRING-PARAMETER', 
-                                trim: true
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_gpu'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_ha'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_runtime'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_verbose'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'install_ad'
+                                ),
+                                choice(
+                                choices: ['ezmeral_platform', 'ezmeral_mlops', 'ezmeral_spark', 'ezmeral_it', 'mapr'], 
+                                name: 'CostCenter'        
+                                ),
+                                choice(
+                                choices: ['America/New_York', 'Asia/Calcutta', 'TBD..'], 
+                                name: 'TimeZone'        
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: 'When you want automatic stoppage of resources on given date/time.', 
+                                name: 'AutomaticStop'
                                 )
                             ])
                         ])
                     }
+                // Generate user.settings    
+                script {
+                    ​def tags = [   
+                                cost_center : params.CostCenter,
+                                TZ : params.TimeZone,
+                                stop_auto : params.AutomaticStop
+                                ]
+                    def extra_tags = groovy.json.JsonOutput.toJson(tags)
+                    println(extra_tags)
+                    env.CloudType = params.Env
+                    def user_setting = [
+                        project_id : params.ProjectId,
+                        user : params.ecp_user,
+                        admin_password : params.ecp_password,
+                        is_mlops : params.is_mlops,
+                        is_mapr : params.is_mapr,
+                        is_gpu : params.is_gpu,
+                        is_ha : params.is_ha,
+                        is_runtime : params.is_runtime,
+                        is_verbose : params.is_verbose,
+                        install_ad : params.install_ad,
+                        extra_tags : params.extra_tags
+                    ]
+                    writeJSON(file: 'user.settings', json: user_setting)
                 }
+                // TODO:
+                /* Generate aws_config.json or azure_config.json
+                { aws_config.json ->>
+                "aws_access_key": "",
+                "aws_secret_key": "",
+                "region": "" }
+                
+                azure_config.json ->> 
+
+                { "az_subscription": "",
+                  "az_appId": "",
+                  "az_password": "",
+                  "az_tenant": "",
+                  "region": ""
+                }
+                */ 
+                script {
+
+
+
+                }
+
+
             }
-        }   
+        }
+
+    // Stage to Create Docker Image.
+    try{
+        stage('Build Docker Image'){
+        script {
+            sh  """
+                chmod + docker-build.sh
+                ./docker-build.sh
+                """
+            }        
+        }
+        } catch(excption) {
+        currentBuild.result = "FAILED"
+        throw excption
+    }
+
+     // Stage to Start the Docker Container.
+    try{
+        stage('Stage to Start the Docker Container'){
+        script {
+            sh  """
+                ./start.sh
+                ./docker-exec.sh
+                """
+            }        
+        }
+        } catch(excption) {
+        currentBuild.result = "FAILED"
+        throw excption
+    }
+
+     // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
+    try{
+        stage('Stage to Build and Deploy EZCP'){
+        script {
+            sh  "./00-run_all.sh \${CloudType}" 
+            }        
+        }
+        } catch(excption) {
+        currentBuild.result = "FAILED"
+        throw excption
+    }
+}   
 }
