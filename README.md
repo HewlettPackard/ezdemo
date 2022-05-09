@@ -37,6 +37,7 @@ Create your user settings in a separate file named "user.settings" in following 
   "admin_password": "ChangeMe!",
   "is_mlops": false,
   "is_mapr": false,
+  "is_mapr_ha": false,
   "is_gpu": false,
   "is_ha": false,
   "is_runtime" : true,

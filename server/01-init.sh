@@ -54,7 +54,7 @@ fi
 
 . ./user_settings.sh
 
-if [ "${IS_HA}" == "true" ]
+if [ "${IS_MAPR_HA}" == "true" ]
 then
    MAPR_COUNT=5
 else
