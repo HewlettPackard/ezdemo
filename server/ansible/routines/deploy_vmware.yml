@@ -55,6 +55,10 @@
       disk:
         - autoselect_datastore: no
           datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
           size_gb: "{{ vm_controller_disk }}"
           type: thin
       customization:
@@ -102,10 +106,10 @@
         type: static
         dns_servers: "{{ vm_dns }}"
       disk:
-        # - autoselect_datastore: no
-        #   datastore: "{{ vcenter_datastore }}"
-        #   size_gb: 400
-        #   type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
       customization:
         hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
         domain: "{{ vm_domain }}"
@@ -169,7 +173,7 @@
 
 - hosts: localhost
   vars:
-    epic_ips: "{{ groups['picasso'] | list }}"
+    picasso_ips: "{{ groups['picasso'] | list }}"
 
   gather_facts: no
   tasks:
@@ -199,7 +203,7 @@
       disk:
         - autoselect_datastore: no
           datastore: "{{ vcenter_datastore }}"
-          size_gb: "{{ vm_picasso_disk }}"
+          size_gb: 400
           type: thin
         - autoselect_datastore: no
           datastore: "{{ vcenter_datastore }}"
@@ -224,7 +228,7 @@
 
 - hosts: localhost
   vars:
-    epic_ips: "{{ groups['k8s'] | list }}"
+    k8s_ips: "{{ groups['k8s'] | list }}"
 
 
   gather_facts: no
@@ -255,12 +259,16 @@
       disk:
         - autoselect_datastore: no
           datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
           size_gb: "{{ vm_k8s_disk }}"
           type: thin
-        # - autoselect_datastore: no
-        #   datastore: "{{ vcenter_datastore }}"
-        #   size_gb: "{{ vm_k8s_disk }}"
-        #   type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: "{{ vm_k8s_disk }}"
+          type: thin
       customization:
         hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
         domain: "{{ vm_domain }}"

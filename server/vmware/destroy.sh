@@ -23,7 +23,8 @@
 
 set -euo pipefail
 
+ansible-playbook -v -i hosts.ini ../ansible/routines/destroy_vmware.yml
+
 rm hosts-common.ini
 rm hosts.ini
 
-echo "Ansible destroy needed"

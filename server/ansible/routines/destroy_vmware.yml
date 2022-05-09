@@ -1,0 +1,163 @@
+---
+######################################################################################################
+# VMWARE DESTROY
+######################################################################################################
+
+#######################
+# Destroy Controller
+#######################
+
+- hosts: localhost
+  vars:
+    controller_ips: "{{ groups['controller'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Destroy controller
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-ECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ controller_ips }}"
+    delegate_to: localhost
+
+#######################
+# Destroy GATEWAY
+#######################
+
+- hosts: localhost
+  vars:
+    gateway_ips: "{{ groups['gateway'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Destroy gateway
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-ECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ gateway_ips }}"
+    delegate_to: localhost
+
+#######################
+# Destroy EPIC
+#######################
+
+- hosts: localhost
+  vars:
+    epic_ips: "{{ groups['epic'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Destroy EPIC nodes
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-ECP-EPIC-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ epic_ips }}"
+    delegate_to: localhost
+
+
+#######################
+# Destroy PICASSO
+#######################
+
+- hosts: localhost
+  vars:
+    picasso_ips: "{{ groups['picasso'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: Destroy Picasso nodes
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-ECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ picasso_ips }}"
+    delegate_to: localhost
+
+#######################
+# Destroy K8S
+#######################
+
+- hosts: localhost
+  vars:
+    k8s_ips: "{{ groups['k8s'] | list }}"
+
+
+  gather_facts: no
+  tasks:
+
+  - name: Destroy K8s nodes
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-ECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ k8s_ips }}"
+    delegate_to: localhost
+
+
+#######################
+# Remove Folder
+#######################
+
+  - name: Delete VM folder
+    community.vmware.vcenter_folder:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      datacenter_name: "{{ datacenter_name }}"
+      folder_name: "{{vcenter_folder}}"
+      folder_type: vm
+      state: absent
+    delegate_to: localhost
+
+######################################################################################################
+# VMWARE DESTROY END
+######################################################################################################
+
