@@ -1,0 +1,263 @@
+#######################
+# Controller Deployment
+#######################
+
+- hosts: localhost
+  gather_facts: no
+  vars:
+    controller_ips: "{{ groups['controller'] | list }}"
+
+  tasks:
+  - name: clone Controller 
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      # clone: arbitrary 
+      clone: '{{ proxmox_masterimage }}'
+      name: "controller-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: no
+      node: df101
+    with_items: '{{ controller_ips }}'
+
+  - name: modify the Controller
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      node: df101
+      name: "controller-{{ item.split('.')[-1][-3:] }}"
+      ciuser: '{{ vm_username }}'
+      cipassword: '{{ vm_password }}'
+      sshkeys: '{{ vm_sshkey }}'
+      timeout: 500
+      onboot: yes
+      autostart: yes
+      cores: '{{ vm_controller_cpu_cores }}'
+      memory: '{{ vm_contoller_memory }}'
+      ipconfig:
+        ipconfig0: "ip={{ item }}/24,gw=10.1.39.1"
+      pool: ezmeral
+      protection: no
+      update: yes
+    with_items: '{{ controller_ips }}'
+
+  - name: start Controller 
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      # clone: arbitrary 
+      state: started
+      name: "controller-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: yes
+      node: df101
+    with_items: '{{ controller_ips }}'
+ 
+
+#######################
+# Gateway Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    gateway_ips: "{{ groups['gateway'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: clone Gateways
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      clone: '{{ proxmox_gatewayimage }}'
+      name: "gateway-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: no
+      node: df101
+    with_items: "{{ gateway_ips }}"
+
+  - name: modify the Gateways
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      
+      protection: no
+      update: yes
+      
+      node: df101
+      name: "gateway-{{ item.split('.')[-1][-3:] }}"
+      ciuser: '{{ vm_username }}'
+      cipassword: '{{ vm_password }}'
+      sshkeys: '{{ vm_sshkey }}'
+      timeout: 500
+      onboot: yes
+      autostart: yes
+
+      cores: '{{ vm_gateway_cpu_cores }}'
+      memory: '{{ vm_gateway_memory }}'
+      ipconfig:
+        ipconfig0: "ip={{ item }}/24,gw=10.1.39.1"
+      pool: ezmeral
+
+    with_items: '{{ gateway_ips }}'
+
+
+  - name: start Gateways
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      state: started
+      name: "gateway-{{ item.split('.')[-1][-3:] }}"
+      template: no
+      full: yes
+      node: df101
+    with_items: "{{ gateway_ips }}"
+
+#######################
+# Picasso Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    picasso_ips: "{{ groups['picasso'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: clone Picasso VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      clone: '{{ proxmox_picassoimage }}'
+      name: "picasso-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: no
+      node: df108
+    with_items: "{{ picasso_ips }}"
+
+  - name: modify the Picasso VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      
+      protection: no
+      update: yes
+      
+      node: df108
+      name: "picasso-{{ item.split('.')[-1][-3:] }}"
+      ciuser: '{{ vm_username }}'
+      cipassword: '{{ vm_password }}'
+      sshkeys: '{{ vm_sshkey }}'
+      timeout: 500
+      onboot: yes
+      autostart: yes
+
+      cores: '{{ vm_picasso_cpu_cores }}'
+      memory: '{{ vm_picasso_memory }}'
+      ipconfig:
+        ipconfig0: "ip={{ item }}/24,gw=10.1.39.1"
+      pool: ezmeral
+
+    with_items: '{{ picasso_ips }}'
+
+
+  - name: start Picasso VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      state: started
+      name: "picasso-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: yes
+      node: df108
+    with_items: "{{ picasso_ips }}"
+
+
+#######################
+# k8s Deployment
+#######################
+
+- hosts: localhost
+  vars:
+    k8s_ips: "{{ groups['k8s'] | list }}"
+
+  gather_facts: no
+  tasks:
+
+  - name: clone k8s VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      clone: '{{ proxmox_k8simage }}'
+      name: "k8s-{{ item.split('.')[-1][-3:] }}"
+      timeout: 500
+      template: no
+      full: no
+      node: df110
+    with_items: "{{ k8s_ips }}"
+
+  - name: modify the k8s VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      
+      protection: no
+      update: yes
+      
+      node: df110
+      name: "k8s-{{ item.split('.')[-1][-3:] }}"
+      ciuser: '{{ vm_username }}'
+      cipassword: '{{ vm_password }}'
+      sshkeys: '{{ vm_sshkey }}'
+      timeout: 500
+      onboot: yes
+      autostart: yes
+
+      cores: '{{ vm_k8s_cpu_cores }}'
+      memory: '{{ vm_k8s_memory }}'
+      ipconfig:
+        ipconfig0: "ip={{ item }}/24,gw=10.1.39.1"
+      pool: ezmeral
+
+    with_items: '{{ k8s_ips }}'
+
+  - name: start k8s VMs
+    community.general.proxmox_kvm:
+      api_user: '{{ proxmox_username }}'
+      api_password: '{{ proxmox_password }}'
+      api_host: '{{ proxmox_host }}'
+      state: started
+      name: "k8s-{{ item.split('.')[-1][-3:] }}"
+      template: no
+      full: yes
+      node: df110
+    with_items: "{{ k8s_ips }}"
+
+- hosts: all
+  gather_facts: no
+  tasks:
+  - name: Wait 600 seconds for target connection to become reachable/usable
+    ignore_errors: yes 
+    wait_for_connection:
+      delay: 10
+######################################################################################################
+# Proxmox DEPLOYMENT END
+######################################################################################################
+
+

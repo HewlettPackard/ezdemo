@@ -59,18 +59,15 @@ DC={{ dc }}
 
 ###
 # define vm size for the different roles
-vm_contoller_memory='32 GiB'
-vm_controller_cpu_cores='4'
-vm_controller_cpu_socket='4'
+vm_controller_memory='32768'
+vm_controller_cpu_cores='12'
+vm_controller_disk = '500'
 
-vm_gateway_memory='8 GiB'
-vm_gateway_cpu_cores='4'
-vm_gateway_cpu_socket='4'
+vm_gateway_memory='8192'
+vm_gateway_cpu_cores='8'
 
-vm_picasso_memory='64 GiB'
-vm_picasso_cpu_cores='4'
-vm_picasso_cpu_socket='4'
+vm_picasso_memory='65536'
+vm_picasso_cpu_cores='16'
 
-vm_k8s_memory='32 GiB'
-vm_k8s_cpu_cores='4'
-vm_k8s_cpu_socket='4'
+vm_k8s_memory='32768'
+vm_k8s_cpu_cores='16'

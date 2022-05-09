@@ -7,3 +7,4 @@ Flask[async]
 Flask-Cors
 Werkzeug
 waitress
+pyvmomi

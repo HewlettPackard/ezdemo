@@ -27,13 +27,7 @@ set -euo pipefail
 DC=$(jq -r '.dc' ./config.json)
 NETWORK=$(jq '.network' ./config.json)
 
-# cat > ./ansible-init <<EOF
-# [all:vars]
-# dc=${DC}
-# network=${NETWORK}
-# EOF
-
 ansible --extra-vars "dc=${DC} network=${NETWORK}" localhost -m ansible.builtin.template -a "src=hosts-common.j2 dest=hosts-common.ini"
-cat hosts-common.ini ${DC}.ini > ./ansible.ini 
+cat hosts-common.ini ${DC}.ini > ./hosts.ini 
 
 exit 0

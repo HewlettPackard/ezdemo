@@ -1,0 +1,10 @@
+
+- hosts: all
+  gather_facts: yes
+  vars:
+
+  tasks:
+  - name: Remove file /etc/environment file (delete this step, if not required) 
+    ansible.builtin.file:
+      path: /etc/environment
+      state: absent
