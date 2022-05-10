@@ -1,7 +1,13 @@
 pipeline {
     agent any
     options {
-        skipStagesAfterUnstable()
+        skipStagesAfterUnstable(),
+        skipDefaultCheckout() 
+    }
+    environment {
+        aws_credentials = "ezdemo_indu",
+        azure_credentials = ""
+        gcp_credentials = ""
     }
     stages {
             // Stage to clone repository to our workspace.
@@ -31,7 +37,7 @@ pipeline {
                                         fallbackScript: [
                                                 classpath: [], 
                                                 sandbox: false, 
-                                                script: "return['Could not get demo_dependent Param']"
+                                                script: "return['Could not get dependent Param']"
                                                 ], 
                                         script: [ 
                                                 classpath: [],
@@ -125,7 +131,7 @@ pipeline {
                                 ]
                     def extra_tags = groovy.json.JsonOutput.toJson(tags)
                     println(extra_tags)
-                    env.CloudType = params.Env
+                    env.CloudType = params.CloudEnv
                     def user_setting = [
                         project_id : params.ProjectId,
                         user : params.ecp_user,
@@ -137,7 +143,7 @@ pipeline {
                         is_runtime : params.is_runtime,
                         is_verbose : params.is_verbose,
                         install_ad : params.install_ad,
-                        extra_tags : params.extra_tags
+                        extra_tags : ${extra_tags}
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
                 }
