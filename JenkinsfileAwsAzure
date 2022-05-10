@@ -42,17 +42,17 @@ pipeline {
                                         script: [ 
                                                 classpath: [],
                                                 sandbox: false, 
-                                                script: ('''
-                                                if (CloudEnv.equals("aws")){
-                                                    return["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"]
+                                                script: ("""
+                                                if (CloudEnv.equals('aws')){
+                                                    return['us-east-1','us-east-2','us-west-1','us-west-2','ap-southeast-1','eu-central-1','eu-west-1','eu-west-2','eu-west-3','eu-north-1','ca-central-1']
                                                 }
-                                                else if(CloudEnv.equals("azure")){
-                                                    return["eastus","eastus2","centralus","westus","westus2","canadacentral","canadaeast","northeurope","westeurope","ukwest","uksouth","francecentral","germanynorth","centralindia","japaneast","australiacentral","uaenorth","southafricawest"]
+                                                else if(CloudEnv.equals('azure')){
+                                                    return['eastus','eastus2','centralus','westus','westus2','canadacentral','canadaeast','northeurope','westeurope','ukwest','uksouth','francecentral','germanynorth','centralindia','japaneast','australiacentral','uaenorth','southafricawest']
                                                 }
-                                                else if(CloudEnv.equals("gcp")){
-                                                    return["TBD1", "TBD2", "TBD3"]
+                                                else if(CloudEnv.equals('gcp')){
+                                                    return['TBD1', 'TBD2', 'TBD3']
                                                 }
-                                                ''')
+                                                """)
                                                 ]    
                                         ]
                                 ],
@@ -116,20 +116,20 @@ pipeline {
                                 ),
                                 booleanParam(
                                 defaultValue: true, 
-                                description: 'If true, all cloud resources will be stopped.', 
+                                description: 'If true, all cloud resources will be stopped', 
                                 name: 'IsAutomaticStop'
                                 ),
                                 [
                                     $class: 'DateParameterDefinition',
                                     name: 'stop_date',
-                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will stop after a day'
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will stop after a day',
                                     dateFormat: 'yyyy:MM:dd hh:mm',
                                     defaultValue: 'LocalDate.now().plusDays(1)'
                                 ],
                                 [
                                     $class: 'DateParameterDefinition',
                                     name: 'delete_date',
-                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will delete after 3 days'
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will delete after 3 days',
                                     dateFormat: 'yyyy:MM:dd hh:mm',
                                     defaultValue: 'LocalDate.now().plusDays(3)'
                                 ]
