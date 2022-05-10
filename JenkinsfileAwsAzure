@@ -14,57 +14,10 @@ pipeline {
                     
                     properties([
                             parameters([
-                                [$class: 'ChoiceParameter', 
-                                    choiceType: 'PT_SINGLE_SELECT', 
-                                    description: 'Select the Public Cloud from the Dropdown List', 
-                                    filterLength: 1, 
-                                    filterable: false, 
-                                    name: 'Env', 
-                                    script: [
-                                        $class: 'bash', 
-                                        fallbackScript: [
-                                            classpath: [], 
-                                            sandbox: false, 
-                                            script: 
-                                                "return['Could not get the Lists of Public clouds']"
-                                        ], 
-                                        script: [
-                                            classpath: [], 
-                                            sandbox: false, 
-                                            script: 
-                                                "return['aws','azure','gcp']"
-                                        ]
-                                    ]
-                                ],
-                                [$class: 'CascadeChoiceParameter', 
-                                    choiceType: 'PT_SINGLE_SELECT', 
-                                    description: 'AWS regions for Public Cloud types',
-                                    name: 'regions', 
-                                    referencedParameters: 'Env', 
-                                    script: 
-                                        [$class: 'GroovyScript', 
-                                        fallbackScript: [
-                                                classpath: [], 
-                                                sandbox: false, 
-                                                script: "return['Could not get demo_dependent Param']"
-                                                ], 
-                                        script: [
-                                                classpath: [], 
-                                                sandbox: false, 
-                                                script: '''
-                                                if (Env.equals("aws")){
-                                                    return["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"]
-                                                }
-                                                else if(Env.equals("azure")){
-                                                    return["eastus","eastus2","centralus","westus","westus2","canadacentral","canadaeast","northeurope","westeurope","ukwest","uksouth","francecentral","germanynorth","centralindia","japaneast","australiacentral","uaenorth","southafricawest"]
-                                                }
-                                                else if(Env.equals("gcp")){
-                                                    return["TBD1", "TBD2", "TBD3"]
-                                                }
-                                                '''
-                                                ]    
-                                        ]
-                                ],
+                                choice(
+                                choices: ['aws', 'azure','gcp'], 
+                                name: 'Env'        
+                                ),
                                 [$class: 'CascadeChoiceParameter', 
                                     choiceType: 'PT_SINGLE_SELECT', 
                                     description: 'AWS regions for Public Cloud types',
