@@ -116,9 +116,23 @@ pipeline {
                                 ),
                                 booleanParam(
                                 defaultValue: true, 
-                                description: 'When you want automatic stoppage of resources on given date/time.', 
-                                name: 'AutomaticStop'
-                                )
+                                description: 'If true, all cloud resources will be stopped.', 
+                                name: 'IsAutomaticStop'
+                                ),
+                                [
+                                    $class: 'DateParameterDefinition',
+                                    name: 'stop_date',
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will stop after a day'
+                                    dateFormat: 'yyyy:MM:dd hh:mm',
+                                    defaultValue: 'LocalDate.now().plusDays(1)'
+                                ],
+                                [
+                                    $class: 'DateParameterDefinition',
+                                    name: 'delete_date',
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will delete after 3 days'
+                                    dateFormat: 'yyyy:MM:dd hh:mm',
+                                    defaultValue: 'LocalDate.now().plusDays(3)'
+                                ]
                             ])
                         ])
                     }
