@@ -11,13 +11,13 @@ pipeline {
     }
     stages {
             // Stage to clone repository to our workspace.
-            stage('EZDEMO :: Clone repository'){
+            stage('EZDEMO :: Git Clone'){
             steps {
             checkout scm
             }
             }
             // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
-            stage('EZDEMO :: Configure Input Parameters'){
+            stage('EZDEMO :: Configure Parameters'){
             steps {
                 script {
                     properties([
