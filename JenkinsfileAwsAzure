@@ -3,7 +3,9 @@ pipeline {
         stages {
             // Stage to clone repository to our workspace.
             stage('Clone repository'){
+            steps {
             checkout scm
+            }
             }
             // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
             stage('Set Parameters For the Pipeline'){
@@ -183,50 +185,27 @@ pipeline {
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
                 }
-                // TODO:
-                /* Generate aws_config.json or azure_config.json
-                { aws_config.json ->>
-                "aws_access_key": "",
-                "aws_secret_key": "",
-                "region": "" }
                 
-                azure_config.json ->> 
-
-                { "az_subscription": "",
-                  "az_appId": "",
-                  "az_password": "",
-                  "az_tenant": "",
-                  "region": ""
-                }
-                */ 
-                script {
-
-
-
-                }
-
 
             }
         }
 
     // Stage to Create Docker Image.
-    try{
-        stage('Build Docker Image'){
-        script {
+
+    stage('Build Docker Image'){
+    steps {
+    script {
             sh  """
                 chmod + docker-build.sh
                 ./docker-build.sh
                 """
             }        
-        }
-        } catch(excption) {
-        currentBuild.result = "FAILED"
-        throw excption
     }
-
+    }
      // Stage to Start the Docker Container.
-    try{
-        stage('Stage to Start the Docker Container'){
+
+    stage('Stage to Start the Docker Container'){
+    steps {
         script {
             sh  """
                 ./start.sh
@@ -234,21 +213,14 @@ pipeline {
                 """
             }        
         }
-        } catch(excption) {
-        currentBuild.result = "FAILED"
-        throw excption
     }
-
+     
      // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
-    try{
-        stage('Stage to Build and Deploy EZCP'){
+    stage('Stage to Build and Deploy EZCP'){
+    steps {
         script {
             sh  "./00-run_all.sh \${CloudType}" 
             }        
         }
-        } catch(excption) {
-        currentBuild.result = "FAILED"
-        throw excption
     }
-}   
 }
