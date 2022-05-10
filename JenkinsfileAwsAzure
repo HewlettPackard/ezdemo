@@ -1,6 +1,9 @@
 pipeline {
     agent any
-        stages {
+    options {
+        skipStagesAfterUnstable()
+    }
+    stages {
             // Stage to clone repository to our workspace.
             stage('Clone repository'){
             steps {
@@ -8,42 +11,41 @@ pipeline {
             }
             }
             // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
-            stage('Set Parameters For the Pipeline'){
-                steps {
-                    script {
-                    
+            stage('EZDEMO :: Configure Input Parameters'){
+            steps {
+                script {
                     properties([
                             parameters([
                                 choice(
                                 choices: ['aws', 'azure','gcp'], 
-                                name: 'Env'        
+                                name: 'CloudEnv'        
                                 ),
                                 [$class: 'CascadeChoiceParameter', 
                                     choiceType: 'PT_SINGLE_SELECT', 
-                                    description: 'AWS regions for Public Cloud types',
+                                    description: 'Regions for Public Cloud Selected',
                                     name: 'regions', 
-                                    referencedParameters: 'Env', 
+                                    referencedParameters: 'CloudEnv', 
                                     script: 
-                                        [$class: 'GroovyScript', 
+                                        [
+                                        $class: 'GroovyScript', 
                                         fallbackScript: [
                                                 classpath: [], 
                                                 sandbox: false, 
                                                 script: "return['Could not get demo_dependent Param']"
                                                 ], 
-                                        script: [
-                                                classpath: [], 
+                                        script: [ 
                                                 sandbox: false, 
-                                                script: '''
-                                                if (Env.equals("aws")){
+                                                script: ('''
+                                                if (CloudEnv.equals("aws")){
                                                     return["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"]
                                                 }
-                                                else if(Env.equals("azure")){
+                                                else if(CloudEnv.equals("azure")){
                                                     return["eastus","eastus2","centralus","westus","westus2","canadacentral","canadaeast","northeurope","westeurope","ukwest","uksouth","francecentral","germanynorth","centralindia","japaneast","australiacentral","uaenorth","southafricawest"]
                                                 }
-                                                else if(Env.equals("gcp")){
+                                                else if(CloudEnv.equals("gcp")){
                                                     return["TBD1", "TBD2", "TBD3"]
                                                 }
-                                                '''
+                                                ''',false,[])
                                                 ]    
                                         ]
                                 ],
@@ -145,7 +147,7 @@ pipeline {
 
     // Stage to Create Docker Image.
 
-    stage('Build Docker Image'){
+    stage('EZDEMO :: Build Image'){
     steps {
     script {
             sh  """
@@ -157,7 +159,7 @@ pipeline {
     }
      // Stage to Start the Docker Container.
 
-    stage('Stage to Start the Docker Container'){
+    stage('EZDEMO :: Run Container'){
     steps {
         script {
             sh  """
@@ -169,7 +171,7 @@ pipeline {
     }
      
      // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
-    stage('Stage to Build and Deploy EZCP'){
+    stage('EZCP :: Build and Deploy'){
     steps {
         script {
             sh  "./00-run_all.sh \${CloudType}" 
