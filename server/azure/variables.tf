@@ -45,4 +45,4 @@ variable "mapr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 
 variable "ad_member_group" { default = "DemoTenantUsers" }
 variable "ad_admin_group" { default = "DemoTenantAdmins" }
-variable "extra_tags: { default = {"cost_center":"Sales"} }
+variable "extra_tags" { default = {"cost_center":"Sales"} }

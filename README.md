@@ -11,20 +11,19 @@ Download the [start script](https://raw.githubusercontent.com/hpe-container-plat
 ```bash
 #!/usr/bin/env bash
 VOLUMES=()
-CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json" "ovirt_config.json")
-
+CONFIG_FILES=("aws_config.json" "azure_config.json")
 for file in "${CONFIG_FILES[@]}"
 do
   target="${file%_*}"
-  # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 
+[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/${target}/dc.ini:rw")
 [[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
 [[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
+
 printf -v joined ' -v %s' "${VOLUMES[@]}"
 
-## run at the background with web service exposed at 4000, mapr grafana at 3000, mcs at 8443, mcs installer at 9443
 docker run --name ezdemo --pull always -d -p 3000:3000 -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
 ```
 
@@ -37,7 +36,7 @@ Create your user settings in a separate file named "user.settings" in following 
   "admin_password": "ChangeMe!",
   "is_mlops": false,
   "is_mapr": false,
-  "is_mapr_ha": false,
+  "is_mapr_ha": true,
   "is_gpu": false,
   "is_ha": false,
   "is_runtime" : true,
@@ -83,22 +82,22 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ### Run all
 
-```./00-run_all.sh aws|azure|vmware|kvm```
+```./00-run_all.sh aws|azure|dc```
 
 ### Run Individaully
 
 At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
 
-- `./01-init.sh aws|azure|vmware|kvm`
-- `./02-apply.sh aws|azure|vmware|kvm`
-- `./03-install.sh aws|azure|vmware|kvm`
-- `./04-configure.sh aws|azure|vmware|kvm`
+- `./01-init.sh aws|azure|dc`
+- `./02-apply.sh aws|azure|dc`
+- `./03-install.sh aws|azure|dc`
+- `./04-configure.sh aws|azure|dc`
 
 Deployed resources will be available in ./server/ansible/inventory.ini file
 
-- All access to the environment is possible only through the gateway
+- All access to the public cloud environment is possible only through the gateway
 
-- Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config setup for jump host via gateway)
+- Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config file is already set up for jump host via gateway)
 
 - You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your workstation to access the deployed nodes directly
 
@@ -106,7 +105,7 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 
 ## Reference
 
-### Utilities used in the container (or you need if you are running locally)
+### Utilities used in the container
 
 - AWS CLI - Download from [AWS](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - Azure-CLI - Download from [Azure](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)

@@ -23,8 +23,15 @@
 
 set -euo pipefail
 
-ansible-playbook -i hosts.ini ../terraform.yml
+ansible-playbook -v -i hosts.ini ../ansible/routines/destroy_vmware.yml
 
-ansible-inventory -i hosts.ini --list
+VM_NETWORK=$(grep vm_network dc.ini | cut -d= -f2 | cut -d/ -f1 | tr -d '"')
+# Clear ssh host keys
+for i in $(seq 1 20); do
+  ssh-keygen -R $(echo ${VM_NETWORK%.*}.$((${VM_NETWORK##*.}+i))) >> /dev/null 2>&1  
+done
 
-exit 0
+rm hosts-common.ini
+rm hosts.ini
+rm my.tfvars
+

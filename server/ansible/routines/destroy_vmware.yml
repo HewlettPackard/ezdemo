@@ -10,6 +10,9 @@
 - hosts: localhost
   vars:
     controller_ips: "{{ groups['controller'] | list }}"
+    gateway_ips: "{{ groups['gateway'] | list }}"
+    picasso_ips: "{{ groups['picasso'] | list }}"
+    k8s_ips: "{{ groups['k8s'] | list }}"
 
   gather_facts: no
   tasks:
@@ -34,13 +37,6 @@
 # Destroy GATEWAY
 #######################
 
-- hosts: localhost
-  vars:
-    gateway_ips: "{{ groups['gateway'] | list }}"
-
-  gather_facts: no
-  tasks:
-
   - name: Destroy gateway
     vmware_guest:
       hostname: "{{ vcenter_server }}"
@@ -58,43 +54,8 @@
     delegate_to: localhost
 
 #######################
-# Destroy EPIC
-#######################
-
-- hosts: localhost
-  vars:
-    epic_ips: "{{ groups['epic'] | list }}"
-
-  gather_facts: no
-  tasks:
-
-  - name: Destroy EPIC nodes
-    vmware_guest:
-      hostname: "{{ vcenter_server }}"
-      username: "{{ vcenter_user }}"
-      password: "{{ vcenter_pass }}"
-      validate_certs: False
-      name: "{{ item }}-ECP-EPIC-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
-      datastore: "{{ vcenter_datastore }}"
-      state: absent
-      force: yes
-    with_items: "{{ epic_ips }}"
-    delegate_to: localhost
-
-
-#######################
 # Destroy PICASSO
 #######################
-
-- hosts: localhost
-  vars:
-    picasso_ips: "{{ groups['picasso'] | list }}"
-
-  gather_facts: no
-  tasks:
 
   - name: Destroy Picasso nodes
     vmware_guest:
@@ -115,14 +76,6 @@
 #######################
 # Destroy K8S
 #######################
-
-- hosts: localhost
-  vars:
-    k8s_ips: "{{ groups['k8s'] | list }}"
-
-
-  gather_facts: no
-  tasks:
 
   - name: Destroy K8s nodes
     vmware_guest:
@@ -160,4 +113,3 @@
 ######################################################################################################
 # VMWARE DESTROY END
 ######################################################################################################
-

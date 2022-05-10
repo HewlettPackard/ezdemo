@@ -32,4 +32,3 @@
           enabled: yes
           name: docker
         # when: copy.changed
-

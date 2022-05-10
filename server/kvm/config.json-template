@@ -1,9 +1,0 @@
-{
-  "libvirt_uri": "qemu+ssh:///system",
-  "libvirt_network": "",
-  "is_mlops": false,
-  "user": "",
-  "admin_password": "ChangeMe!",
-  "is_mapr": false,
-  "project_id": ""
-}

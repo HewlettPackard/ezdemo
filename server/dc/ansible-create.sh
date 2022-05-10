@@ -23,7 +23,7 @@
 
 set -euo pipefail
 
-ansible-playbook -i hosts.ini ../terraform.yml
+ansible-playbook -i hosts.ini terraform.yml
 
 ansible-inventory -i hosts.ini --list
 
