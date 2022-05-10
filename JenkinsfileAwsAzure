@@ -119,7 +119,13 @@ pipeline {
                             ])
                         ])
                     }
-                // Generate user.settings    
+            }
+        }
+
+
+    // Generate user.settings 
+    stage('EZDEMO :: Generate user.settings'){
+        steps {           
                 script {
                     ​def tags = [   
                                 cost_center : params.CostCenter,
@@ -144,42 +150,38 @@ pipeline {
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
                 }
-                
-
-            }
         }
+    }
 
     // Stage to Create Docker Image.
-
-    stage('EZDEMO :: Build Image'){
-    steps {
-    script {
-            sh  """
-                chmod + docker-build.sh
-                ./docker-build.sh
-                """
+    stage('EZDEMO :: Generate <cloud>_config.json'){
+        steps {
+            sh 'echo "TBD"'            
             }        
     }
+    
+    // Stage to Create Docker Image.
+    stage('EZDEMO :: Build Image'){
+        steps {
+            sh 'chmod + docker-build.sh'            
+            sh './docker-build.sh'
+            }        
     }
+    
      // Stage to Start the Docker Container.
 
     stage('EZDEMO :: Run Container'){
-    steps {
-        script {
-            sh  """
-                ./start.sh
-                ./docker-exec.sh
-                """
-            }        
-        }
+        steps {
+            sh './start.sh'
+            sh './docker-exec.sh'
+        }        
     }
+    
      
      // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
     stage('EZCP :: Build and Deploy'){
-    steps {
-        script {
-            sh  "./00-run_all.sh \${CloudType}" 
-            }        
+        steps {
+            sh  './00-run_all.sh ${CloudType}'
         }
     }
 }
