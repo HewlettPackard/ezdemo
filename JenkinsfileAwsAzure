@@ -1,11 +1,11 @@
 pipeline {
     agent any
     options {
-        skipStagesAfterUnstable(),
+        skipStagesAfterUnstable()
         skipDefaultCheckout() 
     }
     environment {
-        aws_credentials = "ezdemo_indu",
+        aws_credentials = "ezdemo_indu"
         azure_credentials = ""
         gcp_credentials = ""
     }
