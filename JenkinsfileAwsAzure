@@ -34,6 +34,7 @@ pipeline {
                                                 script: "return['Could not get demo_dependent Param']"
                                                 ], 
                                         script: [ 
+                                                classpath: [],
                                                 sandbox: false, 
                                                 script: ('''
                                                 if (CloudEnv.equals("aws")){
@@ -45,7 +46,7 @@ pipeline {
                                                 else if(CloudEnv.equals("gcp")){
                                                     return["TBD1", "TBD2", "TBD3"]
                                                 }
-                                                ''',false,[])
+                                                ''')
                                                 ]    
                                         ]
                                 ],
