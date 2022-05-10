@@ -70,6 +70,7 @@ is_ha = ${IS_HA}
 is_mapr = ${IS_MAPR}
 mapr_count = ${MAPR_COUNT}
 admin_password = ${ADMIN_PASSWORD}
+extra_tags=${EXTRA_TAGS}
 EOF
 if [[ "${IS_GPU}" == "true" ]]; then
   echo "gworker_count = 1" >> ${1}/my.tfvars
@@ -85,4 +86,11 @@ popd > /dev/null
 
 echo "Stage 1 complete"
 
+# Apply Terratags only extra_tags are set in user.settings and infra is aws or azure. 
+
+if [[ "$1" == "aws" || "$1" == "azure" ]] && [[ ! -z "${EXTRA_TAGS}" ]] 
+then
+	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via. terratag"
+	terratag -dir=$1 -tags=${EXTRA_TAGS} -rename
+fi
 exit 0
