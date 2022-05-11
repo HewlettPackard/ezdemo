@@ -161,7 +161,7 @@ pipeline {
     // }
 
     // Stage to generate aws_config.json
-    stage('EZDEMO :: Generate <cloud>_config.json'){
+    stage('EZDEMO :: Generate aws_config.json'){
         steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
@@ -177,7 +177,7 @@ pipeline {
     // Stage to Start the Docker Container.
     stage('EZDEMO :: Run Container'){
         steps {
-            sh './start.sh'
+            sh './start.sh '
             //sh './docker-exec.sh'
         }        
     }
@@ -186,7 +186,7 @@ pipeline {
         agent {
             docker { 
                 image 'erdincka/ezdemo:latest' 
-                reuseNode true
+                //reuseNode true
                 }
         }
         steps {   
