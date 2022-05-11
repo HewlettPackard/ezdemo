@@ -183,12 +183,8 @@ pipeline {
                 }
         }
         steps {
-                sh "echo ${params.AwsPrincipal}"
-                sh "echo ${aws_credentials}"
-                sh "echo ${CloudType}"
-                
-                withCredentials([credentials(credentialsId: params.AwsPrincipal, credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl',variable: 'mykey')]) {
-                    echo "Indu Actual keys: ${mykey}"
+                withAWS(region: params.AwsRegion, credentials: params.AwsCredentials) {
+                    echo "Indu Actual keys: ${AWS_ACCESS_KEY_ID}, ${AWS_SECRET_ACCESS_KEY}, ${AWS_DEFAULT_REGION}"
                 }
                 // sh "./00-run_all.sh ${CloudType}"
             }
