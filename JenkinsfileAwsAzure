@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         docker_image='erdincka/ezdemo:latest'
-        docker_args="-u root:root -v ${WORKSPACE}/config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings"
+        docker_args="-u root:root -v ${WORKSPACE}/config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/home/jenkins"
         aws_credentials = "ezdemo_indu"
         azure_credentials = ""
         gcp_credentials = ""
