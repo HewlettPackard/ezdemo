@@ -33,9 +33,12 @@
 - name: configure MLOps tenant
   import_playbook: routines/configure_mlops.yml
   when: (is_runtime | bool) and (is_mlops | bool)
-  
-### External Data Fabric
-- name: Install External MapR Hosts
-  # import_playbook: routines/create_mapr.yml
-  import_playbook: routines/create_mapr7.yml
+
+###
+# Configure external Data Fabric
+###
+
+- name: configure MLOps tenant
+  import_playbook: routines/configure_mapr7.yml
   when: is_mapr | bool
+  

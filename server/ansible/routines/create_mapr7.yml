@@ -56,7 +56,6 @@
                   'mapr-spark-historyserver'
                   ]
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: populate /tmp/disks.txt
     lineinfile:
@@ -64,20 +63,12 @@
       line: "{{ item }}"
       create: true
     with_items: "{{ mapr_disks.stdout_lines }}"
-    when: cluster_configured.failed | bool
-
-  - name: create tokens for root
-    shell: echo mapr | maprlogin password -user mapr
-    become: yes
-  - name: create tokens for user
-    shell: echo mapr | maprlogin password -user mapr
 
 - hosts: "{{ groups['mapr'][:3] | default([]) }}"
   tasks:
   - name: install cldb and zk
     package: name="mapr-cldb, mapr-zookeeper" state=present
     become: yes
-    when: cluster_configured.failed | bool
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   vars:
@@ -149,13 +140,11 @@
   - name: pack tokens
     shell: "cd /opt/mapr/conf && tar czvf tokens.tgz tokens"
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: save keys from first node
     fetch: src="/opt/mapr/conf/{{ item.filename }}" dest="/tmp/maprkeys/" flat=yes
     with_items: "{{ secure_files }}"
     become: yes
-    when: cluster_configured.failed | bool
   
 - hosts: "{{ groups['mapr'][1:] | default([]) }}"
   vars:
@@ -210,6 +199,10 @@
           mode: '0444'
         - filename: chain-ca.pem
           mode: '0644'
+        - filename: signing-ca.pem
+          mode: '0644'
+        - filename: root-ca.pem
+          mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
   tasks:
@@ -217,17 +210,14 @@
     copy: src="/tmp/maprkeys/{{ item.filename }}" dest="/opt/mapr/conf/{{ item.filename }}" mode="{{ item.mode }}" owner="mapr" group="mapr"
     with_items: "{{ secure_files }}"
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: restore tokens for dare
-    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz; mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
+    shell: "cd /opt/mapr/conf; rm -rf tokens && tar xzf tokens.tgz; rm -rf ca && mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: enable monitoring
     package: name="mapr-collectd, mapr-grafana, mapr-fluentd" state=present
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: install ecosystem components
     package: name="{{ packages | join(',') }}" state=present
@@ -240,22 +230,22 @@
         'mapr-airflow', 'mapr-airflow-webserver', 'mapr-airflow-scheduler'
       ]
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: Configure.sh secure on other nodes
     shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
-    when: cluster_configured.failed | bool
     become: yes
 
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
   - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver, mapr-elasticsearch" state=present
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: re-Configure.sh
     shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
     become: yes
+
+  - name: create ticket for user
+    shell: echo mapr | maprlogin password -user mapr
 
   - name: copy the license
     copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
@@ -270,20 +260,6 @@
     shell: |
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
-
-  - name: configure delta
-    shell: pip3 install delta_spark
-    # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-    become: yes
-
-  - name: configure s3
-    shell: |
-      mkdir -p /home/mapr/.mc/certs/CAs
-      ln -s /opt/mapr/conf/ca/chain-ca.pem /home/mapr/.mc/certs/CAs/chain-ca.pem || true
-      chown -R mapr:mapr /home/mapr/.mc/certs/CAs
-      export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
-      ${JAVA_HOME}/bin/keytool -noprompt -importcert -file /opt/mapr/conf/ca/chain-ca.pem -alias maprca -storepass changeit -cacerts || true
-    become: yes
 
 - hosts: localhost
   tasks:
