@@ -185,13 +185,13 @@ pipeline {
     }
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
-        agent {
+        // agent {
                 // docker {
                 //     image docker_image
                 //     reuseNode true
                 //     args docker_args
                 // }
-            }
+        //     }
         steps {   
             script {
                 docker.image(docker_image).withRun(docker_args) {c ->
