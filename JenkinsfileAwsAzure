@@ -196,16 +196,15 @@ pipeline {
             script {
                 def CID = sh(script: '$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q)', returnStdout: true)
                 docker exec CID ./00-run_all.sh params.CloudEnv     
+            }
         }
-    }
 }
 }
-
 post {
     always {
             script {
                 echo 'Job is completed, doing clean up activities!'
-                // deleteDir() /* clean up workspace too */
+                // deleteDir() clean up workspace too 
                 sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
             }
     }
