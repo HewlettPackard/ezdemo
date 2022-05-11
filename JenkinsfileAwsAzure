@@ -125,6 +125,7 @@ pipeline {
 
     // Generate user.settings 
     stage('EZDEMO :: Generate user.settings'){
+        steps {
        
                     ​def tags = [   
                                 cost_center : params.CostCenter,
@@ -148,6 +149,7 @@ pipeline {
                         extra_tags : ${extra_tags}
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
+        }
     }
 
     // Stage to Create Docker Image.
