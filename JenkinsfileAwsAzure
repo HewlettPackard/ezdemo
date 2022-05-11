@@ -166,9 +166,9 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
                         sh ">${WORKSPACE}/aws_config.json"
-                        sh "echo AWS_ACCESS_KEY_ID=env.AWS_ACCESS_KEY_ID >> ${WORKSPACE}/aws_config.json" 
-                        sh "echo AWS_SECRET_ACCESS_KEY=env.AWS_SECRET_ACCESS_KEY >> ${WORKSPACE}/aws_config.json"
-                        sh "echo AWS_DEFAULT_REGION=params.AwsRegions >> ${WORKSPACE}/aws_config.json"
+                        sh "echo AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID} >> ${WORKSPACE}/aws_config.json" 
+                        sh "echo AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY} >> ${WORKSPACE}/aws_config.json"
+                        sh "echo AWS_DEFAULT_REGION=${params.AwsRegions} >> ${WORKSPACE}/aws_config.json"
                     }
                 }
         }
