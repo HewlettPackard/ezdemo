@@ -1,7 +1,7 @@
 pipeline {
     agent any
     options {
-        skipStagesAfterUnstable()
+        // skipStagesAfterUnstable()
         skipDefaultCheckout() 
     }
     environment {
@@ -126,6 +126,8 @@ pipeline {
     // Generate user.settings 
     stage('EZDEMO :: Generate user.settings'){
         steps {
+
+                script {
        
                     ​def tags = [   
                                 cost_center : params.CostCenter,
@@ -133,7 +135,6 @@ pipeline {
                                 stop_auto : params.AutomaticStop
                                 ]
                     def extra_tags = groovy.json.JsonOutput.toJson(tags)
-                    println(extra_tags)
                     env.CloudType = params.CloudEnv
                     def user_setting = [
                         project_id : params.ProjectId,
@@ -149,6 +150,7 @@ pipeline {
                         extra_tags : ${extra_tags}
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
+                }
         }
     }
 
@@ -167,7 +169,7 @@ pipeline {
             }        
     }
     
-     // Stage to Start the Docker Container.
+    // Stage to Start the Docker Container.
 
     stage('EZDEMO :: Run Container'){
         steps {
@@ -177,7 +179,7 @@ pipeline {
     }
     
      
-     // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
+    // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
     stage('EZCP :: Build and Deploy'){
         steps {
             sh  './00-run_all.sh ${CloudType}'
