@@ -194,7 +194,7 @@ pipeline {
         //     }
         steps {   
             script {
-                docker.image(docker_image).withRun(docker_args) {c ->
+                docker.image(docker_image).inside(docker_args) {
                     sh "./00-run_all.sh ${CloudType}"    
                 }
             }
