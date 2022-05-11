@@ -127,7 +127,9 @@ pipeline {
                         def tags = [   
                                 cost_center : params.CostCenter,
                                 TZ : params.TimeZone,
-                                stop_auto : params.AutomaticStop
+                                stop_auto : params.IsAutomaticStop,
+                                stop_date : params.stop_date,
+                                delete_date: params.delete_date
                                 ]
                         def extra_tags_a = groovy.json.JsonOutput.toJson(tags) 
                         env.CloudType = params.CloudEnv 
