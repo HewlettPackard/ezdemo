@@ -177,24 +177,24 @@ pipeline {
     }
     
     // Stage to Start the Docker Container.
-    // stage('EZDEMO :: Run Container'){
-    //     steps {
-    //         sh './start.sh'
-    //         //sh './docker-exec.sh'
-    //     }        
-    // }
+    stage('EZDEMO :: Run Container'){
+        steps {
+            sh './start.sh'
+            //sh './docker-exec.sh'
+        }        
+    }
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
-        agent {
-                docker {
-                    image docker_image
-                    args docker_args
-                    reuseNode true
-                }
-        }
+        // agent {
+        //         docker {
+        //             image docker_image
+        //             args docker_args
+        //             reuseNode true
+        //         }
+        // }
         steps {
             script {
-                def CID = sh(script: '$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q)', returnStdout: true)
+                def CID = sh(script: 'docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q',returnStdout: true)
                 docker exec CID ./00-run_all.sh params.CloudEnv     
             }
         }
@@ -204,7 +204,6 @@ post {
     always {
             script {
                 echo 'Job is completed, doing clean up activities!'
-                // deleteDir() clean up workspace too 
                 sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
             }
     }
