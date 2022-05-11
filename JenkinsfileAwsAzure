@@ -183,8 +183,10 @@ pipeline {
                 }
         }
         steps {
-            withAWS(credentials: params.AwsPrincipal, region: params.AwsRegions) {
-            sh  "./00-run_all.sh ${CloudType}"
+            script {
+                withAWS(credentials: params.AwsPrincipal, region: params.AwsRegions) {
+                sh  "./00-run_all.sh ${CloudType}"
+                }
             }
         }
     }
