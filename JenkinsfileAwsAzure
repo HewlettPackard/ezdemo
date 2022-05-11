@@ -194,9 +194,11 @@ pipeline {
         //     }
         steps {   
             script {
+               dir("server") { 
                 docker.image(docker_image).inside(docker_args) {
                     sh "./00-run_all.sh ${CloudType}"    
                 }
+               }
             }
         }
     }
