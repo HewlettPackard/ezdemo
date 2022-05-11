@@ -186,17 +186,18 @@ pipeline {
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
         agent {
-                docker {
-                    image docker_image
-                    reuseNode true
-                    args docker_args
-                }
+                // docker {
+                //     image docker_image
+                //     reuseNode true
+                //     args docker_args
+                // }
             }
         steps {   
-            withDockerContainer(image: docker_image, args: docker_args){
-                sh "./00-run_all.sh ${CloudType}"
+            script {
+                docker.image(docker_image).withRun(docker_args) {c ->
+                    sh "./00-run_all.sh ${CloudType}"    
+                }
             }
-            
         }
     }
 }
