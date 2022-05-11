@@ -192,8 +192,10 @@ pipeline {
                     reuseNode true
                 }
         }
-        steps {  
-            sh '${WORKSPACE}/server/00-run_all.sh ${CloudType}'     
+        steps {
+            script {
+                def CID = sh(script: '$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q)', returnStdout: true)
+                docker exec CID ./00-run_all.sh params.CloudEnv     
         }
     }
 }
