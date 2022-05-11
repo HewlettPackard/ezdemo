@@ -193,7 +193,7 @@ pipeline {
                 }
         }
         steps {  
-            sh "./00-run_all.sh ${CloudType}"     
+            sh '${WORKSPACE}/00-run_all.sh ${CloudType}'     
         }
     }
 }
