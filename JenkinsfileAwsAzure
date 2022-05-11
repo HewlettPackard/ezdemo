@@ -12,15 +12,15 @@ pipeline {
     stages {
             // Stage to clone repository to our workspace.
             stage('EZDEMO :: Git Clone'){
-            steps {
-            checkout scm
-            }
+                steps {
+                        checkout scm
+                }
             }
             // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
             stage('EZDEMO :: Configure Parameters'){
             steps {
-                script {
-                    properties([
+                // script {
+                //  properties([
                             parameters([
                                 choice(
                                 choices: ['aws', 'azure','gcp'], 
@@ -117,8 +117,8 @@ pipeline {
                                     defaultValue: 'LocalDate.now().plusDays(3)'
                                 ]
                             ])
-                        ])
-                    }
+                        // ])
+                    // }
             }
         }
 
@@ -126,27 +126,26 @@ pipeline {
     // Generate user.settings 
     stage('EZDEMO :: Generate user.settings'){
         steps {
-
                 script {
        
                     ​def tags = [   
-                                cost_center : params.CostCenter,
-                                TZ : params.TimeZone,
-                                stop_auto : params.AutomaticStop
+                                cost_center : ${params.CostCenter},
+                                TZ : ${params.TimeZone},
+                                stop_auto : ${params.AutomaticStop}
                                 ]
                     def extra_tags = groovy.json.JsonOutput.toJson(tags)
-                    env.CloudType = params.CloudEnv
+                    env.CloudType = ${params.CloudEnv}
                     def user_setting = [
-                        project_id : params.ProjectId,
-                        user : params.ecp_user,
-                        admin_password : params.ecp_password,
-                        is_mlops : params.is_mlops,
-                        is_mapr : params.is_mapr,
-                        is_gpu : params.is_gpu,
-                        is_ha : params.is_ha,
-                        is_runtime : params.is_runtime,
-                        is_verbose : params.is_verbose,
-                        install_ad : params.install_ad,
+                        project_id : ${params.ProjectId},
+                        user : ${params.ecp_user},
+                        admin_password : ${params.ecp_password},
+                        is_mlops : ${params.is_mlops},
+                        is_mapr : ${params.is_mapr},
+                        is_gpu : ${params.is_gpu},
+                        is_ha : ${params.is_ha},
+                        is_runtime : ${params.is_runtime},
+                        is_verbose : ${params.is_verbose},
+                        install_ad : ${params.install_ad},
                         extra_tags : ${extra_tags}
                     ]
                     writeJSON(file: 'user.settings', json: user_setting)
