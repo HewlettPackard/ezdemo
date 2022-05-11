@@ -183,9 +183,12 @@ pipeline {
                 }
         }
         steps {
-                withAWS(region: params.AwsRegion, credentials: params.AwsCredentials) {
-                    echo "Indu Actual keys: ${AWS_ACCESS_KEY_ID}, ${AWS_SECRET_ACCESS_KEY}, ${AWS_DEFAULT_REGION}"
+            script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
+                        echo "this is ${env.AWS_ACCESS_KEY_ID}"
+                        echo "this is ${env.AWS_SECRET_ACCESS_KEY}"
                 }
+            }   
                 // sh "./00-run_all.sh ${CloudType}"
             }
         }
