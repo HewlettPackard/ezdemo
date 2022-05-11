@@ -19,9 +19,8 @@ pipeline {
             // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
             stage('EZDEMO :: Configure Parameters'){
             steps {
-                // script {
-                //  properties([
-                            parameters([
+                        parameters(
+                            [
                                 choice(
                                 choices: ['aws', 'azure','gcp'], 
                                 description: 'Select the Cloud Provider',
@@ -116,26 +115,22 @@ pipeline {
                                     dateFormat: 'yyyy:MM:dd hh:mm',
                                     defaultValue: 'LocalDate.now().plusDays(3)'
                                 ]
-                            ])
-                        // ])
-                    // }
+                            ]
+                        )
+
             }
         }
-
-
     // Generate user.settings 
     stage('EZDEMO :: Generate user.settings'){
         steps {
-                    script {
-                        ​def tags = [   
+                script {
+                        def tags = [   
                                 cost_center : params.CostCenter,
                                 TZ : params.TimeZone,
                                 stop_auto : params.AutomaticStop
                                 ]
-                    }
-                    script { def extra_tags_a = groovy.json.JsonOutput.toJson(tags) }
-                    script { env.CloudType = params.CloudEnv }
-                    script { 
+                        def extra_tags_a = groovy.json.JsonOutput.toJson(tags) 
+                        env.CloudType = params.CloudEnv 
                         def user_setting = [
                             project_id : params.ProjectId,
                             user : params.ecp_user,
@@ -171,15 +166,12 @@ pipeline {
     }
     
     // Stage to Start the Docker Container.
-
     stage('EZDEMO :: Run Container'){
         steps {
             sh './start.sh'
             sh './docker-exec.sh'
         }        
     }
-    
-     
     // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
     stage('EZCP :: Build and Deploy'){
         steps {
