@@ -1,0 +1,184 @@
+pipeline {
+    agent any
+    options {
+        // skipStagesAfterUnstable()
+        skipDefaultCheckout() 
+    }
+    environment {
+        aws_credentials = "ezdemo_indu"
+        azure_credentials = ""
+        gcp_credentials = ""
+    }
+    stages {
+            // Stage to clone repository to our workspace.
+            stage('EZDEMO :: Git Clone'){
+                steps {
+                        checkout scm
+                }
+            }
+            // Stage to parameterize the pipeline and generate user.settings/<cloud>_config.json for the pipeline.
+            stage('EZDEMO :: Configure Parameters'){
+            steps {
+                        parameters(
+                            [
+                                choice(
+                                choices: ['aws', 'azure','gcp'], 
+                                description: 'Select the Cloud Provider',
+                                name: 'CloudEnv'        
+                                ),
+                                choice(
+                                choices: ["us-east-1","us-east-2","us-west-1","us-west-2","ap-southeast-1","eu-central-1","eu-west-1","eu-west-2","eu-west-3","eu-north-1","ca-central-1"], 
+                                description: 'Select the AWS region to use.',
+                                name: 'AwsRegions',
+                                defaultValue: 'us-east-1'     
+                                ),
+                                credentials(
+                                    credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl',
+                                    defaultValue: aws_credentials,
+                                    name: 'AwsPrincipal',
+                                    required: true
+                                ),
+                                string(
+                                defaultValue: 'ezcp_jenkins', 
+                                name: 'ProjectId', 
+                                trim: true
+                                ),
+                                string(
+                                defaultValue: 'admin', 
+                                name: 'ecp_user', 
+                                trim: true
+                                ),
+                                string(
+                                defaultValue: 'admin123', 
+                                name: 'ecp_password', 
+                                trim: true
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_mlops'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_mapr'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_gpu'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_ha'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_runtime'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'is_verbose'
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: '', 
+                                name: 'install_ad'
+                                ),
+                                choice(
+                                choices: ['ezmeral_platform', 'ezmeral_mlops', 'ezmeral_spark', 'ezmeral_it', 'mapr'], 
+                                name: 'CostCenter'        
+                                ),
+                                choice(
+                                choices: ['America/New_York', 'Asia/Calcutta', 'TBD..'], 
+                                name: 'TimeZone'        
+                                ),
+                                booleanParam(
+                                defaultValue: true, 
+                                description: 'If true, all cloud resources will be stopped', 
+                                name: 'IsAutomaticStop'
+                                ),
+                                [
+                                    $class: 'DateParameterDefinition',
+                                    name: 'stop_date',
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will stop after a day',
+                                    dateFormat: 'yyyy:MM:dd hh:mm',
+                                    defaultValue: 'LocalDate.now().plusDays(1)'
+                                ],
+                                [
+                                    $class: 'DateParameterDefinition',
+                                    name: 'delete_date',
+                                    description: 'When you want to stop resources. Format:yyyy:MM:dd hh:mm. By default it will delete after 3 days',
+                                    dateFormat: 'yyyy:MM:dd hh:mm',
+                                    defaultValue: 'LocalDate.now().plusDays(3)'
+                                ]
+                            ]
+                        )
+
+            }
+        }
+    // Generate user.settings 
+    stage('EZDEMO :: Generate user.settings'){
+        steps {
+                script {
+                        def tags = [   
+                                cost_center : params.CostCenter,
+                                TZ : params.TimeZone,
+                                stop_auto : params.IsAutomaticStop,
+                                stop_date : params.stop_date,
+                                delete_date: params.delete_date
+                                ]
+                        def extra_tags_a = groovy.json.JsonOutput.toJson(tags) 
+                        env.CloudType = params.CloudEnv 
+                        def user_setting = [
+                            project_id : params.ProjectId,
+                            user : params.ecp_user,
+                            admin_password : params.ecp_password,
+                            is_mlops : params.is_mlops,
+                            is_mapr : params.is_mapr,
+                            is_gpu : params.is_gpu,
+                            is_ha : params.is_ha,
+                            is_runtime : params.is_runtime,
+                            is_verbose : params.is_verbose,
+                            install_ad : params.install_ad,
+                            extra_tags : extra_tags_a
+                        ]
+
+                        writeJSON(file: "$WORKSPACE/user.settings", json: user_setting)
+                    }
+        }
+    }
+
+    // Stage to Create Docker Image.
+    stage('EZDEMO :: Generate <cloud>_config.json'){
+        steps {
+            sh 'echo "TBD"'            
+            }        
+    }
+    
+    // Stage to Create Docker Image.
+    // stage('EZDEMO :: Build Image'){
+    //     steps {
+    //         sh 'chmod + docker-build.sh'            
+    //         sh './docker-build.sh'
+    //         }        
+    // }
+    
+    // Stage to Start the Docker Container.
+    stage('EZDEMO :: Run Container'){
+        steps {
+            sh './start.sh'
+            sh './docker-exec.sh'
+        }        
+    }
+    // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
+    stage('EZCP :: Build and Deploy'){
+        steps {
+            sh  './00-run_all.sh ${CloudType}'
+        }
+    }
+}
+}
