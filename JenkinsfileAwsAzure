@@ -132,23 +132,25 @@ pipeline {
                                 TZ : params.TimeZone,
                                 stop_auto : params.AutomaticStop
                                 ]
-                    def extra_tags_a = groovy.json.JsonOutput.toJson(tags)
-                    env.CloudType = params.CloudEnv
-                    def user_setting = [
-                        project_id : params.ProjectId,
-                        user : params.ecp_user,
-                        admin_password : params.ecp_password,
-                        is_mlops : params.is_mlops,
-                        is_mapr : params.is_mapr,
-                        is_gpu : params.is_gpu,
-                        is_ha : params.is_ha,
-                        is_runtime : params.is_runtime,
-                        is_verbose : params.is_verbose,
-                        install_ad : params.install_ad,
-                        extra_tags : extra_tags_a
-                    ]
-                    writeJSON(file: 'user.settings', json: user_setting)
-                //}
+                    script { def extra_tags_a = groovy.json.JsonOutput.toJson(tags) }
+                    script { env.CloudType = params.CloudEnv }
+                    script { 
+                        def user_setting = [
+                            project_id : params.ProjectId,
+                            user : params.ecp_user,
+                            admin_password : params.ecp_password,
+                            is_mlops : params.is_mlops,
+                            is_mapr : params.is_mapr,
+                            is_gpu : params.is_gpu,
+                            is_ha : params.is_ha,
+                            is_runtime : params.is_runtime,
+                            is_verbose : params.is_verbose,
+                            install_ad : params.install_ad,
+                            extra_tags : extra_tags_a
+                        ]
+
+                        writeJSON(file: 'user.settings', json: user_setting)
+                    }
         }
     }
 
