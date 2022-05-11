@@ -193,9 +193,7 @@ pipeline {
                 }
         }
         steps {  
-                dir('server') { 
-                    sh "./00-run_all.sh ${CloudType}" 
-                }   
+            sh "./00-run_all.sh ${CloudType}"     
         }
     }
 }
