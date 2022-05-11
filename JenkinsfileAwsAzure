@@ -171,13 +171,21 @@ pipeline {
     stage('EZDEMO :: Run Container'){
         steps {
             sh './start.sh'
-            sh './docker-exec.sh'
+            //sh './docker-exec.sh'
         }        
     }
     // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
     stage('EZCP :: Build and Deploy'){
+        agent {
+            docker { 
+                image 'erdincka/ezdemo:latest' 
+                reuseNode true
+                }
+        }
         steps {
-            sh  './00-run_all.sh ${CloudType}'
+            withAWS(credentials: params.AwsPrincipal, region: params.AwsRegions) {
+            sh  "./00-run_all.sh ${CloudType}"
+            }
         }
     }
 }
