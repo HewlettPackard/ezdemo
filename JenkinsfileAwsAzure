@@ -208,10 +208,10 @@ post {
             }
     }
     success {
-        echo 'Job is completed successfully!'
+        echo 'Job is completed successfully'
     }
     unstable {
-        echo 'Job is Unstable :/'
+        echo 'Job is Unstable'
     }
     failure {
             echo 'Job is Failed! :('
@@ -219,4 +219,5 @@ post {
              subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
              body: "Something is wrong with: ${env.BUILD_URL}, Thanks - Indu Sharma"
     }
+}
 }
