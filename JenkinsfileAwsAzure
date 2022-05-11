@@ -187,7 +187,7 @@ pipeline {
                 sh "echo ${aws_credentials}"
                 sh "echo ${CloudType}"
                 
-                withCredentials([string(credentialsId: ${params.AwsPrincipal}, variable: 'mykey')]) {
+                withCredentials([string(credentialsId: params.AwsPrincipal, variable: 'mykey')]) {
                     echo "Indu Actual keys: ${mykey}"
                 }
                 // sh "./00-run_all.sh ${CloudType}"
