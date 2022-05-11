@@ -145,7 +145,7 @@ pipeline {
                             extra_tags : extra_tags_a
                         ]
 
-                        writeJSON(file: 'user.settings', json: user_setting)
+                        writeJSON(file: "$WORKSPACE/user.settings", json: user_setting)
                     }
         }
     }
@@ -158,12 +158,12 @@ pipeline {
     }
     
     // Stage to Create Docker Image.
-    stage('EZDEMO :: Build Image'){
-        steps {
-            sh 'chmod + docker-build.sh'            
-            sh './docker-build.sh'
-            }        
-    }
+    // stage('EZDEMO :: Build Image'){
+    //     steps {
+    //         sh 'chmod + docker-build.sh'            
+    //         sh './docker-build.sh'
+    //         }        
+    // }
     
     // Stage to Start the Docker Container.
     stage('EZDEMO :: Run Container'){
