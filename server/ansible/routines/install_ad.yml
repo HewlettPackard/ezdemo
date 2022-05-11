@@ -5,9 +5,7 @@
   tasks:
   - name: install docker
     package:
-      name: 
-        - docker
-        - openldap-clients
+      name: docker, openldap-clients
       state: latest
     become: yes
 
@@ -54,3 +52,4 @@
     shell: "/home/centos/run_ad.sh && sleep 120 && /home/centos/ldif_modify.sh"
     async: 600 ## wait for 10 minutes before time out
     poll: 0 ## don't wait it to finish
+    when: "{{ install_ad | bool }}"

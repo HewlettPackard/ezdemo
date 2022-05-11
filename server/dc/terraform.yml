@@ -126,16 +126,16 @@
 #######################################################################################################
 # AD Integration
 #######################################################################################################
-- name: AD Integration
-  import_playbook: ../ansible/routines/ad_integration.yml 
-  when: skip_ad_integration is not defined and ldap_server is not defined
+# - name: AD Integration
+#   import_playbook: ../ansible/routines/ad_integration.yml 
+#   when: skip_ad_integration is not defined and ldap_server is not defined
 
 #######################################################################################################
 # LDAP Integration
 #######################################################################################################
-- name: LDAP Integration
-  import_playbook: ../ansible/routines/ldap_integration.yml 
-  when: skip_ldap_integration is not defined and ad_username is not defined
+# - name: LDAP Integration
+#   import_playbook: ../ansible/routines/ldap_integration.yml 
+#   when: skip_ldap_integration is not defined and ad_username is not defined
 
 ######################################################################################################
 # CUSTOM FILE

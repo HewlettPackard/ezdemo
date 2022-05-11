@@ -6,6 +6,11 @@
     shell: pip3 install delta_spark
     # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
 
+  - name: configure spark
+    shell: |
+      hadoop fs -mkdir /apps/spark
+      hadoop fs -chmod 777 /apps/spark
+
   - name: configure s3
     shell: |
       mkdir -p /home/mapr/.mc/certs/CAs

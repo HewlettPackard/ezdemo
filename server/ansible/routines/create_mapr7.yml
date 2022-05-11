@@ -35,11 +35,20 @@
     register: mapr_disks
     become: yes 
 
-  - name: check fresh cluster
-    shell: '[ -f /opt/mapr/conf/disktab ] && grep -q "{{ mapr_disks.stdout_lines | first }}" /opt/mapr/conf/disktab'
+  - name: populate /tmp/disks.txt
+    lineinfile:
+      dest: /tmp/disks.txt
+      line: "{{ item }}"
+      create: true
+    with_items: "{{ mapr_disks.stdout_lines }}"
+
+  - name: check installation
+    # shell: '[ -f /opt/mapr/conf/disktab ] && grep -q "{{ mapr_disks.stdout_lines | first }}" /opt/mapr/conf/disktab'
+    shell: '[ -f /opt/mapr/roles/fileserver ]'
     register: cluster_configured
     ignore_errors: yes
 
+### ALL NODES
   - name: install mapr packages
     package: name="{{ packages | join(',') }}" state=present
     vars:
@@ -52,17 +61,8 @@
                   'mapr-nfs',
                   'mapr-webserver',
                   'mapr-gateway',
-                  'mapr-spark',
-                  'mapr-spark-historyserver'
-                  ]
+                  'mapr-collectd', 'mapr-fluentd'] ## monitoring
     become: yes
-
-  - name: populate /tmp/disks.txt
-    lineinfile:
-      dest: /tmp/disks.txt
-      line: "{{ item }}"
-      create: true
-    with_items: "{{ mapr_disks.stdout_lines }}"
 
 - hosts: "{{ groups['mapr'][:3] | default([]) }}"
   tasks:
@@ -70,6 +70,7 @@
     package: name="mapr-cldb, mapr-zookeeper" state=present
     become: yes
 
+### FIRST NODE
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   vars:
     secure_files: 
@@ -145,7 +146,8 @@
     fetch: src="/opt/mapr/conf/{{ item.filename }}" dest="/tmp/maprkeys/" flat=yes
     with_items: "{{ secure_files }}"
     become: yes
-  
+
+#### OTHER NODES
 - hosts: "{{ groups['mapr'][1:] | default([]) }}"
   vars:
     secure_files: 
@@ -215,19 +217,14 @@
     shell: "cd /opt/mapr/conf; rm -rf tokens && tar xzf tokens.tgz; rm -rf ca && mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
     become: yes
 
-  - name: enable monitoring
-    package: name="mapr-collectd, mapr-grafana, mapr-fluentd" state=present
-    become: yes
-
   - name: install ecosystem components
     package: name="{{ packages | join(',') }}" state=present
     vars: 
       packages: [
-        'mapr-kafka', 'mapr-livy', 'mapr-drill',
-        'mapr-hive', 'mapr-hiveserver2', 'mapr-hivewebhcat',
-        'mapr-ksql','mapr-schema-registry', 'mapr-kafka-rest',
-        'mapr-kafka-connect-jdbc',  'mapr-kafka-connect-hdfs',
-        'mapr-airflow', 'mapr-airflow-webserver', 'mapr-airflow-scheduler'
+        mapr-kafka, mapr-livy, mapr-drill, mapr-spark, mapr-spark-historyserver,
+        mapr-hive, mapr-hiveserver2, mapr-hivewebhcat,
+        mapr-ksql,mapr-schema-registry, mapr-kafka-rest,
+        mapr-kafka-connect-jdbc,  mapr-kafka-connect-hdfs, mapr-elasticsearch
       ]
     become: yes
 
@@ -235,10 +232,24 @@
     shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
 
+### FIRST NODE
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
   tasks:
-  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver, mapr-elasticsearch" state=present
+  - name: Enable monitoring & standalone services
+    package: name="mapr-airflow-webserver, mapr-airflow-scheduler, mapr-opentsdb, mapr-grafana, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver" state=present
     become: yes
+
+  - name: install ecosystem components on first node (if single node)
+    package: name="{{ packages | join(',') }}" state=present
+    vars: 
+      packages: [
+        mapr-kafka, mapr-livy, mapr-drill, mapr-spark, mapr-spark-historyserver,
+        mapr-hive, mapr-hiveserver2, mapr-hivewebhcat,
+        mapr-ksql,mapr-schema-registry, mapr-kafka-rest,
+        mapr-kafka-connect-jdbc,  mapr-kafka-connect-hdfs, mapr-elasticsearch
+      ]
+    become: yes
+    when: "{{ not is_mapr_ha | bool }}"
 
   - name: re-Configure.sh
     shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
@@ -255,11 +266,6 @@
     shell: |
       [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
     ignore_errors: yes
-
-  - name: configure spark
-    shell: |
-      hadoop fs -mkdir /apps/spark
-      hadoop fs -chmod 777 /apps/spark
 
 - hosts: localhost
   tasks:

@@ -58,6 +58,7 @@ ssh_prv_key=${SSH_PRV_KEY_PATH}
 is_mlops=${IS_MLOPS}
 is_mapr=${IS_MAPR}
 is_ha=${IS_HA}
+is_mapr_ha=${IS_MAPR_HA}
 is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
 install_ad=${INSTALL_AD}
