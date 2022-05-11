@@ -126,12 +126,13 @@ pipeline {
     // Generate user.settings 
     stage('EZDEMO :: Generate user.settings'){
         steps {
-                // script {
-                    ​def tags = [   
+                    script {
+                        ​def tags = [   
                                 cost_center : params.CostCenter,
                                 TZ : params.TimeZone,
                                 stop_auto : params.AutomaticStop
                                 ]
+                    }
                     script { def extra_tags_a = groovy.json.JsonOutput.toJson(tags) }
                     script { env.CloudType = params.CloudEnv }
                     script { 
