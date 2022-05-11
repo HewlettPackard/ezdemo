@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         docker_image='erdincka/ezdemo:latest'
-        docker_args='-u root:root'
+        docker_args="-u root:root -v ${WORKSPACE}/config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server"
         aws_credentials = "ezdemo_indu"
         azure_credentials = ""
         gcp_credentials = ""
@@ -168,32 +168,34 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
                         sh ">${WORKSPACE}/aws_config.json"
-                        sh "echo AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID} >> ${WORKSPACE}/aws_config.json" 
-                        sh "echo AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY} >> ${WORKSPACE}/aws_config.json"
-                        sh "echo AWS_DEFAULT_REGION=${params.AwsRegions} >> ${WORKSPACE}/aws_config.json"
+                        sh "echo aws_access_key=${env.AWS_ACCESS_KEY_ID} >> ${WORKSPACE}/aws_config.json" 
+                        sh "echo aws_secret_key=${env.AWS_SECRET_ACCESS_KEY} >> ${WORKSPACE}/aws_config.json"
+                        sh "echo region=${params.AwsRegions} >> ${WORKSPACE}/aws_config.json"
                     }
                 }
         }
     }
     
     // Stage to Start the Docker Container.
-    stage('EZDEMO :: Run Container'){
-        steps {
-            sh './start.sh'
-            //sh './docker-exec.sh'
-        }        
-    }
+    // stage('EZDEMO :: Run Container'){
+    //     steps {
+    //         sh './start.sh'
+    //         //sh './docker-exec.sh'
+    //     }        
+    // }
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
         agent {
                 docker {
                     image docker_image
-                    reuseNode true
                     args docker_args
+                    reuseNode true
                 }
         }
-        steps {   
-                sh "./00-run_all.sh ${CloudType}"    
+        steps {  
+                dir('server') { 
+                    sh "./00-run_all.sh ${CloudType}" 
+                }   
         }
     }
 }
