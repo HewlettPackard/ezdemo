@@ -194,10 +194,13 @@ pipeline {
 }
 post {
     always {
-        echo 'Job is completed, doing clean up activities!'
-        // deleteDir() /* clean up our workspace */
-        sh label: "removing running containers",
-        sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
+
+        script {
+            echo 'Job is completed, doing clean up activities!'
+            // deleteDir() /* clean up our workspace */
+            sh label: "removing running containers"
+            sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
+        }
     }
     success {
         echo 'Job is completed successfully!'
