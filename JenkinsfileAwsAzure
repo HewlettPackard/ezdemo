@@ -185,24 +185,20 @@ pipeline {
     }
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
-        // agent {
-                // docker {
-                //     image docker_image
-                //     reuseNode true
-                //     args docker_args
-                // }
-        //     }
-        steps {   
-            script {
-               dir("server") { 
-                docker.image(docker_image).inside(docker_args) {
-                    sh "./00-run_all.sh ${CloudType}"    
+        agent {
+                docker {
+                    image docker_image
+                    reuseNode true
+                    args docker_args
                 }
-               }
-            }
+        }
+        steps {   
+                sh "./00-run_all.sh ${CloudType}"    
         }
     }
 }
+}
+
 post {
     always {
             script {
@@ -223,5 +219,4 @@ post {
              subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
              body: "Something is wrong with: ${env.BUILD_URL}, Thanks - Indu Sharma"
     }
-}
 }
