@@ -185,11 +185,9 @@ pipeline {
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
         steps {   
-            script {
-                docker.image(docker_image).inside {
+                withDockerContainer(image: docker_image){
                     sh "./00-run_all.sh ${CloudType}"
                 }
-            }
         }
     }
 
