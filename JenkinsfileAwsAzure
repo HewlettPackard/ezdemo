@@ -5,6 +5,7 @@ pipeline {
         skipDefaultCheckout() 
     }
     environment {
+        docker_image='erdincka/ezdemo:latest'
         aws_credentials = "ezdemo_indu"
         azure_credentials = ""
         gcp_credentials = ""
@@ -183,16 +184,14 @@ pipeline {
     }
     // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
-        agent {
-            docker { 
-                image 'erdincka/ezdemo:latest' 
-                //reuseNode true
-                }
-        }
         steps {   
-                sh "./00-run_all.sh ${CloudType}"
+            script {
+                docker.image(docker_image).inside {
+                    sh "./00-run_all.sh ${CloudType}"
+                }
+            }
         }
     }
-}
 
+}
 }
