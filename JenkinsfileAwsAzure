@@ -186,19 +186,18 @@ pipeline {
     stage('EZCP :: Build and Deploy'){
         steps {   
             dir("server"){
-                withDockerContainer(image: docker_image){
+                withDockerContainer(image: docker_image, args: '-u root:root'){
                     sh "./00-run_all.sh ${CloudType}"
                 }
             }
         }
     }
-
 }
 post {
     always {
             script {
                 echo 'Job is completed, doing clean up activities!'
-                // deleteDir() /* clean up our workspace */
+                // deleteDir() /* clean up workspace too */
                 sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
             }
     }
@@ -212,7 +211,7 @@ post {
             echo 'Job is Failed! :('
             mail to: 'indu.sharma@hpe.com',
              subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-             body: "Something is wrong with: ${env.BUILD_URL}"
+             body: "Something is wrong with: ${env.BUILD_URL}, Thanks - Indu Sharma"
     }
 }
 }
