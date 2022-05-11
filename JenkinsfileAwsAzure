@@ -151,13 +151,6 @@ pipeline {
                     }
         }
     }
-
-    // Stage to Create Docker Image.
-    stage('EZDEMO :: Generate <cloud>_config.json'){
-        steps {
-            sh 'echo "TBD"'            
-            }        
-    }
     
     // Stage to Create Docker Image.
     // stage('EZDEMO :: Build Image'){
@@ -166,6 +159,19 @@ pipeline {
     //         sh './docker-build.sh'
     //         }        
     // }
+
+    // Stage to generate aws_config.json
+    stage('EZDEMO :: Generate <cloud>_config.json'){
+        steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
+                        sh 'echo "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}" >> ${WORKSPACE}/aws_config.json' 
+                        sh 'echo "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}" >> ${WORKSPACE}/aws_config.json' 
+                        sh 'echo "AWS_DefAULT_REGION=${params.AwsRegions}" >> {WORKSPACE}/aws_config.json'
+                    }
+                }
+        }
+    }
     
     // Stage to Start the Docker Container.
     stage('EZDEMO :: Run Container'){
@@ -174,7 +180,7 @@ pipeline {
             //sh './docker-exec.sh'
         }        
     }
-    // Stage to Build and Deploy EZCP; pass the CloudType from env variable.
+    // Stage to Build and Deploy EZCP Against ENV selected.
     stage('EZCP :: Build and Deploy'){
         agent {
             docker { 
@@ -182,15 +188,10 @@ pipeline {
                 reuseNode true
                 }
         }
-        steps {
-            script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AwsPrincipal, variable: 'AWS_ACCESS_KEY_ID']]) {
-                        echo "this is ${env.AWS_ACCESS_KEY_ID}"
-                        echo "this is ${env.AWS_SECRET_ACCESS_KEY}"
-                }
-            }   
-                // sh "./00-run_all.sh ${CloudType}"
-            }
+        steps {   
+                sh "./00-run_all.sh ${CloudType}"
         }
     }
+}
+
 }
