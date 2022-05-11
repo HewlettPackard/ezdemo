@@ -31,7 +31,6 @@ for i in $(seq 1 20); do
   ssh-keygen -R $(echo ${VM_NETWORK%.*}.$((${VM_NETWORK##*.}+i))) >> /dev/null 2>&1  
 done
 
-rm hosts-common.ini
 rm hosts.ini
 rm my.tfvars
 

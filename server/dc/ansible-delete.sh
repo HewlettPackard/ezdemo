@@ -23,6 +23,6 @@
 
 set -euo pipefail
 
-rm -f ansible.ini hosts-common.ini
+rm -f ansible.ini hosts-common.ini hosts.ini
 
 exit 0

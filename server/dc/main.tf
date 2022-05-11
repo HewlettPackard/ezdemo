@@ -36,9 +36,9 @@ output "gateway_public_ips" {
 output "gateway_private_dns" {
   value = jsondecode(shell_script.ansiblevms.output.gateway)["hosts"]
 }
-output "gateway_public_dns" {
-  value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0]
-}
+# output "gateway_public_dns" {
+#   value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0]
+# }
 output "worker_count" {
   value = length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"])
 }
@@ -57,6 +57,6 @@ output "gworkers_private_ip" {
 # output "mapr_private_ips" {
 #   value = jsondecode(shell_script.ansiblevms.output.mapr)["hosts"]
 # }
-output "ad_server_private_ip" {
-  value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_host"] ][0]
-}
+# output "ad_server_private_ip" {
+#   value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_host"] ][0]
+# }
