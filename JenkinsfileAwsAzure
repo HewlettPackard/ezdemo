@@ -1,12 +1,14 @@
 pipeline {
-    agent any
+    agent { 
+        label 'mipworker' 
+    }
     options {
         // skipStagesAfterUnstable()
         skipDefaultCheckout() 
     }
     environment {
         docker_image='erdincka/ezdemo:latest'
-        docker_args="-u root:root -v ${WORKSPACE}/config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings -v /var/run/docker.sock:/var/run/docker.sock -v /tmp:/home/jenkins"
+        docker_args="-u root:root -v ${WORKSPACE}/aws_config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings"
         aws_credentials = "ezdemo_indu"
         azure_credentials = ""
         gcp_credentials = ""
@@ -194,11 +196,10 @@ pipeline {
         // }
         steps {
             script {
-                def CID = sh(script: 'docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q',returnStdout: true)
-                docker exec CID ./00-run_all.sh params.CloudEnv     
-            }
+                def CID = sh(script: $('docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q',returnStdout: true))   
+                sh "docker exec ${CID} ./00-run_all.sh ${params.CloudEnv}"
         }
-}
+    }
 }
 post {
     always {
