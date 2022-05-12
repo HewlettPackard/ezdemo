@@ -7,7 +7,7 @@ pipeline {
     environment {
         docker_image='erdincka/ezdemo:latest'
         docker_args="-u root:root -v ${WORKSPACE}/aws_config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings"
-        aws_credentials = "ezdemo_indu"
+        aws_credentials = "ezdemo_indu" // default aws credentials to populate on UI
         azure_credentials = ""
         gcp_credentials = ""
     }
@@ -179,7 +179,7 @@ pipeline {
         }
     }
     //Stage to Start the Docker Container.
-    stage('EZDEMO :: Run Container'){
+    stage('EZDEMO :: Start Docker Container'){
         steps {
             sh './start.sh '  
         }        
@@ -200,7 +200,7 @@ post {
     always {
             script {
                 echo 'Job is completed, doing clean up activities!'
-                // deleteDir() /* clean up workspace too */
+                // deleteDir() //clean up workspace too 
                 def containers_running = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", " ") 
                 if (containers_running) {
                     sh "docker stop ${containers_running}"
