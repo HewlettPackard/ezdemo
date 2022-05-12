@@ -189,7 +189,7 @@ pipeline {
         steps {  
             script { 
                 def running_container = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", "").trim()
-                sh "docker exec ${running_container} ./00-run_all.sh ${CloudType}"  
+                sh "docker exec \"${running_container}\" ./00-run_all.sh ${CloudType}"  
             } 
         }
     }
