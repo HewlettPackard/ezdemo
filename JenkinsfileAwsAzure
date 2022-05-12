@@ -196,8 +196,8 @@ pipeline {
         // }
         steps {
             script {
-                def CID = sh(script: $('docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q',returnStdout: true))   
-                sh "docker exec ${CID} ./00-run_all.sh ${params.CloudEnv}"
+                def CID = sh(returnStdout: true, script: 'docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -q').replaceAll("\n"," ") 
+                sh("docker exec ${CID} ./00-run_all.sh ${params.CloudEnv}")
         }
     }
 }
@@ -215,7 +215,7 @@ post {
         echo 'Job is Unstable'
     }
     failure {
-            echo 'Job is Failed! :('
+            echo 'Job is Failed!'
             mail to: 'indu.sharma@hpe.com',
              subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
              body: "Something is wrong with: ${env.BUILD_URL}, Thanks - Indu Sharma"
