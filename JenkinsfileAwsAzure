@@ -166,7 +166,17 @@ pipeline {
                 }
         }
     }
-    
+    stage('Stop Docker Containers'){
+        steps{
+            script{
+                def containers_running = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", " ") 
+                if (containers_running) {
+                    sh "docker stop ${containers_running}"
+                }
+                    
+            }
+        }
+    }
     //Stage to Start the Docker Container.
     stage('EZDEMO :: Run Container'){
         steps {
