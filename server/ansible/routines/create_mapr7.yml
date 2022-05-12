@@ -249,7 +249,7 @@
         mapr-kafka-connect-jdbc,  mapr-kafka-connect-hdfs, mapr-elasticsearch
       ]
     become: yes
-    when: "{{ not is_mapr_ha | bool }}"
+    when: not is_mapr_ha | bool
 
   - name: re-Configure.sh
     shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
