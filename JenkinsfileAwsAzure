@@ -166,7 +166,7 @@ pipeline {
                 }
         }
     }
-    stage('Stop Docker Containers'){
+    stage('EZDEMO :: Stop Running Containers'){
         steps{
             script{
                 def containers_running = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", " ") 
@@ -192,18 +192,6 @@ pipeline {
             } 
         }
     }
-    stage('Stop Docker Containers'){
-        steps{
-            script{
-                def containers_running = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", " ") 
-                if (containers_running) {
-                    sh "docker stop ${containers_running}"
-                }
-                    
-            }
-        }
-    }
-
 }
 }
 post {
@@ -211,7 +199,11 @@ post {
             script {
                 echo 'Job is completed, doing clean up activities!'
                 // deleteDir() /* clean up workspace too */
+                def containers_running = sh(returnStdout: true, script: 'docker container ps -aq').replaceAll("\n", " ") 
+                if (containers_running) {
+                    sh "docker stop ${containers_running}"
                 sh "timeout 30 docker ps -aq | xargs -r docker rm -f || true"
+                }
             }
     }
     success {
