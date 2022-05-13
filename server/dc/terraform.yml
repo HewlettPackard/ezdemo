@@ -14,10 +14,9 @@
     K8S_COUNT: "{{ groups['k8s']| length }}"
     PICASSO_COUNT: "{{ groups['picasso']| length }}"
 
-
   tasks:
   - name: amount of Hosts found.  
-    ansible.builtin.debug:
+    debug:
       msg:
       - "we will deploy {{ HOST_COUNT }} hosts."
       - "{{ CONTROLLER_COUNT}} controller(s)."
@@ -34,45 +33,38 @@
 ####
 # check inventory and find the right deployment
 #
-- hosts: localhost
-  gather_facts: yes
-  tasks:
   - name: VMware Deployment requested?
-    ansible.builtin.debug:
+    debug:
       msg: 
       - "VMware Deployment will be started."
     when: vcenter_server is defined
 
   - name: oVirt deployment requested?
-    ansible.builtin.debug:
+    debug:
       msg: 
       - "oVirt Deployment will be started."
     when: ovirt_host is defined
 
   - name: Baremetal deployment requested?
-    ansible.builtin.debug:
+    debug:
       msg: 
       - "Baremetal Deployment will be started."
     when: ilo_host1 is defined
 
   - name: 'no deployment requested?'
-    ansible.builtin.debug:
+    debug:
       msg: 
       - "no Deployment will be started, we are heading directly to preparation.."
     when: existing is defined
 
   - name: Proxmox deployment requested?
-    ansible.builtin.debug:
+    debug:
       msg: 
       - "Proxmox deployment will be started."
     when: proxmox_host is defined
-
-  
-
 # 
 # end of find the right deployment
 ##### 
-
 
 ####
 # run the right deployment
@@ -110,53 +102,11 @@
   when: http_proxy is defined
 
 ######################################################################################################
-# PREPARATION
-######################################################################################################
-# - name: Prepare HCP Hosts
-#   import_playbook: ../ansible/routines/prepare_hcp.yml 
-#   when: skip_preparation is not defined
-
-######################################################################################################
-# FALCO PREPARATION
-######################################################################################################
-# - name: Prepare for FALCO
-#   import_playbook: ../ansible/routines/prepare_falco.yml
-#   when: install_falco|lower == "true" and skip_falco_preparation is not defined
-
-#######################################################################################################
-# AD Integration
-#######################################################################################################
-# - name: AD Integration
-#   import_playbook: ../ansible/routines/ad_integration.yml 
-#   when: skip_ad_integration is not defined and ldap_server is not defined
-
-#######################################################################################################
-# LDAP Integration
-#######################################################################################################
-# - name: LDAP Integration
-#   import_playbook: ../ansible/routines/ldap_integration.yml 
-#   when: skip_ldap_integration is not defined and ad_username is not defined
-
-######################################################################################################
 # CUSTOM FILE
 ######################################################################################################
 - name: Prepare HCP Hosts with custom yaml
   import_playbook: custom.yml
   when: skip_custom is not defined
-
-######################################################################################################
-# INSTALLATION
-######################################################################################################
-# - name: Install HCP Hosts
-#   import_playbook: ../ansible/routines/install_hcp.yml
-#   when: skip_install is not defined
-
-######################################################################################################
-# IMPORT HOSTS
-######################################################################################################
-# - name: Install HCP Hosts
-#   import_playbook: ../ansible/routines/import_hosts.yml
-#   when: skip_import is not defined
 
 ######################################################################################################
 # Add Docker Proxy (Temporary Solution)
@@ -170,10 +120,22 @@
 #   import_playbook: ../ansible/routines/add_docker_account.yml
 #   when: skip_docker_proxy is not defined and configjson is defined
 
+###
+# Add project ssh key to hosts
+###
 
-######################################################################################################
-# PICASSO INSTALLATION
-######################################################################################################
-# - name: create Picasso (HPEDF)
-#   import_playbook: ../ansible/routines/create_picasso.yml
-#   when: "groups['picasso']| length >= 3 and skip_picasso_install is not defined"
+- hosts: all:!mapr
+  tasks:
+  - name: add ssh key to centos user
+    authorized_key:
+      user: centos
+      state: present
+      key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+
+- hosts: mapr
+  tasks:
+  - name: add ssh key to ubuntu user
+    authorized_key:
+      user: ubuntu
+      state: present
+      key: "{{ lookup('file', '../generated/controller.pub_key') }}"

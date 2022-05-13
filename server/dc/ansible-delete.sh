@@ -23,6 +23,6 @@
 
 set -euo pipefail
 
-rm -f ansible.ini hosts-common.ini hosts.ini
+ansible-playbook -v -i hosts.ini -i vars.ini ../ansible/routines/destroy_vmware.yml
 
 exit 0

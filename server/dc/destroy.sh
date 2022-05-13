@@ -23,8 +23,6 @@
 
 set -euo pipefail
 
-ansible-playbook -v -i hosts.ini ../ansible/routines/destroy_vmware.yml
-
 VM_NETWORK=$(grep vm_network dc.ini | cut -d= -f2 | cut -d/ -f1 | tr -d '"')
 # Clear ssh host keys
 for i in $(seq 1 20); do
@@ -33,4 +31,5 @@ done
 
 rm hosts.ini
 rm my.tfvars
+rm vars.ini
 

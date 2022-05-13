@@ -22,10 +22,10 @@ resource "shell_script" "ansiblevms" {
 }
 
 output "controller_private_ips" {
-  value = jsondecode(shell_script.ansiblevms.output.controller)["hosts"]
+  value = var.is_runtime ? jsondecode(shell_script.ansiblevms.output.controller)["hosts"] : []
 }
 output "controller_private_dns" {
-  value = jsondecode(shell_script.ansiblevms.output.controller)["hosts"]
+  value = var.is_runtime ? jsondecode(shell_script.ansiblevms.output.controller)["hosts"] : []
 }
 output "gateway_private_ips" {
   value = jsondecode(shell_script.ansiblevms.output.gateway)["hosts"]
@@ -36,14 +36,14 @@ output "gateway_public_ips" {
 output "gateway_private_dns" {
   value = jsondecode(shell_script.ansiblevms.output.gateway)["hosts"]
 }
-# output "gateway_public_dns" {
-#   value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0]
-# }
+output "gateway_public_dns" {
+  value = [ [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0] ]
+}
 output "worker_count" {
-  value = length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"])
+  value = var.is_runtime ? length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]) : 0
 }
 output "workers_private_ip" {
-  value = jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]
+  value = var.is_runtime ? jsondecode(shell_script.ansiblevms.output.k8s)["hosts"] : []
 }
 output "gworker_count" {
   value = 0
@@ -51,12 +51,12 @@ output "gworker_count" {
 output "gworkers_private_ip" {
   value = [ ]
 }
-# output "mapr_count" {
-#   value = var.mapr_count
-# }
-# output "mapr_private_ips" {
-#   value = jsondecode(shell_script.ansiblevms.output.mapr)["hosts"]
-# }
-# output "ad_server_private_ip" {
-#   value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_host"] ][0]
-# }
+output "mapr_count" {
+  value = var.is_mapr ? var.mapr_count : 0
+}
+output "mapr_private_ips" {
+  value = var.is_mapr ? jsondecode(shell_script.ansiblevms.output.mapr)["hosts"] : []
+}
+output "ad_server_private_ip" {
+  value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_host"] ][0]
+}
