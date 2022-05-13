@@ -10,9 +10,7 @@
     become: yes
 
   - name: install microsoft edge
-    shell: >
-      # curl -k -o microsoft-edge-stable-101.0.1210.39-1.x86_64.rpm https://packages.microsoft.com/yumrepos/edge/microsoft-edge-stable-101.0.1210.39-1.x86_64.rpm
-      # yum install -y microsoft-edge-stable-101.0.1210.39-1.x86_64.rpm
+    shell: |-
       rpm --import https://packages.microsoft.com/keys/microsoft.asc
       yum-config-manager --add-repo https://packages.microsoft.com/yumrepos/edge
       yum install -y microsoft-edge
