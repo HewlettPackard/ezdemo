@@ -134,7 +134,7 @@
   tasks:
   - name: Configure.sh to generate keys on first mapr-cldb node only
     shell: |-
-      /opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
+      /opt/mapr/server/configure.sh -N {{ project_id | replace(' ', '_') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
     when: cluster_configured.failed | bool
     become: yes
 
@@ -229,7 +229,7 @@
     become: yes
 
   - name: Configure.sh secure on other nodes
-    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
+    shell: "/opt/mapr/server/configure.sh -N {{ project_id | replace(' ', '_') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
 
 ### FIRST NODE

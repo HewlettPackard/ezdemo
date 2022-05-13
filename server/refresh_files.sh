@@ -87,13 +87,13 @@ Host *
   ForwardX11 yes
 Host ezdemo_gateway
   Hostname $(echo ${GATW_PUB_DNS[0]:-})
-  IdentityFile $(pwd)/generated/controller.prv_key
+  IdentityFile generated/controller.prv_key
   ServerAliveInterval 30
   User centos
 Host 10.1.0.*
     Hostname %h
     ConnectionAttempts 3
-    IdentityFile $(pwd)/generated/controller.prv_key
+    IdentityFile generated/controller.prv_key
     ProxyJump ezdemo_gateway
 
 "

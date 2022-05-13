@@ -56,7 +56,7 @@
             - "{{ mapr_disks.stdout_lines[0] }}"
             - "{{ mapr_disks.stdout_lines[1] }}"
             - "{{ mapr_disks.stdout_lines[2] }}"
-          cluster_name: dfdemo.local
+          cluster_name: "{{ project_id | replace(' ', '_') }}.datafabric.io"
           services:
             mapr-hivemetastore:
               database:
