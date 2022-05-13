@@ -32,6 +32,12 @@ WORKDIR /app
 COPY --from=builder /app/build /app/build
 COPY server /app/server
 
+# Initialize providers
+WORKDIR /app/server/aws
+RUN terraform init -upgrade
+WORKDIR /app/server/azure
+RUN terraform init -upgrade
+
 WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt

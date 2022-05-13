@@ -76,7 +76,7 @@ if [[ "${IS_GPU}" == "true" ]]; then
 fi
 
 pushd "${1}" > /dev/null
-   TF_IN_AUTOMATION=1 terraform init -upgrade ${EZWEB_TF:-}
+   TF_IN_AUTOMATION=1 terraform init ${EZWEB_TF:-}
    ### Init hook-up for individual targets (aws, vmware etc)
    if [[ -f "./init.sh" ]]; then
       "./init.sh"
