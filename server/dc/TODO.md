@@ -2,6 +2,8 @@
 
 ## Settings
 
+Use existing certificate
+
 Create AD if none exist/selected
 
 Select number of nodes per type (picasso/k8s/mapr)
