@@ -40,10 +40,10 @@ output "gateway_public_dns" {
   value = [ [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0] ]
 }
 output "worker_count" {
-  value = var.is_runtime ? length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]) : 0
+  value = var.is_runtime ? (length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]) + length(jsondecode(shell_script.ansiblevms.output.picasso)["hosts"])) : 0
 }
 output "workers_private_ip" {
-  value = var.is_runtime ? jsondecode(shell_script.ansiblevms.output.k8s)["hosts"] : []
+  value = var.is_runtime ? concat(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"], jsondecode(shell_script.ansiblevms.output.picasso)["hosts"]) : []
 }
 output "gworker_count" {
   value = 0
