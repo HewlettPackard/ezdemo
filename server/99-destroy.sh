@@ -45,10 +45,13 @@ popd > /dev/null
 (ls "${1}"/*run.log | xargs rm -f) || true
 (ls -d generated/*/ | xargs rm -rf) || true # Deletes all folders under generated, better than deleting the generated folder all together
 
-## Clean user environment
-rm -f ~/.hpecp.conf
-rm -f ~/.hpecp_tenant.conf
-rm -f ~/.kube/config
+## Clean user environment, unless linked to some other file
+[ ! -L ~/.hpecp.conf  ] && rm -f ~/.hpecp.conf
+[ ! -L ~/.hpecp_tenant.conf  ] && rm -f ~/.hpecp_tenant.conf
+[ ! -L ~/.kube/config  ] && rm -f ~/.kube/config
+
+## Clean up ssh proxy configuration
+sed -i -e '/^Host ezdemo_gateway/,+4d' -e '/^Host 10\.1\.0\./,+4d' ~/.ssh/config
 
 source outputs.sh ${1}
 
