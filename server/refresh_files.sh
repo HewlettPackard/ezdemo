@@ -73,7 +73,7 @@ echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 SSHOPT="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]:-}\""
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars
-if [[ "${1}" == "mac" ]]; then
+if [[ "${1}" == "dc" ]]; then
   echo "ansible_ssh_common_args: ${SSHOPT}" > ./ansible/group_vars/all.yml
 else
   echo "ansible_ssh_common_args: ${SSH_VIA_PROXY}" > ./ansible/group_vars/all.yml
@@ -99,7 +99,7 @@ Host 10.1.0.*
 "
 
 [[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
-[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible, delete on destroy
+[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible
 
 pushd ./generated/ > /dev/null
   if [[ $IS_RUNTIME == "true" ]]; then
