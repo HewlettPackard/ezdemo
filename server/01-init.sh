@@ -68,6 +68,7 @@ is_runtime     = ${IS_RUNTIME}
 is_mlops       = ${IS_MLOPS}
 is_ha          = ${IS_HA}
 is_mapr        = ${IS_MAPR}
+is_mapr_ha     = ${IS_MAPR_HA}
 mapr_count     = ${MAPR_COUNT}
 admin_password = ${ADMIN_PASSWORD}
 EOF
