@@ -9,15 +9,13 @@ FROM python:3-slim
 LABEL Name=ezdemo Version=0.0.2
 ENV PATH /root/.local/bin:$PATH
 
-RUN wget -qO - terraform.gpg https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/terraform-archive-keyring.gpg
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/terraform-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/terraform.list
 RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \
   libcurl4-openssl-dev libssl-dev libxml2-dev gcc terraform sshpass
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
   && unzip awscliv2.zip && ./aws/install
-# RUN curl "https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip" -o terraform.zip \
-#   && unzip terraform.zip && mv terraform /usr/bin
+RUN curl "https://releases.hashicorp.com/terraform/1.2.0/terraform_1.2.0_linux_amd64.zip" -o terraform.zip \
+  && unzip terraform.zip && mv terraform /usr/bin
 
 ### For 5.4 we have ['1.19.15', '1.20.11', '1.21.5'] for K8s versions
 RUN curl -LO "https://dl.k8s.io/release/v1.20.11/bin/linux/amd64/kubectl" && install -o root -g root \
