@@ -25,6 +25,8 @@ set -euo pipefail
 
 source ./outputs.sh "${1}"
 
+AD_SERVER="" && [[ "$INSTALL_AD" == "true" ]] && AD_SERVER=$AD_PRV_IP
+
 ANSIBLE_INVENTORY="####
 # Ansible Hosts File for HPE Container Platform Deployment
 # created by Dirk Derichsweiler
@@ -42,7 +44,7 @@ $(echo ${WRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gworkers]
 $(echo ${GWRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [ad_server]
-${AD_PRV_IP}
+${AD_SERVER}
 [mapr]
 $(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [mapr:vars]
