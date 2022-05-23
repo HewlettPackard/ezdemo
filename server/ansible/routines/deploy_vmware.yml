@@ -70,6 +70,9 @@
       wait_for_ip_address: no
     delegate_to: localhost
     with_items: "{{ controller_ips }}"
+    register: _create_controllers
+    async: 1200
+    poll: 0
 
 #######################
 # GATEWAY Deployment
@@ -110,6 +113,9 @@
       wait_for_ip_address: no
     delegate_to: localhost
     with_items: "{{ gateway_ips }}"
+    register: _create_gateways
+    async: 1200
+    poll: 0
 
 #######################
 # PICASSO Deployment
@@ -158,6 +164,9 @@
       wait_for_ip_address: no
     delegate_to: localhost
     with_items: "{{ picasso_ips }}"
+    register: _create_picasso_nodes
+    async: 1200
+    poll: 0
 
 #######################
 # K8S Deployment
@@ -206,6 +215,9 @@
       wait_for_ip_address: no
     delegate_to: localhost
     with_items: "{{ k8s_ips }}"
+    register: _create_k8s_nodes
+    async: 1200
+    poll: 0
 
 #######################
 # Standalone Data Fabric Deployment
@@ -250,13 +262,30 @@
       wait_for_ip_address: no
     delegate_to: localhost
     with_items: "{{ mapr_ips }}"
+    register: _create_mapr_nodes
+    async: 1200
+    poll: 0
+
+  - name: Wait for creation to finish
+    async_status:
+      jid: "{{ item.ansible_job_id }}"
+    register: _jobs
+    until: _jobs.finished
+    delay: 15  # Check every 15 seconds
+    retries: 20  # Retry up to 20 times - 300 seconds
+    with_items: "{{ _create_controllers.results + _create_gateways.results + _create_k8s_nodes.results + _create_picasso_nodes.results + _create_mapr_nodes.results }}"
 
 - hosts: all
   gather_facts: no
   tasks:
   - name: Wait 600 seconds for target connection to become reachable/usable
     wait_for_connection:
-        
+  - name: disable cloud-init network config
+    copy:
+      dest: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+      content: 'network: {config: disabled}'
+    become: yes
+
 ######################################################################################################
 # VMWARE DEPLOYMENT END
 ######################################################################################################

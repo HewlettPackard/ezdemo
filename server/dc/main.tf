@@ -17,8 +17,17 @@ resource "shell_script" "ansiblevms" {
     create = file("./ansible-create.sh")
     delete = file("./ansible-delete.sh")
   }
-
   interpreter = ["/bin/bash", "-c"]
+  triggers = {
+        is_mlops_changed = var.is_mlops
+        is_mapr_changed = var.is_mapr
+        is_mapr_ha_changed = var.is_mapr_ha
+        is_runtime_changed = var.is_runtime
+        is_ha_changed = var.is_ha
+        install_ad_changed = var.install_ad
+        worker_count_changed = var.worker_count
+        mapr_count_changed = var.mapr_count
+    }
 }
 
 output "controller_private_ips" {
@@ -37,13 +46,13 @@ output "gateway_private_dns" {
   value = jsondecode(shell_script.ansiblevms.output.gateway)["hosts"]
 }
 output "gateway_public_dns" {
-  value = [ [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_host"] ][0] ]
+  value = [ [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["gw_fqdn"] ][0] ]
 }
 output "worker_count" {
-  value = var.is_runtime ? (length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]) + length(jsondecode(shell_script.ansiblevms.output.picasso)["hosts"])) : 0
+  value = var.is_runtime ? (length(jsondecode(shell_script.ansiblevms.output.picasso)["hosts"]) + length(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"])) : 0
 }
 output "workers_private_ip" {
-  value = var.is_runtime ? concat(jsondecode(shell_script.ansiblevms.output.k8s)["hosts"], jsondecode(shell_script.ansiblevms.output.picasso)["hosts"]) : []
+  value = var.is_runtime ? concat(jsondecode(shell_script.ansiblevms.output.picasso)["hosts"], jsondecode(shell_script.ansiblevms.output.k8s)["hosts"]) : []
 }
 output "gworker_count" {
   value = 0
@@ -58,5 +67,5 @@ output "mapr_private_ips" {
   value = var.is_mapr ? jsondecode(shell_script.ansiblevms.output.mapr)["hosts"] : []
 }
 output "ad_server_private_ip" {
-  value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_host"] ][0]
+  value = [ for k, v in jsondecode(shell_script.ansiblevms.output._meta)["hostvars"] : v["ad_server"] ][0]
 }

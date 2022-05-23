@@ -13,6 +13,7 @@
     GATEWAY_COUNT: "{{ groups['gateway']| length }}"
     K8S_COUNT: "{{ groups['k8s']| length }}"
     PICASSO_COUNT: "{{ groups['picasso']| length }}"
+    MAPR_COUNT: "{{ groups['mapr']| length }}"
 
   tasks:
   - name: amount of Hosts found.  
@@ -23,12 +24,14 @@
       - "{{ GATEWAY_COUNT}} gateway(s)."
       - "{{ K8S_COUNT}} k8s node(s)."
       - "{{ PICASSO_COUNT}} picasso node(s)."
+      - "{{ MAPR_COUNT}} data fabric node(s)."
       # - "--- vCenter INFORMATION ---"
       - "vCenter IP: {{ vcenter_server }}"
       - "vCenter Username: {{ vcenter_user }}"
       - "Datacentername: {{ datacenter_name }}"
       - "Clustername: {{ cluster_name }}"
       - "Templatename: {{ template_name }}"
+      - "DF Templatename: {{ mapr_template_name }}"
 
 ####
 # check inventory and find the right deployment
@@ -125,6 +128,7 @@
 ###
 
 - hosts: all:!mapr
+  gather_facts: no
   tasks:
   - name: add ssh key to centos user
     authorized_key:
@@ -133,9 +137,17 @@
       key: "{{ lookup('file', '../generated/controller.pub_key') }}"
 
 - hosts: mapr
+  gather_facts: no
   tasks:
+  - name: ensure ubuntu user exist
+    user:
+      name: ubuntu
+      groups: sudo
+      append: yes
+    become: yes
   - name: add ssh key to ubuntu user
     authorized_key:
       user: ubuntu
       state: present
       key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+    become: yes
