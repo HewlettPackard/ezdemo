@@ -10,7 +10,7 @@ LABEL Name=ezdemo Version=0.0.2
 ENV PATH /root/.local/bin:$PATH
 
 RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \
-  libcurl4-openssl-dev libssl-dev libxml2-dev gcc terraform sshpass
+  libcurl4-openssl-dev libssl-dev libxml2-dev gcc sshpass
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
   && unzip awscliv2.zip && ./aws/install
