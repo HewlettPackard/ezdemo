@@ -1,14 +1,28 @@
-# TODO for on prem deployment
+# TODO for DC deployment
 
 ## Settings
 
-Create AD if none exist/selected
+- [x] Create AD if none exist/selected
 
-Select number of nodes per type (picasso/k8s/mapr)
+- [x] Select number of nodes per type (picasso/k8s/mapr)
 
-Output while running ansible-create.sh
+  - can be provided in dc.ini:
 
-GPU Worker support
+      controller_count
+
+      gateway_count
+
+      picasso_count
+
+      k8s_count
+
+      mapr_count
+
+- [ ] Output while running ansible-create.sh
+
+- [ ] GPU Worker support
+
+- [ ] refresh_files.sh to check and update if download_url provided by dc.ini
 
 ## UI
 

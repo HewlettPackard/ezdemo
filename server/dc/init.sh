@@ -26,6 +26,6 @@ set -euo pipefail
 echo "[all:vars]" > vars.ini
 cat my.tfvars | tr -d "[:blank:]" | cat - dc.ini >> vars.ini
 
-ansible -i vars.ini localhost -m ansible.builtin.template -a "src=hosts-common.ini dest=hosts.ini"
+ansible -i vars.ini localhost -m template -a "src=hosts-common.ini dest=hosts.ini"
 
 exit 0

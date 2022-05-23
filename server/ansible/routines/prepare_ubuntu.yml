@@ -1,8 +1,9 @@
 ## Configure mapr ubuntu hosts
 - hosts: "{{ groups['mapr'] }}"
   tasks:
-  - name: ensure passwordless sudo
-    shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
+  # Enabled by default at cloud images
+  # - name: enable passwordless sudo
+  #   shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
     
   - name: update sysctl
     lineinfile:

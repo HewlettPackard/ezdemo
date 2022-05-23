@@ -31,8 +31,8 @@ do
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
 
-## map if we have on-prem config.ini 
-[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/${target}/dc.ini:rw")
+## map if we have dc.ini for on prem deployment 
+[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/dc/dc.ini:rw")
 
 [[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
 [[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
