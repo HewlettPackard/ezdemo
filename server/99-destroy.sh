@@ -42,8 +42,8 @@ pushd "${1}" > /dev/null
 
 popd > /dev/null
 
-(ls "${1}"/*run.log | xargs rm -f) || true
-(ls -d generated/*/ | xargs rm -rf) || true # Deletes all folders under generated, better than deleting the generated folder all together
+(ls "${1}"/*run.log | xargs rm -f) 2> /dev/null || true
+(ls -d generated/*/ | xargs rm -rf) 2> /dev/null || true # Deletes all folders under generated, better than deleting the generated folder all together
 
 ## Clean user environment, unless linked to some other file
 [ ! -L ~/.hpecp.conf  ] && rm -f ~/.hpecp.conf

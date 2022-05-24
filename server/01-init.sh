@@ -84,9 +84,7 @@ fi
 pushd "${1}" > /dev/null
    TF_IN_AUTOMATION=1 terraform init ${EZWEB_TF:-}
    ### Init hook-up for individual targets (aws, vmware etc)
-   if [[ -f "./init.sh" ]]; then
-      "./init.sh"
-   fi
+   [ -f "./init.sh" ] && "./init.sh"
 popd > /dev/null
 
 echo "Stage 1 complete"
@@ -95,7 +93,7 @@ echo "Stage 1 complete"
 
 if [[ "$1" == "aws" || "$1" == "azure" ]] && [[ ! -z "${EXTRA_TAGS}" ]] 
 then
-	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via. terratag"
+	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via terratag"
 	terratag -dir=$1 -tags="${EXTRA_TAGS}" -rename
 fi
 exit 0
