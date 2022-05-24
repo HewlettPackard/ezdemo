@@ -21,20 +21,28 @@
 # SOFTWARE.
 # =============================================================================
 
+USAGE="Usage: ${0} $(paste -s -d '|' providers)"
+
+PROVIDERS=($(<providers))
+if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
+  echo $USAGE
+  exit 1
+fi
+
 set -euo pipefail
 
 source ./outputs.sh "${1}"
 
-AD_SERVER="" && [[ "$INSTALL_AD" == "true" ]] && AD_SERVER=$AD_PRV_IP
+CUSTOM_INI=""
+
+pushd "${1}" > /dev/null
+  [ -f "refresh.sh" ] && source ./refresh.sh || true
+popd > /dev/null
+
+# Configure AD settings for new AD installation
+[[ "$INSTALL_AD" == "true" ]] && AD_CONF=$(<./etc/default_ad_conf.ini)
 
 ANSIBLE_INVENTORY="####
-# Ansible Hosts File for HPE Container Platform Deployment
-# created by Dirk Derichsweiler
-# modified by Erdinc Kaya
-#
-# Important:
-# use only ip addresses in this file
-####
 [controllers]
 $(echo ${CTRL_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gateway]
@@ -44,7 +52,7 @@ $(echo ${WRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gworkers]
 $(echo ${GWRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [ad_server]
-${AD_SERVER}
+${AD_PRV_IP:-}
 [mapr]
 $(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [mapr:vars]
@@ -64,10 +72,11 @@ is_mapr_ha=${IS_MAPR_HA}
 is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
 install_ad=${INSTALL_AD}
-ad_realm=${AD_REALM}
 app_version=${APP_VERSION}
 k8s_version=${K8S_VERSION}
 project_id=${PROJECT_ID}
+${AD_CONF:-}
+${CUSTOM_INI}
 
 "
 

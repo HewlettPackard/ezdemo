@@ -251,6 +251,40 @@
     become: yes
     when: not is_mapr_ha | bool
 
+  # - name: install mysql-server for hive metastore
+  #   package: name="mysql-server" state=present
+
+  # - name: configure mysql server for mapr
+  #   command:
+  #     - mysql_secure_installation 
+  #     - systemctl enable --now mysql
+  #     - mysql -u root -p ''
+  #   become: yes
+
+  # - name: configure hive metastore with mysql
+  #   xml:
+  #     path: /opt/mapr/hive/hive-*/conf/hive-site.xml
+  #     xpath: "{{ item.property }}"
+  #     value: "{{ item.value }}"
+
+  #   with_items:
+  #     - property = /configuration/property/javax.jdo.option.ConnectionURL
+  #       value = jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true
+  #     - property = javax.jdo.option.ConnectionDriverName, 
+  #       value = com.mysql.jdbc.Driver
+  #     - property = javax.jdo.option.ConnectionUserName
+  #       value = mapr
+  #     - property = javax.jdo.option.ConnectionPassword
+  #       value = "{{ admin_password }}"
+  #     - property = hive.metastore.uris
+  #       value = thrift://localhost:9083
+
+  # - name: refresh hive service
+  #   command: 
+  #     - /opt/mapr/hive/hive-*/bin/schematool -dbType mysql -initSchema
+  #     - maprcli node services -name hivemeta -action start -nodes "{{ mapr_hosts }}"
+  #   become: yes
+
   - name: re-Configure.sh
     shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
     become: yes

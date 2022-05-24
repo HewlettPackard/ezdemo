@@ -8,6 +8,23 @@
 - hosts: "{{ (groups['controllers'] | first) | default([]) }}"
   gather_facts: yes
 
+  vars:
+    ad_conf: |-
+      {
+        "external_identity_server":  {
+          "bind_pwd":"{{ bind_pwd }}",
+          "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
+          "bind_type":"{{ bind_type | default('search_bind') }}",
+          "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
+          "host":"{{ ad_server | default(groups['ad_server'] | first | default([])) }}",
+          "security_protocol":"{{ security_protocol | default('ldaps') }}",
+          "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
+          "verify_peer": false,
+          "type":"{{ type | default('Active Directory') }}",
+          "port":"{{ port | default(636) }}"
+        }
+      }
+
   tasks:
   - name: configure hpecp
     copy:
@@ -137,21 +154,7 @@
   - name: AD config
     copy:
       dest: ~/adconf.json
-      content: |-
-        {
-          "external_identity_server":  {
-            "bind_pwd":"5ambaPwd@",
-            "user_attribute":"sAMAccountName",
-            "bind_type":"search_bind",
-            "bind_dn":"cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com",
-            "host":"{{ groups['ad_server'] | list | first }}",
-            "security_protocol":"ldaps",
-            "base_dn":"CN=Users,DC=samdom,DC=example,DC=com",
-            "verify_peer": false,
-            "type":"Active Directory",
-            "port":636
-          }
-        }
+      content: "{{ ad_conf }}"
       force: yes
 
   - name: configure global AD
