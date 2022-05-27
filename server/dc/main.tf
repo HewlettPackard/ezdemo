@@ -61,7 +61,7 @@ output "gworkers_private_ip" {
   value = []
 }
 output "mapr_count" {
-  value = var.is_mapr ? var.mapr_count : 0
+  value = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 }
 output "mapr_private_ips" {
   value = var.is_mapr ? jsondecode(shell_script.ansiblevms.output.mapr)["hosts"] : []

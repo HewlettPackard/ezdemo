@@ -1,6 +1,6 @@
 # Worker instances
 resource "aws_instance" "mapr" {
-  count         = var.is_mapr ? var.mapr_count : 0
+  count         = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
   # ami           = data.aws_ami.ec2_centos8_ami.image_id
   ami           = data.aws_ami.ec2_ubuntu2004_ami.image_id
   instance_type = var.mapr_instance_type
@@ -34,7 +34,7 @@ resource "aws_instance" "mapr" {
 
 # /dev/xvdb
 resource "aws_ebs_volume" "mapr-ebs-volumes-sdb" {
-  count             = var.is_mapr ? var.mapr_count : 0
+  count             = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
   availability_zone = var.az
   size              = 100
   type              = "gp2"
@@ -48,7 +48,7 @@ resource "aws_ebs_volume" "mapr-ebs-volumes-sdb" {
 }
 
 resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
-  count       = var.is_mapr ? var.mapr_count : 0
+  count       = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
   device_name = "/dev/xvdb"
   volume_id   = aws_ebs_volume.mapr-ebs-volumes-sdb.*.id[count.index]
   instance_id = aws_instance.mapr.*.id[count.index]
@@ -58,7 +58,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
 
 # # /dev/xvdc
 # resource "aws_ebs_volume" "mapr-ebs-volumes-sdc" {
-#   count             = var.is_mapr ? var.mapr_count : 0
+#   count             = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 #   availability_zone = var.az
 #   size              = 500
 #   type              = "gp2"
@@ -70,7 +70,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
 #   }
 # }
 # resource "aws_volume_attachment" "mapr-volume-attachment-sdc" {
-#   count       = var.is_mapr ? var.mapr_count : 0
+#   count       = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 #   device_name = "/dev/xvdc"
 #   volume_id   = aws_ebs_volume.mapr-ebs-volumes-sdc.*.id[count.index]
 #   instance_id = aws_instance.mapr.*.id[count.index]
@@ -79,7 +79,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
 # }
 # # /dev/xvdd
 # resource "aws_ebs_volume" "mapr-ebs-volumes-sdd" {
-#   count             = var.is_mapr ? var.mapr_count : 0
+#   count             = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 #   availability_zone = var.az
 #   size              = 500
 #   type              = "gp2"
@@ -91,7 +91,7 @@ resource "aws_volume_attachment" "mapr-volume-attachment-sdb" {
 #   }
 # }
 # resource "aws_volume_attachment" "mapr-volume-attachment-sdd" {
-#   count       = var.is_mapr ? var.mapr_count : 0
+#   count       = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 #   device_name = "/dev/xvdd"
 #   volume_id   = aws_ebs_volume.mapr-ebs-volumes-sdd.*.id[count.index]
 #   instance_id = aws_instance.mapr.*.id[count.index]
@@ -106,5 +106,5 @@ output "mapr_private_ips" {
 #   value = [aws_instance.mapr.*.private_dns]
 # }
 output "mapr_count" {
-  value = var.is_mapr ? var.mapr_count : 0
+  value = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 }

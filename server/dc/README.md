@@ -20,7 +20,7 @@ If dc.ini exist where you run start.sh script, it will be automatically mounted 
 
 ## Supported options
 
-Override default node counts using (overrides is_mlops, is_ha and is_mapr_ha user settings)
+Override default node counts with following settings, use numbers (smaller than minimums will be overriden)
 
 - picasso_count=
 
@@ -36,26 +36,29 @@ Additional (custom) information
 
 50 lines after "#### Custom ####" will be copied as is to provide additional information (ie, AD settings).
 
-- If you chose not to install_ad in user settings, you need to provide AD access information
+- If you set install_ad=false in user settings, you need to provide AD access information
 
  ```ini
 #### Custom ####
-bind_pwd=""
-user_attribute="sAMAccountName" # this is default
-bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
-bind_type="search_bind" # this is default
 ad_server=""
-security_protocol="ldap"
-base_dn="DC=example,DC=com"
-verify_peer="false" # this is not used, always defaults to false
-type="Active Directory" # this is default
-port="389"
-external_groups="CN=Administrators,CN=Users,DC=example,DC=com"
-group_attribute="member" # this is default
 ad_domain="example.com"
-
 ad_username="Administrator"
+bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
+bind_pwd=""
+security_protocol="ldap" # defaults to ldaps
+bind_type="search_bind" # this is default
+base_dn="DC=example,DC=com"
+user_attribute="sAMAccountName" # this is default
+group_attribute="memberOf" # defaults to member
+type="Active Directory" # this is default
+port=389
+external_groups="CN=Administrators,CN=Users,DC=example,DC=com"
+verify_peer=false # this is not used, always defaults to false
 
+http_proxy= ### add http proxy environment to all nodes (NOT TESTED)
+https_proxy= ### add https proxy environment to all nodes (NOT TESTED)
+no_proxy= ### add no proxy environment to all nodes (NOT TESTED)
+...
  ```
 
 ## Requirements

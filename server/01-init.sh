@@ -54,17 +54,6 @@ fi
 
 . ./user_settings.sh
 
-if [ "${IS_MAPR_HA}" == "true" ]
-then
-   MAPR_COUNT=5
-else
-   MAPR_COUNT=1
-fi
-
-if [ "${IS_MAPR}" == "false" ]; then
-   MAPR_COUNT=0
-fi
-
 cat > ${1}/my.tfvars <<EOF
 user           = ${USER_ID}
 project_id     = ${PROJECT_ID// /_}
@@ -74,16 +63,16 @@ is_ha          = ${IS_HA}
 is_mapr        = ${IS_MAPR}
 is_mapr_ha     = ${IS_MAPR_HA}
 install_ad     = ${INSTALL_AD}
-mapr_count     = ${MAPR_COUNT}
 admin_password = ${ADMIN_PASSWORD}
 EOF
+
 if [[ "${IS_GPU}" == "true" ]]; then
   echo "gworker_count      = 1" >> ${1}/my.tfvars
 fi
 
 pushd "${1}" > /dev/null
    TF_IN_AUTOMATION=1 terraform init ${EZWEB_TF:-}
-   ### Init hook-up for individual targets (aws, vmware etc)
+   ### Init hook-up for targets
    [ -f "./init.sh" ] && "./init.sh"
 popd > /dev/null
 

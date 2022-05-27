@@ -1,6 +1,6 @@
 # Worker NICs
 resource "azurerm_network_interface" "maprnics" {
-    count                = var.is_mapr ? var.mapr_count : 0
+    count                = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
     name                 = "mapr${count.index + 1}-nic"
     location             = azurerm_resource_group.resourcegroup.location
     resource_group_name  = azurerm_resource_group.resourcegroup.name
@@ -13,7 +13,7 @@ resource "azurerm_network_interface" "maprnics" {
 
 # Worker VMs
 resource "azurerm_linux_virtual_machine" "mapr" {
-  count                 = var.is_mapr ? var.mapr_count : 0
+  count                 = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
   name                  = "mapr${count.index + 1}"
   location              = azurerm_resource_group.resourcegroup.location
   resource_group_name   = azurerm_resource_group.resourcegroup.name
@@ -86,5 +86,5 @@ output "mapr_private_dns" {
   value = azurerm_network_interface.maprnics.*.internal_domain_name_suffix
 }
 output "mapr_count" {
-  value = var.is_mapr ? var.mapr_count : 0
+  value = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
 }
