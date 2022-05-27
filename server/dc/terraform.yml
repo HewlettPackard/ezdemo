@@ -111,25 +111,21 @@
   import_playbook: custom.yml
   when: skip_custom is not defined
 
-######################################################################################################
-# Add Docker Proxy (Temporary Solution)
-######################################################################################################
-
-# - name: add Docker Proxy Support
-#   import_playbook: ../ansible/routines/add_dockerproxy.yml
-#   when: skip_docker_proxy is not defined and configjson is not defined
-
-# - name: Docker account enablement
-#   import_playbook: ../ansible/routines/add_docker_account.yml
-#   when: skip_docker_proxy is not defined and configjson is defined
-
 ###
-# Add project ssh key to hosts
+# Set baseline users and connectivity for hosts (aligning with cloud images)
 ###
 
 - hosts: all:!mapr
   gather_facts: no
   tasks:
+  - name: ensure centos user exist
+    user:
+      name: centos
+      groups: sudo
+      shell: /bin/bash
+      createhome: true
+      append: true
+    become: yes
   - name: add ssh key to centos user
     authorized_key:
       user: centos
@@ -143,7 +139,9 @@
     user:
       name: ubuntu
       groups: sudo
-      append: yes
+      shell: /bin/bash
+      createhome: true
+      append: true
     become: yes
   - name: add ssh key to ubuntu user
     authorized_key:
@@ -151,3 +149,7 @@
       state: present
       key: "{{ lookup('file', '../generated/controller.pub_key') }}"
     become: yes
+  - name: enable passwordless sudo
+    shell: 'echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/ubuntu'
+    become: yes
+

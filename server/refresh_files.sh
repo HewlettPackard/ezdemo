@@ -34,6 +34,26 @@ set -euo pipefail
 source ./outputs.sh "${1}"
 
 CUSTOM_INI=""
+### TODO: Move to ansible task
+SSH_CONFIG="
+Host *
+  StrictHostKeyChecking no
+  Compression yes
+  ForwardX11 yes
+Host ezdemo_gateway
+  Hostname $(echo ${GATW_PUB_DNS[0]:-})
+  IdentityFile generated/controller.prv_key
+  ServerAliveInterval 30
+  User centos
+Host 10.1.0.*
+    Hostname %h
+    ConnectionAttempts 3
+    IdentityFile generated/controller.prv_key
+    ProxyJump ezdemo_gateway
+
+"
+[[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
+[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible
 
 pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
@@ -89,28 +109,6 @@ if [[ "${1}" == "dc" ]]; then
 else
   echo "ansible_ssh_common_args: ${SSH_VIA_PROXY}" > ./ansible/group_vars/all.yml
 fi
-
-### TODO: Move to ansible task
-SSH_CONFIG="
-Host *
-  StrictHostKeyChecking no
-  Compression yes
-  ForwardX11 yes
-Host ezdemo_gateway
-  Hostname $(echo ${GATW_PUB_DNS[0]:-})
-  IdentityFile generated/controller.prv_key
-  ServerAliveInterval 30
-  User centos
-Host 10.1.0.*
-    Hostname %h
-    ConnectionAttempts 3
-    IdentityFile generated/controller.prv_key
-    ProxyJump ezdemo_gateway
-
-"
-
-[[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
-[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible
 
 pushd ./generated/ > /dev/null
   if [[ $IS_RUNTIME == "true" ]]; then

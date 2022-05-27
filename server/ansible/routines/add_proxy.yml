@@ -8,9 +8,6 @@
 
 - hosts: all
   gather_facts: yes
-  vars:
-
-
   tasks:
 
   - name: change resolv.conf if 192.168.122.1 is found.
@@ -168,13 +165,13 @@
   #     mode: '0644'
   #     backup: no
         
-  - name: Unconditionally reboot the machine with all defaults
-    reboot:
-    when: proxy.changed
+  # - name: Unconditionally reboot the machine with all defaults
+  #   reboot:
+  #   when: proxy.changed
 
-  - name: Upgrade the OS (yum upgrade)
-    become: yes
-    yum: name=* state=latest
-    when: ansible_os_family == "RedHat"
+  # - name: Upgrade the OS (yum upgrade)
+  #   become: yes
+  #   yum: name=* state=latest
+  #   when: ansible_os_family == "RedHat"
 
 

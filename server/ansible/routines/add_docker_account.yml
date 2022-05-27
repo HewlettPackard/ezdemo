@@ -4,36 +4,36 @@
 - hosts: k8s:picasso
   gather_facts: false
   tasks:
-      - name: delete docker.json 
-        ansible.builtin.file:
-          path: /etc/docker/daemon.json
-          state: absent
-          
-      - name: copy config.json file 
-        ansible.builtin.copy:
-           src: ../config.json
-           dest: /var/lib/kubelet/
+  - name: delete docker.json 
+    ansible.builtin.file:
+      path: /etc/docker/daemon.json
+      state: absent
+      
+  - name: copy config.json to kubelet
+    ansible.builtin.copy:
+        src: ../config.json
+        dest: /var/lib/kubelet/
 
-      - name: copy config.json file
-        ansible.builtin.copy:
-           src: ../config.json
-           dest: /root/.docker/     
+  - name: copy config.json to root
+    ansible.builtin.copy:
+        src: ../config.json
+        dest: /root/.docker/     
 
-      - name: copy config.json file
-        ansible.builtin.copy:
-           src: ../config.json
-           dest: /.docker/     
+  - name: copy config.json to user
+    ansible.builtin.copy:
+        src: ../config.json
+        dest: /.docker/     
 
-      - name: stop docker daemon
-        ansible.builtin.systemd:
-          state: stopped
-          enabled: yes
-          name: docker
+  - name: stop docker daemon
+    ansible.builtin.systemd:
+      state: stopped
+      enabled: yes
+      name: docker
 
-      - name: start docker daemon
-        ansible.builtin.systemd:
-          state: started
-          enabled: yes
-          name: docker
-        # when: copy.changed
+  - name: start docker daemon
+    ansible.builtin.systemd:
+      state: started
+      enabled: yes
+      name: docker
+    # when: copy.changed
 

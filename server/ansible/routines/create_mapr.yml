@@ -41,12 +41,14 @@
       dest: /tmp/mapr.stanza
       content: |-
         environment:
-          mapr_core_version: 6.2.0
+          mapr_core_version: 7.0.0
         config:
           hosts:
             - "{{ mapr_hosts[0] }}"
             - "{{ mapr_hosts[1] }}"
             - "{{ mapr_hosts[2] }}"
+            - "{{ mapr_hosts[3] }}"
+            - "{{ mapr_hosts[4] }}"
           ssh_id: {{ ansible_user_id }}
           ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
           metrics_ui_admin_password: admin
@@ -69,20 +71,33 @@
   - name: configure mapr
     command: bash -c 'echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza'
 
+  - name: create ticket for user
+    shell: echo mapr | maprlogin password -user mapr
+
+  - name: copy the license
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+    ignore_errors: yes
+
+  - name: install mapr license
+    shell: |
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    ignore_errors: yes
+
 - hosts: localhost
   tasks:
-  - name: check tunnel
+  - name: check socket file
     stat: path=/tmp/MCS-socket-admin
     register: socket_file
     
-  - name: MCS tunnel admin
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-admin -fNT -L 0.0.0.0:8443:{{ groups['mapr'] | first }}:8443 centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
-
-  - name: MCS tunnel installer
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-installer -fNT -L 0.0.0.0:9443:{{ groups['mapr'] | first }}:9443 centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
-
-  - name: MCS tunnel grafana
-    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-grafana -fNT -L 0.0.0.0:3000:{{ groups['mapr'] | first }}:3000 centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
+  - name: MCS tunnel for ports
+    shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
+    when: not socket_file.stat.exists and groups['gateway'] | length > 0
+    with_items:
+      - port: 8443
+        description: admin
+      - port: 9443
+        description: installer
+      - port: 8780
+        description: airflow
+      - port: 5601
+        description: kibana

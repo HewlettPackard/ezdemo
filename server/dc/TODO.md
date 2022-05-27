@@ -12,6 +12,8 @@
 
 - [x] check and update if download_url provided by dc.ini
 
+- [ ] Option to use existing certificate
+
 ## UI
 
 request ovirt/vcenter/kvm credentials -> list/create/select DC/cluster/folder/datastore/vswitch
