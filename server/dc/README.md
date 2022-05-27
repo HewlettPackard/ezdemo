@@ -39,23 +39,22 @@ Additional (custom) information
 - If you chose not to install_ad in user settings, you need to provide AD access information
 
  ```ini
- #### Custom ####
+#### Custom ####
 bind_pwd=""
-user_attribute="sAMAccountName"
+user_attribute="sAMAccountName" # this is default
 bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
-bind_type="search_bind"
+bind_type="search_bind" # this is default
 ad_server=""
 security_protocol="ldap"
 base_dn="DC=example,DC=com"
-verify_peer="false"
-type="Active Directory"
+verify_peer="false" # this is not used, always defaults to false
+type="Active Directory" # this is default
 port="389"
 external_groups="CN=Administrators,CN=Users,DC=example,DC=com"
-group_attribute="member"
+group_attribute="member" # this is default
 ad_domain="example.com"
 
 ad_username="Administrator"
-ad_password=""
 
  ```
 
