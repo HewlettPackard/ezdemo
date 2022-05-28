@@ -64,6 +64,7 @@ is_mapr        = ${IS_MAPR}
 is_mapr_ha     = ${IS_MAPR_HA}
 install_ad     = ${INSTALL_AD}
 admin_password = ${ADMIN_PASSWORD}
+extra_tags = ${EXTRA_TAGS}
 EOF
 
 if [[ "${IS_GPU}" == "true" ]]; then
