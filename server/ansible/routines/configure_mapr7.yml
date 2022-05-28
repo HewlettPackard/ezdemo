@@ -2,6 +2,10 @@
 
 - hosts: "{{ groups['mapr'] | default([]) }}"
   tasks:
+
+  - name: create impersonation ticket for fuse
+    shell: sudo maprlogin generateticket -type servicewithimpersonation -user mapr -out /opt/mapr/conf/maprfuseticket
+
   - name: configure delta
     shell: pip3 install delta_spark
     # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
@@ -21,3 +25,4 @@
     shell: |
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
+    become: yes
