@@ -35,4 +35,3 @@ IS_MAPR_HA=$(jq 'if has("is_mapr_ha") then .is_mapr_ha else true end' user.setti
 INSTALL_AD=$(jq 'if has("install_ad") then .install_ad else true end' user.settings)
 ADMIN_PASSWORD=$(jq 'if has("admin_password") then .admin_password else "admin123" end' user.settings)
 EXTRA_TAGS=$(jq 'if has("extra_tags") then .extra_tags else {} end' user.settings)
-AD_REALM="SAMDOM.EXAMPLE.COM"
