@@ -54,34 +54,26 @@ fi
 
 . ./user_settings.sh
 
-if [ "${IS_MAPR_HA}" == "true" ]
-then
-   MAPR_COUNT=5
-else
-   MAPR_COUNT=1
-fi
-
 cat > ${1}/my.tfvars <<EOF
-user = ${USER_ID}
-project_id = ${PROJECT_ID// /_}
-is_runtime = ${IS_RUNTIME}
-is_mlops = ${IS_MLOPS}
-is_ha = ${IS_HA}
-is_mapr = ${IS_MAPR}
-mapr_count = ${MAPR_COUNT}
+user           = ${USER_ID}
+project_id     = ${PROJECT_ID// /_}
+is_runtime     = ${IS_RUNTIME}
+is_mlops       = ${IS_MLOPS}
+is_ha          = ${IS_HA}
+is_mapr        = ${IS_MAPR}
+is_mapr_ha     = ${IS_MAPR_HA}
+install_ad     = ${INSTALL_AD}
 admin_password = ${ADMIN_PASSWORD}
-extra_tags=${EXTRA_TAGS}
 EOF
+
 if [[ "${IS_GPU}" == "true" ]]; then
-  echo "gworker_count = 1" >> ${1}/my.tfvars
+  echo "gworker_count      = 1" >> ${1}/my.tfvars
 fi
 
 pushd "${1}" > /dev/null
-   TF_IN_AUTOMATION=1 terraform init -upgrade ${EZWEB_TF:-}
-   ### Init hook-up for individual targets (aws, vmware etc)
-   if [[ -f "./init.sh" ]]; then
-      "./init.sh"
-   fi
+   TF_IN_AUTOMATION=1 terraform init ${EZWEB_TF:-}
+   ### Init hook-up for targets
+   [ -f "./init.sh" ] && "./init.sh"
 popd > /dev/null
 
 echo "Stage 1 complete"
@@ -90,7 +82,7 @@ echo "Stage 1 complete"
 
 if [[ "$1" == "aws" || "$1" == "azure" ]] && [[ ! -z "${EXTRA_TAGS}" && "${EXTRA_TAGS}" != "{}" ]] 
 then
-	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via. terratag"
-	terratag -dir=$1 -tags=${EXTRA_TAGS} -rename
+	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via terratag"
+	terratag -dir=$1 -tags="${EXTRA_TAGS}" -rename
 fi
 exit 0

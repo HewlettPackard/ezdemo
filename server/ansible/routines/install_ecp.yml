@@ -8,6 +8,24 @@
 - hosts: "{{ (groups['controllers'] | first) | default([]) }}"
   gather_facts: yes
 
+  vars:
+    ad_conf: |-
+      {
+        "external_identity_server":  {
+          "host":"{{ ad_server | default(groups['ad_server'] | first | default([])) }}",
+          "port": {{ port | int | default(636) }},
+          "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
+          "bind_pwd":"{{ bind_pwd }}",
+          "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
+          "group_attribute":"{{ group_attribute | default('member') }}",
+          "bind_type":"{{ bind_type | default('search_bind') }}",
+          "security_protocol":"{{ security_protocol | default('ldaps') }}",
+          "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
+          "type":"{{ type | default('Active Directory') }}",
+          "verify_peer": false
+        }
+      }
+
   tasks:
   - name: configure hpecp
     copy:
@@ -92,7 +110,7 @@
     # become: yes
 
   - name: configure ecp
-    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ groups['controllers'] | first }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin "{{ project_id }}" -k no --no-local-tenant-storage --routable no
+    shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ groups['controllers'] | first }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin "{{ project_id | replace('.', '_' ) }}" -k no --no-local-tenant-storage --routable no
     when: not hpecp_installed.stat.exists
 
   - name: install python3
@@ -137,21 +155,7 @@
   - name: AD config
     copy:
       dest: ~/adconf.json
-      content: |-
-        {
-          "external_identity_server":  {
-            "bind_pwd":"5ambaPwd@",
-            "user_attribute":"sAMAccountName",
-            "bind_type":"search_bind",
-            "bind_dn":"cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com",
-            "host":"{{ groups['ad_server'] | list | first }}",
-            "security_protocol":"ldaps",
-            "base_dn":"CN=Users,DC=samdom,DC=example,DC=com",
-            "verify_peer": false,
-            "type":"Active Directory",
-            "port":636
-          }
-        }
+      content: "{{ ad_conf }}"
       force: yes
 
   - name: configure global AD

@@ -23,8 +23,6 @@
 
 set -euo pipefail
 
-ansible-playbook -i hosts.ini ../terraform.yml
-
-ansible-inventory -i hosts.ini --list
+ansible-playbook -v -i hosts.ini -i vars.ini ../ansible/routines/destroy_vmware.yml
 
 exit 0

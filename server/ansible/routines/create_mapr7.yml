@@ -1,5 +1,4 @@
 ### Manual DF installation
-
 - hosts: "{{ groups['mapr'] | default([]) }}"
   tasks:
   - name: Create MapR Group
@@ -19,6 +18,7 @@
       password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0" # password is mapr
       createhome: true
       update_password: on_create
+      shell: /bin/bash
       state: present
       append: true
     become: yes
@@ -35,51 +35,46 @@
     register: mapr_disks
     become: yes 
 
-  - name: check fresh cluster
-    shell: '[ -f /opt/mapr/conf/disktab ] && grep -q "{{ mapr_disks.stdout_lines | first }}" /opt/mapr/conf/disktab'
-    register: cluster_configured
-    ignore_errors: yes
-
-  - name: install mapr packages
-    package: name="{{ packages | join(',') }}" state=present
-    vars:
-      packages: ['mapr-librdkafka',
-                  'mapr-hadoop-util',
-                  'mapr-client',
-                  'mapr-fileserver',
-                  'mapr-s3server',
-                  'mapr-mastgateway',
-                  'mapr-nfs',
-                  'mapr-webserver',
-                  'mapr-gateway',
-                  'mapr-spark',
-                  'mapr-spark-historyserver'
-                  ]
-    become: yes
-    when: cluster_configured.failed | bool
-
   - name: populate /tmp/disks.txt
     lineinfile:
       dest: /tmp/disks.txt
       line: "{{ item }}"
       create: true
     with_items: "{{ mapr_disks.stdout_lines }}"
-    when: cluster_configured.failed | bool
 
-  - name: create tokens for root
-    shell: echo mapr | maprlogin password -user mapr
+  - name: check installation
+    shell: '[ -f /opt/mapr/roles/fileserver ]'
+    register: cluster_configured
+    ignore_errors: yes
+
+### ALL NODES
+  - name: install mapr packages
+    package: 
+      name:
+        "mapr-librdkafka, mapr-hadoop-util, mapr-client, mapr-fileserver, mapr-s3server, \
+        mapr-mastgateway, mapr-nfs, mapr-webserver, mapr-gateway"
+      state: present
     become: yes
-  - name: create tokens for user
-    shell: echo mapr | maprlogin password -user mapr
 
+  - name: install mapr monitoring packages
+    package: 
+      name:
+          "mapr-collectd, mapr-fluentd"
+      state: present
+    become: yes
+    when: mapr_monitoring is defined and (mapr_monitoring | bool)
+
+### FIRST 3 NODES
 - hosts: "{{ groups['mapr'][:3] | default([]) }}"
+  gather_facts: no
   tasks:
   - name: install cldb and zk
     package: name="mapr-cldb, mapr-zookeeper" state=present
     become: yes
-    when: cluster_configured.failed | bool
 
+### FIRST NODE
 - hosts: "{{ groups['mapr'] | first | default([]) }}"
+  gather_facts: no
   vars:
     secure_files: 
         - filename: maprhsm.conf
@@ -138,26 +133,132 @@
           mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
+    mysql_root_password: R00tpwd123.
 
   tasks:
+  - name: install mysql-server for hive metastore
+    package: name="mysql-server" state=present
+    become: yes
+
+  - name: check if mysql is configured
+    shell: '[ -f mysql_secured ]'
+    register: mysql_configured
+    ignore_errors: yes
+
+  - name: configure mysql server for mapr
+    shell: |-
+      sudo mysql -u root -e "CREATE USER hive@localhost IDENTIFIED WITH mysql_native_password by 'H1vepwd123.'; \
+      REVOKE ALL PRIVILEGES, GRANT OPTION FROM hive@localhost; \
+      GRANT ALL PRIVILEGES ON hive.* TO hive@localhost; \
+      ALTER USER root@localhost IDENTIFIED WITH mysql_native_password by 'R00tpwd123.'; \
+      FLUSH PRIVILEGES;"
+      expect <<EOF
+        set timeout 1800
+        spawn sudo mysql_secure_installation -D
+        expect ".*Enter password for user root:" { send "{{ mysql_root_password }}\r" }
+        expect eof
+      EOF
+      touch mysql_secured
+    when: mysql_configured.failed | bool
+
   - name: Configure.sh to generate keys on first mapr-cldb node only
     shell: |-
-      /opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
+      /opt/mapr/server/configure.sh -N {{ project_id | regex_replace('[_ ]', '') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
     when: cluster_configured.failed | bool
     become: yes
 
   - name: pack tokens
     shell: "cd /opt/mapr/conf && tar czvf tokens.tgz tokens"
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: save keys from first node
     fetch: src="/opt/mapr/conf/{{ item.filename }}" dest="/tmp/maprkeys/" flat=yes
     with_items: "{{ secure_files }}"
     become: yes
-    when: cluster_configured.failed | bool
-  
+
+  - name: Enable standalone services
+    package: name="mapr-airflow-webserver, mapr-airflow-scheduler, mapr-hivemetastore, mapr-spark-thriftserver" state=present
+    become: yes
+
+  - name: install ecosystem components for single node
+    package: name="{{ packages | join(',') }}" state=present
+    vars: 
+      packages: [
+        mapr-kafka, mapr-livy, mapr-drill, mapr-spark, mapr-spark-historyserver,
+        mapr-hive, mapr-hiveserver2, mapr-hivewebhcat,
+        mapr-ksql,mapr-schema-registry, mapr-kafka-rest,
+        mapr-kafka-connect-jdbc,  mapr-kafka-connect-hdfs, mapr-elasticsearch
+      ]
+    become: yes
+    when: not is_mapr_ha | bool
+
+  - name: update hive-site.xml
+    become: yes
+    register: hivesite
+    blockinfile:
+      create: no
+      path: /opt/mapr/hive/hive-2.3/conf/hive-site.xml
+      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+      insertafter: "<configuration>"
+      block: |+
+          <property>
+            <name>javax.jdo.option.ConnectionURL</name>
+            <value>jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true</value>
+            <description>the URL of the MySQL database</description>
+          </property>
+
+          <property>
+            <name>javax.jdo.option.ConnectionDriverName</name>
+            <value>com.mysql.cj.jdbc.Driver</value>
+          </property>
+
+          <property>
+            <name>javax.jdo.option.ConnectionUserName</name>
+            <value>hive</value>
+          </property>
+
+          <property>
+            <name>javax.jdo.option.ConnectionPassword</name>
+            <value>H1vepwd123.</value>
+          </property>
+
+          <property>
+            <name>hive.metastore.uris</name>
+            <value>thrift://localhost:9083</value>
+            <description>IP address (or fully-qualified domain name) and port of the metastore host</description>
+          </property>
+
+  - name: refresh hive service
+    shell: |
+      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
+      sudo /opt/mapr/hive/hive-2.3/bin/schematool -dbType mysql -initSchema
+    when: hivesite.changed
+
+  - name: Enable monitoring
+    package: name="mapr-opentsdb, mapr-grafana, mapr-kibana" state=present
+    become: yes
+    when: mapr_monitoring is defined and (mapr_monitoring | bool)
+
+  - name: re-Configure.sh
+    shell: "/opt/mapr/server/configure.sh -R -OT {{ mapr_hosts | first }} -ES {{ mapr_hosts[1:] | join(',') if is_mapr_ha | bool else mapr_hosts | first }}"
+    become: yes
+
+  - name: create ticket for root
+    shell: |
+      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
+
+  - name: copy the license
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+    ignore_errors: yes
+
+  - name: install mapr license
+    shell: |
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && sudo maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    ignore_errors: yes
+
+#### OTHER NODES
 - hosts: "{{ groups['mapr'][1:] | default([]) }}"
+  gather_facts: no
   vars:
     secure_files: 
         - filename: maprhsm.conf
@@ -210,6 +311,10 @@
           mode: '0444'
         - filename: chain-ca.pem
           mode: '0644'
+        - filename: signing-ca.pem
+          mode: '0644'
+        - filename: root-ca.pem
+          mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
   tasks:
@@ -217,75 +322,28 @@
     copy: src="/tmp/maprkeys/{{ item.filename }}" dest="/opt/mapr/conf/{{ item.filename }}" mode="{{ item.mode }}" owner="mapr" group="mapr"
     with_items: "{{ secure_files }}"
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: restore tokens for dare
-    shell: "cd /opt/mapr/conf; rm -rf tokens; tar xzf tokens.tgz; mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
+    shell: "cd /opt/mapr/conf; rm -rf tokens && tar xzf tokens.tgz; rm -rf ca && mkdir ca; mv chain-ca.pem signing-ca.pem root-ca.pem ca/"
     become: yes
-    when: cluster_configured.failed | bool
-
-  - name: enable monitoring
-    package: name="mapr-collectd, mapr-grafana, mapr-fluentd" state=present
-    become: yes
-    when: cluster_configured.failed | bool
 
   - name: install ecosystem components
     package: name="{{ packages | join(',') }}" state=present
     vars: 
       packages: [
-        'mapr-kafka', 'mapr-livy', 'mapr-drill',
-        'mapr-hive', 'mapr-hiveserver2', 'mapr-hivewebhcat',
-        'mapr-ksql','mapr-schema-registry', 'mapr-kafka-rest',
-        'mapr-kafka-connect-jdbc',  'mapr-kafka-connect-hdfs',
-        'mapr-airflow', 'mapr-airflow-webserver', 'mapr-airflow-scheduler'
+        mapr-kafka, mapr-livy, mapr-drill, mapr-spark, mapr-spark-historyserver,
+        mapr-hive, mapr-hiveserver2, mapr-hivewebhcat,
+        mapr-ksql,mapr-schema-registry, mapr-kafka-rest,
+        mapr-kafka-connect-jdbc,  mapr-kafka-connect-hdfs, mapr-elasticsearch
       ]
     become: yes
-    when: cluster_configured.failed | bool
 
   - name: Configure.sh secure on other nodes
-    shell: "/opt/mapr/server/configure.sh -N dfdemo.local -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
-    when: cluster_configured.failed | bool
-    become: yes
-
-- hosts: "{{ groups['mapr'] | first | default([]) }}"
-  tasks:
-  - package: name="mapr-collectd, mapr-opentsdb, mapr-fluentd, mapr-kibana, mapr-hivemetastore, mapr-spark-thriftserver, mapr-elasticsearch" state=present
-    become: yes
-    when: cluster_configured.failed | bool
-
-  - name: re-Configure.sh
-    shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }}"
-    become: yes
-
-  - name: copy the license
-    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
-    ignore_errors: yes
-
-  - name: install mapr license
-    shell: |
-      [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-    ignore_errors: yes
-
-  - name: configure spark
-    shell: |
-      hadoop fs -mkdir /apps/spark
-      hadoop fs -chmod 777 /apps/spark
-
-  - name: configure delta
-    shell: pip3 install delta_spark
-    # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-    become: yes
-
-  - name: configure s3
-    shell: |
-      mkdir -p /home/mapr/.mc/certs/CAs
-      ln -s /opt/mapr/conf/ca/chain-ca.pem /home/mapr/.mc/certs/CAs/chain-ca.pem || true
-      chown -R mapr:mapr /home/mapr/.mc/certs/CAs
-      export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
-      ${JAVA_HOME}/bin/keytool -noprompt -importcert -file /opt/mapr/conf/ca/chain-ca.pem -alias maprca -storepass changeit -cacerts || true
+    shell: "/opt/mapr/server/configure.sh -N {{ project_id | replace(' ', '_') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
 
 - hosts: localhost
+  gather_facts: no
   tasks:
   - name: check socket file
     stat: path=/tmp/MCS-socket-admin
@@ -293,7 +351,7 @@
     
   - name: MCS tunnel for ports
     shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
-    when: not socket_file.stat.exists
+    when: not socket_file.stat.exists and groups['gateway'] | length > 0
     with_items:
       - port: 8443
         description: admin

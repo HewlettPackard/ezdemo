@@ -129,6 +129,7 @@ yarn.lock
 **/ansible/inventory.ini
 **/__pycache__
 **/*config.json
+**/*.ini
 **/build
 .vscode/settings.json
 **/*.img

@@ -21,10 +21,21 @@
 # SOFTWARE.
 # =============================================================================
 
-set -euo pipefail
 
-ansible-playbook -v -i hosts.ini ../ansible/routines/destroy_vmware.yml
+### 
+### Called from ../refresh_files.sh to override with user-provided vars
+###
 
-rm hosts-common.ini
-rm hosts.ini
+## Clear ssh proxy
+NET=$(grep -w 'vm_network' vars.ini | cut -d'"' -f2 | cut -d/ -f1)
+NETW="${NET%.*}"
+sed -i "s/Host 10.1.0/Host ${NETW}/"  ~/.ssh/config
+sed -i '/^Host ezdemo_gateway/,+4d'  ~/.ssh/config
+sed -i '/ProxyJump ezdemo_gateway/d'  ~/.ssh/config
 
+## Update download url for epic installer - if provided
+URL=$(grep -w 'download_url' vars.ini | cut -d= -f2-)
+[ ! -z "${URL}" ] && export EPIC_DL_URL="${URL}"
+
+## Include custom settings (ie, AD settings)
+export CUSTOM_INI=$(grep -A50 '#### Custom ####' vars.ini | grep -v -e '^#' -e '^\s*$')

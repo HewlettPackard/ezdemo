@@ -1,8 +1,9 @@
 ## Configure mapr ubuntu hosts
 - hosts: "{{ groups['mapr'] }}"
   tasks:
-  - name: ensure passwordless sudo
-    shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
+  # Enabled by default at cloud images
+  # - name: enable passwordless sudo
+  #   shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
     
   - name: update sysctl
     lineinfile:
@@ -27,27 +28,35 @@
     become: yes
     when: sysctl.changed
 
-  - lineinfile:
+  - name: clean up /etc/hosts
+    lineinfile:
       path: /etc/hosts
       regexp: 'ip6-|IPv6|::1|127.0.1.1'
       state: absent
     become: yes
 
-  - name: Import key
-    shell: wget -O - https://package.mapr.hpe.com/releases/pub/maprgpg.key | apt-key add -
-    become: yes
+  - name: set repo params
+    set_fact:
+      mapr_gpgkey: "{{ 'https://package.mapr.hpe.com/releases/pub/maprgpg.key' if not mapr_gpgkey is defined else mapr_gpgkey }}"
+      mapr_repo: "{{ 'https://package.mapr.hpe.com/releases/v7.0.0/ubuntu/' if not mapr_repo is defined else mapr_repo }}"
+      mapr_eeprepo: "{{ 'https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/ubuntu/' if not mapr_eeprepo is defined else mapr_eeprepo }}"
+
+  - name: 
+    apt_key:
+      url: "{{ mapr_gpgkey }}"
+      state: present
 
   - name: Create MapR Repository
     lineinfile:
-      path: /etc/apt/sources.list
-      line: deb https://package.mapr.hpe.com/releases/v7.0.0/ubuntu/ binary bionic
+      path: /etc/apt/sources.list.d/mapr.repo
+      line: "deb {{ mapr_repo }} binary bionic"
       create: yes
     become: yes
 
   - name: Create MapR EEP Repository
     lineinfile:
-      path: /etc/apt/sources.list
-      line: deb https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/ubuntu/ binary bionic
+      path: /etc/apt/sources.list.d/mapr.repo
+      line: "deb {{ mapr_eeprepo }} binary bionic"
       create: yes
     become: yes
 
@@ -99,7 +108,7 @@
     become: yes
 
   - name: Install prerequisites
-    package: name="python3-pip, syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils" state=present
+    package: name="python3-pip, syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils, expect" state=present
     become: yes
 
   - name: reboot mapr nodes
@@ -109,3 +118,4 @@
       pre_reboot_delay: 0
       post_reboot_delay: 30
     become: True
+    when: grub_changed.changed

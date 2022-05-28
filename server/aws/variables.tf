@@ -32,6 +32,7 @@ variable "wkr_instance_type" {
   default = "c5a.8xlarge" ## 32c64
 }
 variable "ad_instance_type" { default = "t2.small" }
+variable "install_ad" { default = true }
 
 variable "client_cidr_block" { default = "0.0.0.0/0" } ### Access possible via gateway only - for limited ports
 variable "extra_tags" { default = {"cost_center": "Sales"} }

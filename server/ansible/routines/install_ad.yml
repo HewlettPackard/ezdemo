@@ -3,12 +3,17 @@
   gather_facts: yes
 
   tasks:
-  - name: install docker
+  - name: install utils
     package:
-      name: 
-        - docker
-        - openldap-clients
+      name: docker, openldap-clients, xauth
       state: latest
+    become: yes
+
+  - name: install microsoft edge
+    shell: |-
+      rpm --import https://packages.microsoft.com/keys/microsoft.asc
+      yum-config-manager --add-repo https://packages.microsoft.com/yumrepos/edge
+      yum install -y microsoft-edge
     become: yes
 
   - name: enable docker
@@ -54,3 +59,4 @@
     shell: "/home/centos/run_ad.sh && sleep 120 && /home/centos/ldif_modify.sh"
     async: 600 ## wait for 10 minutes before time out
     poll: 0 ## don't wait it to finish
+    # when: install_ad | bool ## we shouldn't be here if install_ad is false

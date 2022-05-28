@@ -9,7 +9,11 @@
 
 - hosts: localhost
   vars:
-    controller_ips: "{{ groups['controller'] | list }}"
+    controller_ips: "{{ groups['controller'] | list | default([]) }}"
+    gateway_ips: "{{ groups['gateway'] | list | default([]) }}"
+    picasso_ips: "{{ groups['picasso'] | list | default([]) }}"
+    k8s_ips: "{{ groups['k8s'] | list | default([]) }}"
+    mapr_ips: "{{ groups['mapr'] | list | default([]) }}"
 
   gather_facts: no
   tasks:
@@ -29,17 +33,13 @@
       force: yes
     with_items: "{{ controller_ips }}"
     delegate_to: localhost
+    register: _destroy_controllers
+    async: 1200
+    poll: 0
 
 #######################
 # Destroy GATEWAY
 #######################
-
-- hosts: localhost
-  vars:
-    gateway_ips: "{{ groups['gateway'] | list }}"
-
-  gather_facts: no
-  tasks:
 
   - name: Destroy gateway
     vmware_guest:
@@ -56,45 +56,13 @@
       force: yes
     with_items: "{{ gateway_ips }}"
     delegate_to: localhost
-
-#######################
-# Destroy EPIC
-#######################
-
-- hosts: localhost
-  vars:
-    epic_ips: "{{ groups['epic'] | list }}"
-
-  gather_facts: no
-  tasks:
-
-  - name: Destroy EPIC nodes
-    vmware_guest:
-      hostname: "{{ vcenter_server }}"
-      username: "{{ vcenter_user }}"
-      password: "{{ vcenter_pass }}"
-      validate_certs: False
-      name: "{{ item }}-ECP-EPIC-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
-      datastore: "{{ vcenter_datastore }}"
-      state: absent
-      force: yes
-    with_items: "{{ epic_ips }}"
-    delegate_to: localhost
-
+    register: _destroy_gateways
+    async: 1200
+    poll: 0
 
 #######################
 # Destroy PICASSO
 #######################
-
-- hosts: localhost
-  vars:
-    picasso_ips: "{{ groups['picasso'] | list }}"
-
-  gather_facts: no
-  tasks:
 
   - name: Destroy Picasso nodes
     vmware_guest:
@@ -111,18 +79,13 @@
       force: yes
     with_items: "{{ picasso_ips }}"
     delegate_to: localhost
+    register: _destroy_picasso_nodes
+    async: 1200
+    poll: 0
 
 #######################
 # Destroy K8S
 #######################
-
-- hosts: localhost
-  vars:
-    k8s_ips: "{{ groups['k8s'] | list }}"
-
-
-  gather_facts: no
-  tasks:
 
   - name: Destroy K8s nodes
     vmware_guest:
@@ -139,7 +102,41 @@
       force: yes
     with_items: "{{ k8s_ips }}"
     delegate_to: localhost
+    register: _destroy_k8s_nodes
+    async: 1200
+    poll: 0
 
+#######################
+# Destroy MapR
+#######################
+
+  - name: Destroy EDF nodes
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ item }}-EDF-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      state: absent
+      force: yes
+    with_items: "{{ mapr_ips }}"
+    delegate_to: localhost
+    register: _destroy_mapr_nodes
+    async: 1200
+    poll: 0
+
+  - name: Wait for deletion to finish
+    async_status:
+      jid: "{{ item.ansible_job_id }}"
+    register: _jobs
+    until: _jobs.finished
+    delay: 10  # Check every 10 seconds
+    retries: 20  # Retry up to 20 times - 200 seconds
+    with_items: "{{ _destroy_controllers.results + _destroy_gateways.results + _destroy_k8s_nodes.results + _destroy_picasso_nodes.results + _destroy_mapr_nodes.results }}"
 
 #######################
 # Remove Folder
@@ -160,4 +157,3 @@
 ######################################################################################################
 # VMWARE DESTROY END
 ######################################################################################################
-

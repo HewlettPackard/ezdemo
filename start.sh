@@ -23,13 +23,16 @@
 
 
 VOLUMES=()
-CONFIG_FILES=("aws_config.json" "azure_config.json" "vmware_config.json" "kvm_config.json" "ovirt_config.json")
+CONFIG_FILES=("aws_config.json" "azure_config.json")
 for file in "${CONFIG_FILES[@]}"
 do
   target="${file%_*}"
   # [[ -f "./${file}" ]] && VOLUMES="--mount=type=bind,source="$(pwd)"/${file},target=/app/server/${target}/config.json ${VOLUMES}"
   [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
 done
+
+## map if we have dc.ini for on prem deployment 
+[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/dc/dc.ini:rw")
 
 [[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
 [[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings

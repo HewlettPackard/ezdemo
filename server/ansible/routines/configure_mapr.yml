@@ -42,7 +42,7 @@
             CLDB_LIST="{{ groups['mapr'] | join(',') }}"
             # CLDB_PORT="7222"
             SECURE="true"
-            CLUSTER_NAME="{{ ad_realm }}"
+            CLUSTER_NAME="{{ ad_domain.split('.') | first | default('SAMDOM') }}"
             # REST_URL="<REST_API_URL_as_hostname:port>"
             # EXT_MAPR_MOUNT_DIR="<directory_in_mount_path_for_volumes>"
             # TICKET_FILE_LOCATION="<path_to_ticket_for_ECP_admin>"

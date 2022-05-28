@@ -21,18 +21,48 @@
 # SOFTWARE.
 # =============================================================================
 
+USAGE="Usage: ${0} $(paste -s -d '|' providers)"
+
+PROVIDERS=($(<providers))
+if ! [ $# -gt 0 ] || ! (echo ${PROVIDERS[@]} | grep -w -q ${1}); then
+  echo $USAGE
+  exit 1
+fi
+
 set -euo pipefail
 
 source ./outputs.sh "${1}"
 
+CUSTOM_INI=""
+### TODO: Move to ansible task
+SSH_CONFIG="
+Host *
+  StrictHostKeyChecking no
+  Compression yes
+  ForwardX11 yes
+Host ezdemo_gateway
+  Hostname $(echo ${GATW_PUB_DNS[0]:-})
+  IdentityFile generated/controller.prv_key
+  ServerAliveInterval 30
+  User centos
+Host 10.1.0.*
+    Hostname %h
+    ConnectionAttempts 3
+    IdentityFile generated/controller.prv_key
+    ProxyJump ezdemo_gateway
+
+"
+[[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
+[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible
+
+pushd "${1}" > /dev/null
+  [ -f "refresh.sh" ] && source ./refresh.sh || true
+popd > /dev/null
+
+# Configure AD settings for new AD installation
+[[ "$INSTALL_AD" == "true" ]] && AD_CONF=$(<./etc/default_ad_conf.ini)
+
 ANSIBLE_INVENTORY="####
-# Ansible Hosts File for HPE Container Platform Deployment
-# created by Dirk Derichsweiler
-# modified by Erdinc Kaya
-#
-# Important:
-# use only ip addresses in this file
-####
 [controllers]
 $(echo ${CTRL_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gateway]
@@ -42,7 +72,7 @@ $(echo ${WRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [gworkers]
 $(echo ${GWRKR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [ad_server]
-${AD_PRV_IP}
+${AD_PRV_IP:-}
 [mapr]
 $(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [mapr:vars]
@@ -58,13 +88,15 @@ ssh_prv_key=${SSH_PRV_KEY_PATH}
 is_mlops=${IS_MLOPS}
 is_mapr=${IS_MAPR}
 is_ha=${IS_HA}
+is_mapr_ha=${IS_MAPR_HA}
 is_runtime=${IS_RUNTIME}
 is_stable=${IS_STABLE}
 install_ad=${INSTALL_AD}
-ad_realm=${AD_REALM}
 app_version=${APP_VERSION}
 k8s_version=${K8S_VERSION}
 project_id=${PROJECT_ID}
+${AD_CONF:-}
+${CUSTOM_INI}
 
 "
 
@@ -72,31 +104,11 @@ echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
 SSHOPT="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]:-}\""
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars
-if [[ "${1}" == "mac" ]]; then
+if [[ "${1}" == "dc" ]]; then
   echo "ansible_ssh_common_args: ${SSHOPT}" > ./ansible/group_vars/all.yml
 else
   echo "ansible_ssh_common_args: ${SSH_VIA_PROXY}" > ./ansible/group_vars/all.yml
 fi
-
-### TODO: Move to ansible task
-SSH_CONFIG="
-Host *
-  StrictHostKeyChecking no
-Host hpecp_gateway
-  Hostname $(echo ${GATW_PUB_DNS[0]:-})
-  IdentityFile generated/controller.prv_key
-  ServerAliveInterval 30
-  User centos
-Host 10.1.0.*
-    Hostname %h
-    ConnectionAttempts 3
-    IdentityFile generated/controller.prv_key
-    ProxyJump hpecp_gateway
-
-"
-
-[[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
-[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible, delete on destroy
 
 pushd ./generated/ > /dev/null
   if [[ $IS_RUNTIME == "true" ]]; then

@@ -42,18 +42,21 @@ pushd "${1}" > /dev/null
 
 popd > /dev/null
 
-(ls "${1}"/*run.log | xargs rm -f) || true
-(ls -d generated/*/ | xargs rm -rf) || true # Deletes all folders under generated, better than deleting the generated folder all together
+(ls "${1}"/*run.log | xargs rm -f) 2> /dev/null || true
+(ls -d generated/*/ | xargs rm -rf) 2> /dev/null || true # Deletes all folders under generated, better than deleting the generated folder all together
 
-## Clean user environment
-rm -f ~/.hpecp.conf
-rm -f ~/.hpecp_tenant.conf
-rm -f ~/.kube/config
+## Clean user environment, unless linked to some other file
+[ ! -L ~/.hpecp.conf  ] && rm -f ~/.hpecp.conf
+[ ! -L ~/.hpecp_tenant.conf  ] && rm -f ~/.hpecp_tenant.conf
+[ ! -L ~/.kube/config  ] && rm -f ~/.kube/config
+
+## Clean up ssh proxy configuration
+sed -i -e '/^Host ezdemo_gateway/,+4d' -e '/^Host 10\.1\.0\./,+4d' ~/.ssh/config
 
 source outputs.sh ${1}
 
 # If sockets are created for MCS
-if [[ "${IS_MAPR}" == "true" ]]
+if [[ "${IS_MAPR}" == "true" && "${1}" != "dc" ]]
 then
   for socket_file in "admin" "installer" "airflow" "kibana"
   do

@@ -3,16 +3,17 @@
 # VMWARE DEPLOYMENT 
 ######################################################################################################
 
-
-
-
 #######################
 # Controller Deployment
 #######################
 
 - hosts: localhost
   vars:
-    controller_ips: "{{ groups['controller'] | list }}"
+    controller_ips: "{{ (groups['controller'] | list) | default([])  }}"
+    gateway_ips: "{{ (groups['gateway'] | list) | default([])  }}"
+    picasso_ips: "{{ (groups['picasso'] | list) | default([])  }}"
+    k8s_ips: "{{ (groups['k8s'] | list) | default([])  }}"
+    mapr_ips: "{{ (groups['mapr'] | list) | default([]) }}"
 
   gather_facts: no
   tasks:
@@ -22,7 +23,7 @@
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_pass }}"
-      validate_certs: False
+      validate_certs: no
       datacenter_name: "{{ datacenter_name }}"
       folder_name: "{{vcenter_folder}}"
       folder_type: vm
@@ -30,12 +31,12 @@
     register: vm_folder_creation_result
     delegate_to: localhost
 
-  - name: Clone the Controller template {{ template_name }}
+  - name: Clone template {{ template_name }} to the Controller
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_pass }}"
-      validate_certs: False
+      validate_certs: no
       name: "{{ item }}-ECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ template_name }}"
       datacenter: "{{ datacenter_name }}"
@@ -48,7 +49,7 @@
       networks:
       - name: "{{ vcenter_vswitch }}"
         ip: "{{ item }}"
-        netmask: "{{ vm_netmask }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         gateway: "{{ vm_gateway }}"
         type: static
         dns_servers: "{{ vm_dns }}"
@@ -67,28 +68,22 @@
         dns_servers: "{{ vm_dns }}"
       state: poweredon
       wait_for_ip_address: no
-    with_items: "{{ controller_ips }}"
     delegate_to: localhost
-
-
+    with_items: "{{ controller_ips }}"
+    register: _create_controllers
+    async: 1200
+    poll: 0
 
 #######################
 # GATEWAY Deployment
 #######################
 
-- hosts: localhost
-  vars:
-    gateway_ips: "{{ groups['gateway'] | list }}"
-
-  gather_facts: no
-  tasks:
-
-  - name: Clone the Gateway template {{ template_name }}
+  - name: Clone template {{ template_name }} to the Gateway
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_pass }}"
-      validate_certs: False
+      validate_certs: no
       name: "{{ item }}-ECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ template_name }}"
       datacenter: "{{ datacenter_name }}"
@@ -101,7 +96,7 @@
       networks:
       - name: "{{ vcenter_vswitch }}"
         ip: "{{ item }}"
-        netmask: "{{ vm_netmask }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         gateway: "{{ vm_gateway }}"
         type: static
         dns_servers: "{{ vm_dns }}"
@@ -116,74 +111,22 @@
         dns_servers: "{{ vm_dns }}"
       state: poweredon
       wait_for_ip_address: no
+    delegate_to: localhost
     with_items: "{{ gateway_ips }}"
-    delegate_to: localhost
-
-#######################
-# EPIC Deployment
-#######################
-
-- hosts: localhost
-  vars:
-    epic_ips: "{{ groups['epic'] | list }}"
-
-  gather_facts: no
-  tasks:
-
-  - name: Clone the EPIC template {{ template_name }}
-    vmware_guest:
-      hostname: "{{ vcenter_server }}"
-      username: "{{ vcenter_user }}"
-      password: "{{ vcenter_pass }}"
-      validate_certs: False
-      name: "{{ item }}-ECP-EPIC-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
-      datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
-      datastore: "{{ vcenter_datastore }}"
-      hardware:
-        memory_mb: 16384
-        num_cpus: 12
-      networks:
-      - name: "{{ vcenter_vswitch }}"
-        ip: "{{ item }}"
-        netmask: "{{ vm_netmask }}"
-        gateway: "{{ vm_gateway }}"
-        type: static
-        dns_servers: "{{ vm_dns }}"
-      disk:
-        - autoselect_datastore: no
-          datastore: "{{ vcenter_datastore }}"
-          size_gb: 310
-          type: thin
-      customization:
-        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
-        domain: "{{ vm_domain }}"
-        dns_servers: "{{ vm_dns }}"
-      state: poweredon
-      wait_for_ip_address: no
-    with_items: "{{ epic_ips }}"
-    delegate_to: localhost
-
+    register: _create_gateways
+    async: 1200
+    poll: 0
 
 #######################
 # PICASSO Deployment
 #######################
 
-- hosts: localhost
-  vars:
-    picasso_ips: "{{ groups['picasso'] | list }}"
-
-  gather_facts: no
-  tasks:
-
-  - name: Clone the PICASSO template {{ template_name }}
+  - name: Clone template {{ template_name }} to the PICASSO
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_pass }}"
-      validate_certs: False
+      validate_certs: no
       name: "{{ item }}-ECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ template_name }}"
       datacenter: "{{ datacenter_name }}"
@@ -196,7 +139,7 @@
       networks:
       - name: "{{ vcenter_vswitch }}"
         ip: "{{ item }}"
-        netmask: "{{ vm_netmask }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         gateway: "{{ vm_gateway }}"
         type: static
         dns_servers: "{{ vm_dns }}"
@@ -219,27 +162,22 @@
         dns_servers: "{{ vm_dns }}"
       state: poweredon
       wait_for_ip_address: no
-    with_items: "{{ picasso_ips }}"
     delegate_to: localhost
+    with_items: "{{ picasso_ips }}"
+    register: _create_picasso_nodes
+    async: 1200
+    poll: 0
 
 #######################
 # K8S Deployment
 #######################
 
-- hosts: localhost
-  vars:
-    k8s_ips: "{{ groups['k8s'] | list }}"
-
-
-  gather_facts: no
-  tasks:
-
-  - name: Clone the k8s template {{ template_name }}
+  - name: Clone template {{ template_name }} to the k8s
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_pass }}"
-      validate_certs: False
+      validate_certs: no
       name: "{{ item }}-ECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ template_name }}"
       datacenter: "{{ datacenter_name }}"
@@ -252,7 +190,7 @@
       networks:
       - name: "{{ vcenter_vswitch }}"
         ip: "{{ item }}"
-        netmask: "{{ vm_netmask }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         gateway: "{{ vm_gateway }}"
         type: static
         dns_servers: "{{ vm_dns }}"
@@ -275,19 +213,79 @@
         dns_servers: "{{ vm_dns }}"
       state: poweredon
       wait_for_ip_address: no
-    with_items: "{{ k8s_ips }}"
     delegate_to: localhost
+    with_items: "{{ k8s_ips }}"
+    register: _create_k8s_nodes
+    async: 1200
+    poll: 0
+
+#######################
+# Standalone Data Fabric Deployment
+#######################
+
+  - name: Clone template {{ mapr_template_name }} to the mapr
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: no
+      name: "{{ item }}-EDF-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ mapr_template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: "{{ vm_mapr_memory }}"
+        num_cpus: "{{ vm_mapr_cpu_cores }}"
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: "{{ vm_mapr_disk }}"
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    delegate_to: localhost
+    with_items: "{{ mapr_ips }}"
+    register: _create_mapr_nodes
+    async: 1200
+    poll: 0
+
+  - name: Wait for creation to finish
+    async_status:
+      jid: "{{ item.ansible_job_id }}"
+    register: _jobs
+    until: _jobs.finished
+    delay: 15  # Check every 15 seconds
+    retries: 20  # Retry up to 20 times - 300 seconds
+    with_items: "{{ _create_controllers.results + _create_gateways.results + _create_k8s_nodes.results + _create_picasso_nodes.results + _create_mapr_nodes.results }}"
 
 - hosts: all
   gather_facts: no
   tasks:
   - name: Wait 600 seconds for target connection to become reachable/usable
     wait_for_connection:
-        
+  - name: disable cloud-init network config
+    copy:
+      dest: /etc/cloud/cloud.cfg.d/99-custom-networking.cfg
+      content: 'network: {config: disabled}'
+    become: yes
+
 ######################################################################################################
 # VMWARE DEPLOYMENT END
 ######################################################################################################
-
-
-
-

@@ -1,0 +1,155 @@
+ ###################################
+# HPE Container Platform Deployment
+#
+# for feature improvements contact: dirk.derichsweiler@hpe.com
+#
+#
+
+- hosts: localhost
+  gather_facts: yes
+  vars:
+    HOST_COUNT: "{{ groups['all']| length }}"
+    CONTROLLER_COUNT: "{{ groups['controller']| length }}"
+    GATEWAY_COUNT: "{{ groups['gateway']| length }}"
+    K8S_COUNT: "{{ groups['k8s']| length }}"
+    PICASSO_COUNT: "{{ groups['picasso']| length }}"
+    MAPR_COUNT: "{{ groups['mapr']| length }}"
+
+  tasks:
+  - name: amount of Hosts found.  
+    debug:
+      msg:
+      - "we will deploy {{ HOST_COUNT }} hosts."
+      - "{{ CONTROLLER_COUNT}} controller(s)."
+      - "{{ GATEWAY_COUNT}} gateway(s)."
+      - "{{ K8S_COUNT}} k8s node(s)."
+      - "{{ PICASSO_COUNT}} picasso node(s)."
+      - "{{ MAPR_COUNT}} data fabric node(s)."
+      # - "--- vCenter INFORMATION ---"
+      - "vCenter IP: {{ vcenter_server }}"
+      - "vCenter Username: {{ vcenter_user }}"
+      - "Datacentername: {{ datacenter_name }}"
+      - "Clustername: {{ cluster_name }}"
+      - "Templatename: {{ template_name }}"
+      - "DF Templatename: {{ mapr_template_name }}"
+
+####
+# check inventory and find the right deployment
+#
+  - name: VMware Deployment requested?
+    debug:
+      msg: 
+      - "VMware Deployment will be started."
+    when: vcenter_server is defined
+
+  - name: oVirt deployment requested?
+    debug:
+      msg: 
+      - "oVirt Deployment will be started."
+    when: ovirt_host is defined
+
+  - name: Baremetal deployment requested?
+    debug:
+      msg: 
+      - "Baremetal Deployment will be started."
+    when: ilo_host1 is defined
+
+  - name: 'no deployment requested?'
+    debug:
+      msg: 
+      - "no Deployment will be started, we are heading directly to preparation.."
+    when: existing is defined
+
+  - name: Proxmox deployment requested?
+    debug:
+      msg: 
+      - "Proxmox deployment will be started."
+    when: proxmox_host is defined
+# 
+# end of find the right deployment
+##### 
+
+####
+# run the right deployment
+# 
+
+- name: start VMware deployment
+  import_playbook: ../ansible/routines/deploy_vmware.yml
+  when: vcenter_server is defined
+
+- name: start oVirt deployment
+  import_playbook: ../ansible/routines/deploy_ovirt.yml
+  when: ovirt_host is defined
+
+- name: start Proxmox deployment
+  import_playbook: ../ansible/routines/deploy_proxmox.yml
+  when: proxmox_host is defined
+
+#
+# end of run the right deployment
+####
+
+#####################################################################################################
+# Workaround
+#####################################################################################################
+
+- name: cleanup_image
+  import_playbook: ../ansible/routines/clean_mip.yml
+  when: DC is defined and DC == "MIP"   
+
+######################################################################################################
+# PROXY
+######################################################################################################
+- name: add proxy 
+  import_playbook: ../ansible/routines/add_proxy.yml
+  when: http_proxy is defined
+
+######################################################################################################
+# CUSTOM FILE
+######################################################################################################
+- name: Prepare HCP Hosts with custom yaml
+  import_playbook: custom.yml
+  when: skip_custom is not defined
+
+###
+# Set baseline users and connectivity for hosts (aligning with cloud images)
+###
+
+- hosts: all:!mapr
+  gather_facts: no
+  tasks:
+  - name: ensure centos user exist
+    user:
+      name: centos
+      groups: sudo
+      shell: /bin/bash
+      createhome: true
+      append: true
+    become: yes
+  - name: add ssh key to centos user
+    authorized_key:
+      user: centos
+      state: present
+      key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+
+- hosts: mapr
+  gather_facts: no
+  tasks:
+  - name: ensure ubuntu user exist
+    user:
+      name: ubuntu
+      groups: sudo
+      shell: /bin/bash
+      createhome: true
+      append: true
+    become: yes
+  - name: add ssh key to ubuntu user
+    authorized_key:
+      user: ubuntu
+      state: present
+      key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+    become: yes
+  - name: enable passwordless sudo
+    shell: 'echo "ubuntu ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/ubuntu'
+    become: yes
+

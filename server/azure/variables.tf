@@ -37,6 +37,7 @@ variable "gtw_instance_type" { default = "Standard_B4ms" } ## 4c 16GB
 variable "ctr_instance_type" { default = "Standard_A8m_v2" } ## 8c 64GB
 variable "wkr_instance_type" { default = "Standard_B16ms" } ## 16c 64GB
 # variable "wkr_instance_type" { default = "Standard_A8m_v2" } ## 8c 64GB
+variable "install_ad" { default = true }
 variable "ad_instance_type" { default = "Standard_B1ms" } ## 1c 2GB
 
 variable "mapr_count" { default = 5 }
@@ -45,4 +46,4 @@ variable "mapr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 
 variable "ad_member_group" { default = "DemoTenantUsers" }
 variable "ad_admin_group" { default = "DemoTenantAdmins" }
-variable "extra_tags: { default = {"cost_center":"Sales"} }
+variable "extra_tags" { default = {"cost_center":"Sales"} }

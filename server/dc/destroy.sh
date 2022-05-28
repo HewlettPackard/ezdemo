@@ -23,11 +23,13 @@
 
 set -euo pipefail
 
-# get params from config file
-DC=$(jq -r '.dc' ./config.json)
-NETWORK=$(jq '.network' ./config.json)
+VM_NETWORK=$(grep -w vm_network dc.ini | cut -d'"' -f2 | cut -d/ -f1)
+# Clear ssh host keys
+for i in $(seq 0 20); do
+  ssh-keygen -R $(echo ${VM_NETWORK%.*}.$((${VM_NETWORK##*.}+i))) >> /dev/null 2>&1
+done
 
-ansible --extra-vars "dc=${DC} network=${NETWORK}" localhost -m ansible.builtin.template -a "src=hosts-common.j2 dest=hosts-common.ini"
-cat hosts-common.ini ${DC}.ini > ./hosts.ini 
+rm hosts.ini > /dev/null 2>&1 || true
+rm my.tfvars > /dev/null 2>&1 || true
+rm vars.ini > /dev/null 2>&1 || true
 
-exit 0

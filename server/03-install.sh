@@ -38,7 +38,7 @@ ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
   -i ./ansible/inventory.ini \
   ./ansible/install.yml
 
-echo "Platform installion complete, gateway should be accessible at https://${GATW_PUB_DNS}/"
+[ ! -z ${GATW_PUB_DNS+x} ] && echo "Platform installion complete, gateway should be accessible at https://${GATW_PUB_DNS}/" || true
 
 echo "Stage 3 complete"
 

@@ -38,7 +38,7 @@
         host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
         nic_boot_protocol: static
         nic_ip_address: "{{ item }}"
-        nic_netmask: '{{ vm_netmask }}'
+        nic_netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         nic_gateway: '{{ vm_gateway }}'
         nic_name: '{{ vm_nic }}'
         user_name: '{{ vm_create_user }}'
@@ -100,7 +100,7 @@
         host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
         nic_boot_protocol: static
         nic_ip_address: "{{ item }}"
-        nic_netmask: '{{ vm_netmask }}'
+        nic_netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         nic_gateway: '{{ vm_gateway }}'
         nic_name: '{{ vm_nic }}'
         user_name: '{{ vm_create_user }}'
@@ -142,7 +142,7 @@
         host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
         nic_boot_protocol: static
         nic_ip_address: "{{ item }}"
-        nic_netmask: '{{ vm_netmask }}'
+        nic_netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
         nic_gateway: '{{ vm_gateway }}'
         nic_name: '{{ vm_nic }}'
         user_name: '{{ vm_create_user }}'
@@ -216,8 +216,8 @@
         host_name: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}.{{ vm_dnssearch }}"
         nic_boot_protocol: static
         nic_ip_address: "{{ item }}"
-        nic_netmask: '{{ vm_netmask }}'
-        nic_gateway: '{{ vm_gateway }}'
+        nic_netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
+        nic_gateway: "{{ vm_gateway }}"
         nic_name: '{{ vm_nic }}'
         user_name: '{{ vm_create_user }}'
         root_password: '{{ vm_user_password }}'

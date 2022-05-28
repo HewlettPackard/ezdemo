@@ -23,6 +23,11 @@
 
 set -euo pipefail
 
-rm -f ansible.ini hosts-common.ini
+echo "[all:vars]" > vars.ini
+cat my.tfvars | tr -d "[:blank:]" | cat - dc.ini >> vars.ini
+
+ansible -i vars.ini localhost -m template -a "src=hosts-common.ini dest=hosts.ini"
+
+echo "mapr_count=$(ansible-inventory -i hosts.ini --list | jq '.mapr[] | length')" >> ./my.tfvars
 
 exit 0
