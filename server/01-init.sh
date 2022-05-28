@@ -80,7 +80,7 @@ echo "Stage 1 complete"
 
 # Apply Terratags only extra_tags are set in user.settings and infra is aws or azure. 
 
-if [[ "$1" == "aws" || "$1" == "azure" ]] && [[ ! -z "${EXTRA_TAGS}" ]] 
+if [[ "$1" == "aws" || "$1" == "azure" ]] && [[ ! -z "${EXTRA_TAGS}" && "${EXTRA_TAGS}" != "{}" ]] 
 then
 	echo "Applying Additional Tags: ${EXTRA_TAGS} to cloud resources via terratag"
 	terratag -dir=$1 -tags="${EXTRA_TAGS}" -rename

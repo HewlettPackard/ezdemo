@@ -42,7 +42,7 @@ Create your user settings in a separate file named "user.settings" in following 
   "is_runtime" : true,
   "is_verbose": true,
   "install_ad" : true,
-  "extra_tags": {"cost_center":"Sales"}
+  "extra_tags": {} 
 }
 ```
 

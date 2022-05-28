@@ -1,0 +1,10 @@
+{
+    "proxies": {
+        "default":
+		{
+		"httpProxy": "http://web-proxy.corp.hpecorp.net:8080",
+		"httpsProxy": "http://web-proxy.corp.hpecorp.net:8080",
+		"noProxy": "localhost,10.96.0.0/12,192.168.0.0/16,.default.svc,16.143.20.0/22,16.143.20.46,mip.storage.hpecorp.net"
+	}
+    }
+}
