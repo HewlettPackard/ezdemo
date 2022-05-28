@@ -14,7 +14,7 @@ RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs 
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
   && unzip awscliv2.zip && ./aws/install
-RUN curl "https://releases.hashicorp.com/terraform/1.2.0/terraform_1.2.0_linux_amd64.zip" -o terraform.zip \
+RUN curl "https://releases.hashicorp.com/terraform/1.2.1/terraform_1.2.1_linux_amd64.zip" -o terraform.zip \
   && unzip terraform.zip && mv terraform /usr/bin
 
 ### For 5.4 we have ['1.19.15', '1.20.11', '1.21.5'] for K8s versions
