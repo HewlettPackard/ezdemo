@@ -3,6 +3,7 @@ variable "project_id" {}
 variable "admin_password" {}
 variable "is_mlops" { default = true }
 variable "is_mapr" { default = false }
+variable "is_mapr_ha" { default = false }
 variable "is_runtime" { default = true }
 variable "is_ha" { default = false }
 

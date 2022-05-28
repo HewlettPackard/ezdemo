@@ -56,7 +56,7 @@ sed -i -e '/^Host ezdemo_gateway/,+4d' -e '/^Host 10\.1\.0\./,+4d' ~/.ssh/config
 source outputs.sh ${1}
 
 # If sockets are created for MCS
-if [[ "${IS_MAPR}" == "true" && "${1}" != "dc" ]]
+if [[ ! -z "${GATW_PRV_DNS+x}" && "${IS_MAPR}" == "true" && "${1}" != "dc" ]]
 then
   for socket_file in "admin" "installer" "airflow" "kibana"
   do
