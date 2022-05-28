@@ -13,7 +13,7 @@
       {
         "external_identity_server":  {
           "host":"{{ ad_server | default(groups['ad_server'] | first | default([])) }}",
-          "port": {{ port | default(636) }},
+          "port": {{ port | int | default(636) }},
           "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
           "bind_pwd":"{{ bind_pwd }}",
           "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
