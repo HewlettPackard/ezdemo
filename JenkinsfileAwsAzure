@@ -7,7 +7,7 @@ pipeline {
     environment {
         docker_image='erdincka/ezdemo:latest'
         docker_args="-u root:root -v ${WORKSPACE}/aws_config.json:/app/server/aws/config.json -v ${WORKSPACE}/user.settings:/app/server/user.settings"
-        aws_credentials = "ezdemo_indu" // default aws credentials to populate on UI
+        aws_credentials = "ezmeral_platform_1" // default aws credentials to populate on UI
         azure_credentials = ""
         gcp_credentials = ""
         docker_config = "config_docker.json"
