@@ -10,6 +10,7 @@ pipeline {
         aws_credentials = "ezdemo_indu" // default aws credentials to populate on UI
         azure_credentials = ""
         gcp_credentials = ""
+        docker_config = "config_docker.json"
     }
     stages {
             // Stage to clone repository to our workspace.
@@ -180,6 +181,7 @@ pipeline {
     //Stage to Start the Docker Container.
     stage('EZDEMO :: Start Docker Container'){
         steps {
+            sh "cp ${WORKSPACE}/${docker_config} $HOME/.docker/config.json"
             sh './start.sh '  
         }        
     }
