@@ -7,30 +7,12 @@
 
 - hosts: "{{ (groups['controllers'] | first) | default([]) }}"
   gather_facts: yes
-
-  vars:
-    ad_conf: |-
-      {
-        "external_identity_server":  {
-          "host":"{{ ad_server | default(groups['ad_server'] | first | default([])) }}",
-          "port": {{ port | int | default(636) }},
-          "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
-          "bind_pwd":"{{ bind_pwd }}",
-          "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
-          "group_attribute":"{{ group_attribute | default('member') }}",
-          "bind_type":"{{ bind_type | default('search_bind') }}",
-          "security_protocol":"{{ security_protocol | default('ldaps') }}",
-          "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
-          "type":"{{ type | default('Active Directory') }}",
-          "verify_peer": false
-        }
-      }
-
   tasks:
   - name: configure hpecp
-    copy:
+    blockinfile:
       dest: ~/.hpecp.conf
-      content: |-
+      create: yes
+      block: |
         [default]
         api_host = {{ groups['controllers'] | first }}
         api_port = 8080
@@ -39,7 +21,6 @@
         warn_ssl = False
         username = admin
         password = {{ admin_password }}
-      force: yes
 
   - name: copy private key
     copy:
@@ -155,7 +136,22 @@
   - name: AD config
     copy:
       dest: ~/adconf.json
-      content: "{{ ad_conf }}"
+      content: |-
+        {
+          "external_identity_server":  {
+            "host":"{{ ad_server | default(groups['ad_server']) | first | default([]) }}",
+            "port": {{ ad_port | default('636') | int }},
+            "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
+            "bind_pwd":"{{ bind_pwd }}",
+            "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
+            "group_attribute":"{{ group_attribute | default('member') }}",
+            "bind_type":"{{ bind_type | default('search_bind') }}",
+            "security_protocol":"{{ security_protocol | default('ldaps') }}",
+            "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
+            "type":"{{ type | default('Active Directory') }}",
+            "verify_peer": false
+          }
+        }
       force: yes
 
   - name: configure global AD

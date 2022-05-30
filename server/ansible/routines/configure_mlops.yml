@@ -26,7 +26,7 @@
     register: tenant_ns
 
   - set_fact:
-      kubeatns: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n {{ tenant_ns.stdout }}"
+      kubeatns: "kubectl --kubeconfig {{ ansible_user_dir }}/.kube/config -n {{ tenant_ns.stdout }}"
 
   - name: get admin role
     shell: "hpecp role list --query \"[?label.name=='Admin'][_links.self.href]\" --output text"
@@ -37,15 +37,11 @@
     register: member_role
     
   - name: add admins to tenant
-    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ADMIN_GROUP }}' --role-id {{ admin_role.stdout }}"
-    vars: 
-      ADMIN_GROUP: "CN=DemoTenantAdmins,CN=Users,DC=samdom,DC=example,DC=com"
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ad_admin_group }}' --role-id {{ admin_role.stdout }}"
     ignore_errors: True
 
   - name: add members to tenant
-    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ MEMBER_GROUP }}' --role-id {{ member_role.stdout }}"
-    vars: 
-      MEMBER_GROUP: "CN=DemoTenantUsers,CN=Users,DC=samdom,DC=example,DC=com"
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ad_member_group }}' --role-id {{ member_role.stdout }}"
     ignore_errors: True
   
   # - name: create gitea
@@ -78,15 +74,9 @@
     ignore_errors: yes
 
   - name: configure tenant hpecp
-    copy:
-      dest: ~/.hpecp_tenant.conf
-      content: |-
-        [default]
-        api_host = {{ gateway_pub_dns }}
-        api_port = 8080
-        use_ssl = True
-        verify_ssl = False
-        warn_ssl = False
+    blockinfile:
+      dest: ~/.hpecp.conf
+      block: |
         [tenant]
         tenant = {{ tenant_id.stdout }}
         username = {{ AD_USER_NAME }}
@@ -95,7 +85,6 @@
         tenant = {{ tenant_id.stdout }}
         username = {{ AD_ADMIN_NAME }}
         password = {{ AD_ADMIN_PASS }}
-      force: yes
     vars:
       AD_USER_NAME: "ad_user1"
       AD_USER_PASS: "pass123"

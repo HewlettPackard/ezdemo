@@ -3,7 +3,7 @@
   gather_facts: yes
   vars_prompt:
 
-  vars: ### TODO: move the username/password to settings file
+  vars:
     ad_realm: "{{ ad_domain.split('.') | first | default('SAMDOM') }}"
 
   tasks:
@@ -22,7 +22,7 @@
       become: yes
 
     - name: Install ad_auth required tools for Ubuntu 2004
-      package: 
+      package:
         name: sssd,realmd,oddjob,oddjob-mkhomedir,adcli,samba-common,krb5-user,openldap-utils,policycoreutils-python-utils,python3-pip
         state: present 
       when: ansible_facts['os_family'] == 'Debian'
@@ -32,8 +32,6 @@
       copy: dest=/etc/sssd/sssd.conf content={{ sssd_file }} mode=0600
       become: yes
       vars:
-        AD_ADMIN_GROUP: "DemoTenantAdmins"
-        AD_MEMBER_GROUP: "DemoTenantUsers"
         sssd_file: |-
           [domain/{{ ad_realm | lower }}]
             debug_level = 3
@@ -50,7 +48,7 @@
             ldap_tls_reqcert = never
             ldap_user_member_of = memberOf
             ldap_access_order = filter
-            ldap_access_filter = (|(memberOf=CN={{ AD_ADMIN_GROUP }},CN=Users,DC=samdom,DC=example,DC=com)(memberOf=CN={{ AD_MEMBER_GROUP }},CN=Users,DC=samdom,DC=example,DC=com))
+            ldap_access_filter = (|(memberOf={{ ad_admin_group }})(memberOf={{ ad_member_group }}))
             ldap_id_mapping = False
             ldap_schema = ad
             ldap_user_gid_number = gidNumber
