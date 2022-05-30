@@ -38,6 +38,10 @@ Additional (custom) information
 
 - If you set install_ad=false in user settings, you need to provide AD access information
 
+- Configure proxy settings if behind one
+
+- You may also provide local repository for Data Fabric packages
+
  ```ini
 #### Custom ####
 ad_server=""
@@ -52,7 +56,8 @@ user_attribute="sAMAccountName" # this is default
 group_attribute="memberOf" # defaults to member
 type="Active Directory" # this is default
 port=389
-external_groups="CN=Administrators,CN=Users,DC=example,DC=com"
+ad_admin_group="CN=Administrators,CN=Users,DC=example,DC=com"
+ad_member_group="CN=Users,DC=example,DC=com"
 verify_peer=false # this is not used, always defaults to false
 
 http_proxy= ### add http proxy environment to all nodes (NOT TESTED)

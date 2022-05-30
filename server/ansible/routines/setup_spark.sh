@@ -28,7 +28,7 @@ export TENANT_NS=${KUBEATNS##* }
 export HIVECLUSTERNAME=hivems
 export SPARKHSCLUSTERNAME=sparkhs
 export LIVYCLUSTERNAME=livy
-export AD_USER_NAME=ad_user1
+export AD_USER_NAME=ad_user1 ### TODO: should come from user settings
 export AD_USER_PASS=pass123
 
 export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')

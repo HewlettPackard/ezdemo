@@ -138,6 +138,7 @@ Courtesy of Dirk Derichsweiler (<https://github.com/dderichswei>).
 - create_picasso: Installs Kubernetes Cluster and Picasso (Data Fabric on Kubernetes)
 - configure_picasso: Enables Picasso (Data Fabric on Kubernetes) for all tenants
 - configure_mlops: Configures MLOps tenant and life-cycle tools (Kubeflow, Minio, Jupyter NB etc)
+- ...
 
 ## Notes
 

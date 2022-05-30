@@ -12,7 +12,6 @@ provider "shell" {
 }
 
 resource "shell_script" "ansiblevms" {
-  # count = (var.is_runtime ? var.worker_count + 3 : 1) + local.maprcount
   lifecycle_commands {
     create = file("./ansible-create.sh")
     delete = file("./ansible-delete.sh")

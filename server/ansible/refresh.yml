@@ -2,9 +2,9 @@
 - hosts: localhost
   tasks:
   - name: configure hpecp
-    copy:
+    blockinfile:
       dest: ~/.hpecp.conf
-      content: |-
+      block: |
         [default]
         api_host = {{ gateway_pub_dns }}
         api_port = 8080
@@ -13,7 +13,7 @@
         warn_ssl = False
         username = admin
         password = {{ admin_password }}
-      force: yes
+      create: yes
 
   - name: get clusters
     shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
@@ -35,9 +35,9 @@
 - hosts: "{{ controllers | default([]) }}"
   tasks:
   - name: configure hpecp
-    copy:
+    blockinfile:
       dest: ~/.hpecp.conf
-      content: |-
+      block: |-
         [default]
         api_host = {{ groups['controllers'] | first }}
         api_port = 8080
@@ -46,7 +46,7 @@
         warn_ssl = False
         username = admin
         password = {{ admin_password }}
-      force: yes
+      create: yes
 
   - name: update kubeadmin config
     shell: |-

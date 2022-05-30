@@ -53,16 +53,6 @@
     with_items: "{{ dfworker_ids + kubeworker_ids }}"
     ignore_errors: yes
 
-  # - name: get worker disks
-  #   shell: hpecp k8sworker get "{{ dfworker_ids | first }}" -o json
-  #   register: output2
-  #   ignore_errors: yes
-  # - set_fact:
-  #     worker: "{{ output2.stdout | from_json }}"
-  # - set_fact:
-  #     persistent_disk: "{{ (worker | json_query('sysinfo.storage[?info.IsDisk].info.Name')) | first }}"
-  #     ephemeral_disk: "{{ (worker | json_query('sysinfo.storage[?info.IsDisk].info.ConsistentName')) | last }}"
-
   - name: configure storage for df
     shell: >
       PERSISTENT_DISK=$(hpecp k8sworker get "{{ item }}" --output json \

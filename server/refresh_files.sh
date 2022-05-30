@@ -34,7 +34,7 @@ set -euo pipefail
 source ./outputs.sh "${1}"
 
 CUSTOM_INI=""
-### TODO: Move to ansible task
+
 SSH_CONFIG="
 Host *
   StrictHostKeyChecking no
@@ -53,7 +53,7 @@ Host 10.1.0.*
 
 "
 [[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
-[[ "${1}" == "mac" ]] || echo "${SSH_CONFIG}" > ~/.ssh/config ## TODO: move to ansible
+echo "${SSH_CONFIG}" > ~/.ssh/config
 
 pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
