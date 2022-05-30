@@ -6,7 +6,7 @@ You need a container runtime to run the tool. It should work on any container ru
 
 ## Usage
 
-Download the [start script](https://raw.githubusercontent.com/hpe-container-platform-community/ezdemo/main/start.sh), or copy/paste below to start the container.
+Download the [start script](https://github.com/HewlettPackard/ezdemo/blob/main/start.sh), or copy/paste below to start the container.
 
 ```bash
 #!/usr/bin/env bash
