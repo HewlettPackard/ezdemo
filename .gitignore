@@ -142,8 +142,6 @@ yarn.lock
 **/LatestDemoLicense-M7.txt
 **/LatestDemoLicense-M7.txt.old
 **/*config.json
-./dc/hosts.ini
-./dc/vars.ini
 ctc.ini
 ctcvmw.ini
 garage.ini

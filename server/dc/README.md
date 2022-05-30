@@ -58,6 +58,10 @@ verify_peer=false # this is not used, always defaults to false
 http_proxy= ### add http proxy environment to all nodes (NOT TESTED)
 https_proxy= ### add https proxy environment to all nodes (NOT TESTED)
 no_proxy= ### add no proxy environment to all nodes (NOT TESTED)
+
+mapr_monitoring=false
+mapr_repo=http://www.local.site/repos/mapr/releases/
+
 ...
  ```
 

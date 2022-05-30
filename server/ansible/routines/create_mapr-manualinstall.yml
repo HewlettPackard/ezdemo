@@ -23,14 +23,6 @@
       append: true
     become: yes
 
-  - name: get hostnames
-    shell: getent hosts "{{ item }}" | awk '{ print $2 }'
-    with_items: "{{ groups['mapr'] }}"
-    register: hostnames
-
-  - set_fact:
-      mapr_hosts: "{{ hostnames.results | map(attribute='stdout') | list }}"
-
   - shell: "fdisk -l | grep '100 GiB' | cut -d' ' -f2 | tr -d ':'"
     register: mapr_disks
     become: yes 
@@ -48,6 +40,32 @@
     ignore_errors: yes
 
 ### ALL NODES
+  # - name: set repo params
+  #   set_fact:
+  #     mapr_gpgkey: "{{ 'https://package.mapr.hpe.com/releases/pub/maprgpg.key' if not mapr_gpgkey is defined else mapr_gpgkey }}"
+  #     mapr_repo: "{{ 'https://package.mapr.hpe.com/releases/v7.0.0/ubuntu/' if not mapr_repo is defined else mapr_repo }}"
+  #     mapr_eeprepo: "{{ 'https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/ubuntu/' if not mapr_eeprepo is defined else mapr_eeprepo }}"
+
+  # - name: 
+  #   apt_key:
+  #     url: "{{ mapr_gpgkey }}"
+  #     state: present
+  #   become: yes
+
+  # - name: Create MapR Repository
+  #   lineinfile:
+  #     path: /etc/apt/sources.list.d/mapr.list
+  #     line: "deb {{ mapr_repo }} binary bionic"
+  #     create: yes
+  #   become: yes
+
+  # - name: Create MapR EEP Repository
+  #   lineinfile:
+  #     path: /etc/apt/sources.list.d/mapr.list
+  #     line: "deb {{ mapr_eeprepo }} binary bionic"
+  #     create: yes
+  #   become: yes
+
   - name: install mapr packages
     package: 
       name:
@@ -133,48 +151,25 @@
           mode: '0644'
         - filename: tokens.tgz
           mode: '0644'
-    mysql_root_password: R00tpwd123.
 
   tasks:
-  - name: install mysql-server for hive metastore
-    package: name="mysql-server" state=present
-    become: yes
-
-  - name: check if mysql is configured
-    shell: '[ -f mysql_secured ]'
-    register: mysql_configured
-    ignore_errors: yes
-
-  - name: configure mysql server for mapr
-    shell: |-
-      sudo mysql -u root -e "CREATE USER hive@localhost IDENTIFIED WITH mysql_native_password by 'H1vepwd123.'; \
-      REVOKE ALL PRIVILEGES, GRANT OPTION FROM hive@localhost; \
-      GRANT ALL PRIVILEGES ON hive.* TO hive@localhost; \
-      ALTER USER root@localhost IDENTIFIED WITH mysql_native_password by 'R00tpwd123.'; \
-      FLUSH PRIVILEGES;"
-      expect <<EOF
-        set timeout 1800
-        spawn sudo mysql_secure_installation -D
-        expect ".*Enter password for user root:" { send "{{ mysql_root_password }}\r" }
-        expect eof
-      EOF
-      touch mysql_secured
-    when: mysql_configured.failed | bool
-
   - name: Configure.sh to generate keys on first mapr-cldb node only
     shell: |-
-      /opt/mapr/server/configure.sh -N {{ project_id | regex_replace('[_ ]', '') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
+      /opt/mapr/server/configure.sh -N {{ project_id | regex_replace('[_ ]', '') }}.datafabric.io -Z {{ groups['mapr'][:3] | join(',') }} -C {{ groups['mapr'][:3] | join(':7222,') }}:7222 -u mapr -g mapr -genkeys -secure -dare --isvm -F /tmp/disks.txt
     when: cluster_configured.failed | bool
     become: yes
+    register: firstnode_configured
 
   - name: pack tokens
     shell: "cd /opt/mapr/conf && tar czvf tokens.tgz tokens"
     become: yes
+    when: firstnode_configured.changed
 
   - name: save keys from first node
     fetch: src="/opt/mapr/conf/{{ item.filename }}" dest="/tmp/maprkeys/" flat=yes
     with_items: "{{ secure_files }}"
     become: yes
+    when: firstnode_configured.changed
 
   - name: Enable standalone services
     package: name="mapr-airflow-webserver, mapr-airflow-scheduler, mapr-hivemetastore, mapr-spark-thriftserver" state=present
@@ -191,70 +186,6 @@
       ]
     become: yes
     when: not is_mapr_ha | bool
-
-  - name: update hive-site.xml
-    become: yes
-    register: hivesite
-    blockinfile:
-      create: no
-      path: /opt/mapr/hive/hive-2.3/conf/hive-site.xml
-      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
-      insertafter: "<configuration>"
-      block: |+
-          <property>
-            <name>javax.jdo.option.ConnectionURL</name>
-            <value>jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true</value>
-            <description>the URL of the MySQL database</description>
-          </property>
-
-          <property>
-            <name>javax.jdo.option.ConnectionDriverName</name>
-            <value>com.mysql.cj.jdbc.Driver</value>
-          </property>
-
-          <property>
-            <name>javax.jdo.option.ConnectionUserName</name>
-            <value>hive</value>
-          </property>
-
-          <property>
-            <name>javax.jdo.option.ConnectionPassword</name>
-            <value>H1vepwd123.</value>
-          </property>
-
-          <property>
-            <name>hive.metastore.uris</name>
-            <value>thrift://localhost:9083</value>
-            <description>IP address (or fully-qualified domain name) and port of the metastore host</description>
-          </property>
-
-  - name: refresh hive service
-    shell: |
-      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
-      sudo /opt/mapr/hive/hive-2.3/bin/schematool -dbType mysql -initSchema
-    when: hivesite.changed
-
-  - name: Enable monitoring
-    package: name="mapr-opentsdb, mapr-grafana, mapr-kibana" state=present
-    become: yes
-    when: mapr_monitoring is defined and (mapr_monitoring | bool)
-
-  - name: re-Configure.sh
-    shell: "/opt/mapr/server/configure.sh -R -OT {{ mapr_hosts | first }} -ES {{ mapr_hosts[1:] | join(',') if is_mapr_ha | bool else mapr_hosts | first }}"
-    become: yes
-
-  - name: create ticket for root
-    shell: |
-      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
-
-  - name: copy the license
-    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
-    ignore_errors: yes
-
-  - name: install mapr license
-    shell: |
-      [ -f /tmp/LatestDemoLicense-M7.txt ] && sudo maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-    ignore_errors: yes
 
 #### OTHER NODES
 - hosts: "{{ groups['mapr'][1:] | default([]) }}"
@@ -339,8 +270,109 @@
     become: yes
 
   - name: Configure.sh secure on other nodes
-    shell: "/opt/mapr/server/configure.sh -N {{ project_id | replace(' ', '_') }}.datafabric.io -Z {{ mapr_hosts[:3] | join(',') }} -C {{ mapr_hosts[:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ mapr_hosts[1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
+    shell: "/opt/mapr/server/configure.sh -N {{ project_id | replace(' ', '_') }}.datafabric.io -Z {{ groups['mapr'][:3] | join(',') }} -C {{ groups['mapr'][:3] | join(':7222,') }}:7222 -OT {{ groups['mapr'] | first }} -ES {{ groups['mapr'][1:] | join(',') }} -u mapr -g mapr -secure -dare --isvm -F /tmp/disks.txt"
     become: yes
+
+  - name: create tickets for root and mapr users
+    shell: |
+      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
+      [ -f /tmp/maprticket_5000 ] || echo mapr | maprlogin password -user mapr
+
+- hosts: "{{ groups['mapr'] | first | default([]) }}"
+  gather_facts: no
+  tasks:
+  - name: install mysql-server for hive metastore
+    package: name="mysql-server" state=present
+    become: yes
+
+  - name: check if mysql is configured
+    shell: '[ -f mysql_secured ]'
+    register: mysql_configured
+    ignore_errors: yes
+
+  - name: configure mysql server for mapr
+    shell: |-
+      sudo mysql -u root -e "CREATE USER hive@localhost IDENTIFIED WITH mysql_native_password by 'H1vepwd123.'; \
+      REVOKE ALL PRIVILEGES, GRANT OPTION FROM hive@localhost; \
+      GRANT ALL PRIVILEGES ON hive.* TO hive@localhost; \
+      ALTER USER root@localhost IDENTIFIED WITH mysql_native_password by 'R00tpwd123.'; \
+      FLUSH PRIVILEGES;"
+      expect <<EOF
+        set timeout 1800
+        spawn sudo mysql_secure_installation -D
+        expect ".*Enter password for user root:" { send "{{ mysql_root_password }}\r" }
+        expect eof
+      EOF
+      touch mysql_secured
+    when: mysql_configured.failed | bool
+    vars:
+      mysql_root_password: R00tpwd123.
+
+  - name: update hive-site.xml
+    become: yes
+    register: hivesite
+    blockinfile:
+      create: no
+      path: /opt/mapr/hive/hive-2.3/conf/hive-site.xml
+      marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+      insertafter: "<configuration>"
+      block: |-
+        <property>
+          <name>javax.jdo.option.ConnectionURL</name>
+          <value>jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true</value>
+          <description>the URL of the MySQL database</description>
+        </property>
+
+        <property>
+          <name>javax.jdo.option.ConnectionDriverName</name>
+          <value>com.mysql.cj.jdbc.Driver</value>
+        </property>
+
+        <property>
+          <name>javax.jdo.option.ConnectionUserName</name>
+          <value>hive</value>
+        </property>
+
+        <property>
+          <name>javax.jdo.option.ConnectionPassword</name>
+          <value>H1vepwd123.</value>
+        </property>
+
+        <property>
+          <name>hive.metastore.uris</name>
+          <value>thrift://localhost:9083</value>
+          <description>IP address (or fully-qualified domain name) and port of the metastore host</description>
+        </property>
+
+  - name: refresh hive service
+    shell: |
+      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
+      [ -f mysql_configured_for_hive ] || sudo /opt/mapr/hive/hive-2.3/bin/schematool -dbType mysql -initSchema
+      touch mysql_configured_for_hive
+    when: hivesite.changed
+
+  - name: Enable monitoring
+    package: name="mapr-opentsdb, mapr-grafana, mapr-kibana" state=present
+    become: yes
+    when: mapr_monitoring is defined and (mapr_monitoring | bool)
+
+  - name: re-Configure.sh
+    shell: "/opt/mapr/server/configure.sh -R -OT {{ groups['mapr'] | first }} -ES {{ groups['mapr'][1:] | join(',') if is_mapr_ha | bool else groups['mapr'] | first }}"
+    become: yes
+    when: mapr_monitoring is defined and (mapr_monitoring | bool)
+
+  - name: create tickets for root
+    shell: |
+      [ -f /tmp/maprticket_0 ] || echo mapr | sudo maprlogin password -user mapr
+
+  - name: copy the license
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+    ignore_errors: yes
+
+  - name: install mapr license
+    shell: |
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && sudo maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    ignore_errors: yes
 
 - hosts: localhost
   gather_facts: no

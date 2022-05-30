@@ -1,10 +1,58 @@
 ## Configure mapr ubuntu hosts
-- hosts: "{{ groups['mapr'] }}"
-  tasks:
+
+- hosts: "{{ groups['mapr'] | default([]) }}"
   # Enabled by default at cloud images
   # - name: enable passwordless sudo
   #   shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
-    
+  tasks:
+  - name: Create MapR Group
+    group:
+      name: "mapr"
+      gid: "5000"
+      state: present
+    become: yes
+
+  - name: Create MapR User
+    user:
+      name: "mapr"
+      comment: "MapR default user"
+      uid: "5000"
+      group: "mapr"
+      groups: "mapr"
+      password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0" # password is mapr
+      createhome: true
+      update_password: on_create
+      shell: /bin/bash
+      state: present
+      append: true
+    become: yes
+
+  - name: clean up /etc/hosts
+    lineinfile:
+      path: /etc/hosts
+      regexp: 'ip6-|IPv6|::1|127.0.1.1'
+      state: absent
+    become: yes
+
+  - name: build hosts file
+    lineinfile: 
+      dest: /etc/hosts
+      regexp: '.*{{ item }}$'
+      line: "{{item}} {{ hostvars[item].ansible_fqdn }} {{ hostvars[item].ansible_hostname }}"
+      state: present
+    with_items: "{{ groups['mapr'] }}"
+    become: yes
+
+  - name: Ensure the locale exists
+    locale_gen:
+      name: en_US.UTF-8
+      state: present
+    become: yes
+
+  - name: set default locale to en_US
+    shell: sudo localectl set-locale LANG=en_US.utf8
+    become: yes
+
   - name: update sysctl
     lineinfile:
       dest: /etc/sysctl.conf
@@ -27,38 +75,6 @@
     shell: "sysctl --system"
     become: yes
     when: sysctl.changed
-
-  - name: clean up /etc/hosts
-    lineinfile:
-      path: /etc/hosts
-      regexp: 'ip6-|IPv6|::1|127.0.1.1'
-      state: absent
-    become: yes
-
-  - name: set repo params
-    set_fact:
-      mapr_gpgkey: "{{ 'https://package.mapr.hpe.com/releases/pub/maprgpg.key' if not mapr_gpgkey is defined else mapr_gpgkey }}"
-      mapr_repo: "{{ 'https://package.mapr.hpe.com/releases/v7.0.0/ubuntu/' if not mapr_repo is defined else mapr_repo }}"
-      mapr_eeprepo: "{{ 'https://package.mapr.hpe.com/releases/MEP/MEP-8.1.0/ubuntu/' if not mapr_eeprepo is defined else mapr_eeprepo }}"
-
-  - name: 
-    apt_key:
-      url: "{{ mapr_gpgkey }}"
-      state: present
-
-  - name: Create MapR Repository
-    lineinfile:
-      path: /etc/apt/sources.list.d/mapr.repo
-      line: "deb {{ mapr_repo }} binary bionic"
-      create: yes
-    become: yes
-
-  - name: Create MapR EEP Repository
-    lineinfile:
-      path: /etc/apt/sources.list.d/mapr.repo
-      line: "deb {{ mapr_eeprepo }} binary bionic"
-      create: yes
-    become: yes
 
   - name: update limits
     lineinfile:
