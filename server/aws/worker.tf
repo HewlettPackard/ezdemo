@@ -1,7 +1,7 @@
 # Worker instances
 
 locals {
-  worker_count = var.is_runtime ? var.worker_count + (var.is_mlops ? 3 : 0) : 0
+  worker_count = var.is_runtime ? var.worker_count + (var.is_mlops ? 2 : 0) : 0
 }
 
 resource "aws_instance" "workers" {

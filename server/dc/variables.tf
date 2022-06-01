@@ -7,7 +7,7 @@ variable "is_ha" { default = false }
 variable "install_ad" { default = false }
 variable "extra_tags" { default = "" }
 
-variable "worker_count" { default = 1 }
+variable "worker_count" { default = 3 }
 variable "mapr_count" { default = 5 }
 
 variable "project_id" { default = "Demo" }

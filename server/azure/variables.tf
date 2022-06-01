@@ -26,7 +26,7 @@ variable "ssh_pub_key_path" { default = "../generated/controller.pub_key" }
 
 variable "cloud_init_file" { default = "../generated/cloud-init.yaml" }
 
-variable "worker_count" { default = 2 }
+variable "worker_count" { default = 3 }
 ## GPU Workers
 variable "gworker_count" { default = 0 }
 variable "gpu_instance_type" { default = "Standard_NC6s_v3" } ## 6c 112GB 1v100
@@ -45,6 +45,4 @@ variable "mapr_count" { default = 5 }
 variable "mapr_instance_type" { default = "Standard_B20ms" } ## 20c 80GB
 # variable "mapr_instance_type" { default = "Standard_A4m_v2" } ## 4c 32GB
 
-variable "ad_member_group" { default = "DemoTenantUsers" }
-variable "ad_admin_group" { default = "DemoTenantAdmins" }
 variable "extra_tags" { default = {"cost_center":"Sales"} }

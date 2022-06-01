@@ -13,7 +13,7 @@ variable "az" { default = "eu-west-2a" }
 variable "gtw_instance_type" { default = "m5.xlarge" } ## 4c16
 variable "ctr_instance_type" { default = "r5.2xlarge" } ## 8c64
 
-variable "worker_count" { default = 2 }
+variable "worker_count" { default = 3 }
 ## GPU Workers
 variable "gworker_count" { default = 0 }
 variable "gpu_instance_type" { default = "g4dn.4xlarge" } ## 16c 64GB 1T4
@@ -36,4 +36,5 @@ variable "ad_instance_type" { default = "t2.small" }
 variable "install_ad" { default = true }
 
 variable "client_cidr_block" { default = "0.0.0.0/0" } ### Access possible via gateway only - for limited ports
+
 variable "extra_tags" { default = {"cost_center": "Sales"} }
