@@ -12,6 +12,7 @@
     blockinfile:
       dest: ~/.hpecp.conf
       create: yes
+      marker: ; {mark} ANSIBLE MANAGED PLATFORM BLOCK
       block: |
         [default]
         api_host = {{ groups['controllers'] | first }}
@@ -88,7 +89,6 @@
   - name: install ecp
     shell: "/home/centos/{{ install_file }} --skipeula --default-password {{ admin_password }} --ssl-cert /home/centos/cert.pem --ssl-priv-key /home/centos/key.pem --ssl-ca-data=/home/centos/minica.pem"
     when: not hpecp_installed.stat.exists
-    # become: yes
 
   - name: configure ecp
     shell: /opt/bluedata/common-install/scripts/start_install.py -c "{{ groups['controllers'] | first }}" -p "{{ admin_password }}" -t 60 -s docker -d hpecplocal --cin "{{ project_id | replace('.', '_' ) }}" -k no --no-local-tenant-storage --routable no
@@ -106,7 +106,7 @@
   - name: install hpecp client
     shell: pip3 install --user hpecp pexpect
 
-  - name: system-wide hpecp
+  - name: enable hpecp for all users
     file:
       src: "/home/centos/.local/bin/hpecp"
       dest: "/usr/local/bin/hpecp"
@@ -117,34 +117,34 @@
     become: yes
 
   - name: check ecp gateway
-    shell: ~/.local/bin/hpecp gateway list --output text
+    shell: hpecp gateway list --output text
     register: gw_result
 
   - name: site lockdown
-    shell: ~/.local/bin/hpecp lock create "Install Gateway"
+    shell: hpecp lock create "Install Gateway"
     when: gw_result.stdout == ""
 
   - name: install ecp gateway
-    shell: ~/.local/bin/hpecp gateway create-with-ssh-key --ip "{{ item }}" --proxy-node-hostname "{{ gateway_pub_dns }}" --ssh-key-file ./controller.prv_key
+    shell: hpecp gateway create-with-ssh-key --ip "{{ item }}" --proxy-node-hostname "{{ gateway_pub_dns }}" --ssh-key-file ./controller.prv_key
     with_items: "{{ groups['gateway'] | list }}"
     when: gw_result.stdout == ""
 
   - name: exit site lockdown
-    shell: ~/.local/bin/hpecp lock delete-all --timeout-secs 1800
+    shell: hpecp lock delete-all --timeout-secs 1800
     when: gw_result.stdout == ""
 
   - name: AD config
     copy:
       dest: ~/adconf.json
-      content: |-
+      content: |
         {
           "external_identity_server":  {
-            "host":"{{ ad_server | default(groups['ad_server']) | first | default([]) }}",
+            "host":"{{ install_ad | bool | ternary(groups['ad_server'] | first, ad_server) }}",
             "port": {{ ad_port | default('636') | int }},
             "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
             "bind_pwd":"{{ bind_pwd }}",
             "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
-            "group_attribute":"{{ group_attribute | default('member') }}",
+            "group_attribute":"{{ group_attribute | default('memberOf') }}",
             "bind_type":"{{ bind_type | default('search_bind') }}",
             "security_protocol":"{{ security_protocol | default('ldaps') }}",
             "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
@@ -155,7 +155,7 @@
       force: yes
 
   - name: configure global AD
-    shell: ~/.local/bin/hpecp httpclient post /api/v2/config/auth --json-file ~/adconf.json
+    shell: hpecp httpclient post /api/v2/config/auth --json-file ~/adconf.json
     register: result
     retries: 5
     delay: 60

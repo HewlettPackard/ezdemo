@@ -34,7 +34,7 @@ Provide installer URL (defaults to latest)
 
 Additional (custom) information
 
-50 lines after "#### Custom ####" will be copied as is to provide additional information (ie, AD settings).
+Any lines after "#### Custom ####" will be copied as is to provide additional information (ie, AD settings).
 
 - If you set install_ad=false in user settings, you need to provide AD access information
 
@@ -46,14 +46,13 @@ Additional (custom) information
 #### Custom ####
 ad_server=""
 ad_domain="example.com"
-ad_username="Administrator"
 bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
 bind_pwd=""
 security_protocol="ldap" # defaults to ldaps
 bind_type="search_bind" # this is default
 base_dn="DC=example,DC=com"
 user_attribute="sAMAccountName" # this is default
-group_attribute="memberOf" # defaults to member
+group_attribute="member" # defaults to memberOf
 type="Active Directory" # this is default
 port=389
 ad_admin_group="CN=Administrators,CN=Users,DC=example,DC=com"

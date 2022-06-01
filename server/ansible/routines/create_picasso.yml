@@ -32,14 +32,14 @@
       hpecp k8scluster create \
       --name dfcluster \
       --k8s_version "{{ k8s_version }}" \
-      --k8shosts-config "{{ k8shost_list | join(',')" }} \
+      --k8shosts-config "{{ k8shost_list | join(',') }}" \
       --addons "{{ addons_list }}" \
       --ext_id_svr_bind_pwd "{{ bind_pwd }}" \
       --ext_id_svr_user_attribute "{{ user_attribute | default('sAMAccountName') }}" \
       --ext_id_svr_bind_type "{{ bind_type | default('search_bind') }}" \
       --ext_id_svr_bind_dn "{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}" \
-      --ext_id_svr_host "{{ ad_server | default(groups['ad_server']) | first | default([]) }}" \
-      --ext_id_svr_group_attribute "{{ group_attribute | default('member') }}" \
+      --ext_id_svr_host "{{ install_ad | bool | ternary(groups['ad_server'] | first, ad_server) }}" \
+      --ext_id_svr_group_attribute "{{ group_attribute | default('memberOf') }}" \
       --ext_id_svr_security_protocol "{{ security_protocol | default('ldaps') }}" \
       --ext_id_svr_base_dn "{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}" \
       --ext_id_svr_verify_peer false \

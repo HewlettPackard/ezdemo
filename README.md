@@ -1,39 +1,20 @@
 # Ezmeral Container Platform Demo
 
-Automated installation for Ezmeral Container Platform and MLOps on various platforms (available on AWS and Azure) for demo purposes.
+Automated installation for Ezmeral Container Platform and MLOps on various platforms for demo purposes.
 
 You need a container runtime to run the tool. It should work on any container runtime and tested on Docker. Podman doesn't work if you try to map volumes (should work fine without the mounts).
 
 ## Usage
 
-Download the [start script](https://github.com/HewlettPackard/ezdemo/blob/main/start.sh), or copy/paste below to start the container.
+It is recommended to use a workspace (folder) to keep your settings, instead of editing settings files in the container. You need to create a user.settings and credentials file (as explained below).
 
-```bash
-#!/usr/bin/env bash
-VOLUMES=()
-CONFIG_FILES=("aws_config.json" "azure_config.json")
-for file in "${CONFIG_FILES[@]}"
-do
-  target="${file%_*}"
-  [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
-done
-
-[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/${target}/dc.ini:rw")
-[[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
-[[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
-
-printf -v joined ' -v %s' "${VOLUMES[@]}"
-
-docker run --name ezdemo --pull always -d -p 3000:3000 -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
-```
-
-Create your user settings in a separate file named "user.settings" in following format:
+Create a file named "user.settings" with the following template:
 
 ```json
 {
   "project_id": "",
   "user": "",
-  "admin_password": "ChangeMe!",
+  "admin_password": "ChangeMe.",
   "is_mlops": false,
   "is_mapr": false,
   "is_mapr_ha": true,
@@ -46,7 +27,7 @@ Create your user settings in a separate file named "user.settings" in following 
 }
 ```
 
-Create "aws_config.json" or "azure_config.json" in the same folder with your settings and credentials. Template provided below:
+Create "aws_config.json" or "azure_config.json" in the same folder. Use one of the following templates:
 
 AWS Template;
 
@@ -70,6 +51,61 @@ Azure Template;
 }
 ```
 
+Create dc.ini file for on premise (tested on Vmware 7.0) with following template:
+
+```ini
+
+### Data Center Settings
+
+dc="name_of_dc" # used for specific settings
+vm_network="10.1.1.192/24" # IP allocation will start with the given IP in that subnet, controller the first (or three if HA etc)
+
+### VMWARE SETTINGS
+vcenter_server=""
+vcenter_user=""
+vcenter_pass=""
+datacenter_name=""
+cluster_name=""
+template_name=""            # CentOS/RHEL 7.x template with min 400GB OS disk
+template_user=""            # user with paswordless sudo configured
+template_keyfile=""         # SSH private key for the user
+mapr_template_name=""       # Ubuntu 20.04 template with min 100GB OS disk
+mapr_template_user=""       # user with paswordless sudo configured
+mapr_template_keyfile=      # either SSH private key for the user
+mapr_template_password=""   # or the SSH password for login
+vcenter_folder=""
+vcenter_datastore=""
+vcenter_vswitch=""
+vm_gateway=""
+vm_dns=""
+vm_domain=""
+
+```
+
+More details and customization for on premise deployment is documented in [DC Readme file](./server/dc/README.md)
+
+
+Download the [start script](https://github.com/HewlettPackard/ezdemo/blob/main/start.sh), or copy/paste below to start the container.
+
+```bash
+#!/usr/bin/env bash
+VOLUMES=()
+CONFIG_FILES=("aws_config.json" "azure_config.json")
+for file in "${CONFIG_FILES[@]}"
+do
+  target="${file%_*}"
+  [[ -f "./${file}" ]] && VOLUMES+=("$(pwd)/${file}:/app/server/${target}/config.json:rw")
+done
+
+[[ -f "./dc.ini" ]] && VOLUMES+=("$(pwd)/dc.ini:/app/server/${target}/dc.ini:rw")
+[[ -f "./user.settings" ]] && VOLUMES+=("$(pwd)/user.settings:/app/server/user.settings:rw")
+[[ ! -f "./user.settings" ]] && echo "{}" > ./user.settings
+
+printf -v joined ' -v %s' "${VOLUMES[@]}"
+
+docker run --name ezdemo --pull always -d -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
+```
+
 Once the container starts, you can ~~either use the WebUI on <http://localhost:4000/> or~~ run scripts manually within the container.
 
 ## Advanced Usage
@@ -84,9 +120,25 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ```./00-run_all.sh aws|azure|dc```
 
-### Run Individaully
+### Or run in stages
 
-At any stage if script fails or if you wish to update your environment, you can restart the process wherever needed;
+Process is divided into steps to provide granularity. 
+
+Step 1 (Init): Prepare the environment (ensure that the required settings are in place, utilities are configured etc).
+
+Step 2 (Apply): To deploy the infrastructure nodes based on the selection (runtime, mlops, mapr etc)
+
+Step 3 (Install): Platform installation based on the selection (AD server, runtime platform, Data Fabric nodes etc).
+
+Step 4 (Configure): Further configuration of the platform(s) for selected options, such as;
+
+- Runtime only: creates a Kubernetes cluster with an example tenant enabling Spark operator
+
+- MLOps (is_mlops=true): creates a Kubernetes cluster with Data Fabric on Kubernetes (Picasso) as Tenant Storage and configures end to end model serving scenario, such as deployment and configuration of Kubeflow, MLflow, Livy, Spark Operator and a Notebook (includes project repository for CI/CD, training cluster etc)
+
+- Data Fabric (is_mapr=true): creates a standalone Data Fabric cluster (single node if is_mapr=false, 5 nodes if is_mapr=true) and configures it with AD authentication, Spark, Airflow and Hive
+
+At any stage if script fails or if you wish to update the environment, you can restart the process for a specific step;
 
 - `./01-init.sh aws|azure|dc`
 - `./02-apply.sh aws|azure|dc`
@@ -100,6 +152,8 @@ Deployed resources will be available in ./server/ansible/inventory.ini file
 - Use `ssh centos@10.1.0.xx` to access hosts within the container, using their internal IP address (~/.ssh/config file is already set up for jump host via gateway)
 
 - You can copy "./generated/controller.prv_key" and "~/.ssh/config" to your workstation to access the deployed nodes directly
+
+- You can access created Kubernetes cluster with kubectl as K8s Admin context is already configured for ~/.kube/config (and you can copy that file from container to your workstation to connect to the K8s cluster directly)
 
 - Copy and install "./generated/*/minica.pem" into your browser to prevent SSL certificate errors
 

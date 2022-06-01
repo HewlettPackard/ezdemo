@@ -63,7 +63,7 @@
 - name: configure picasso DF users
   hosts: localhost
   vars:
-    kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo "
+    kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_user_dir }}/.kube/config -n dfdemo "
   tasks:
 
     - name: mapr password
@@ -84,8 +84,8 @@
 - name: configure picasso MCS TLS
   hosts: localhost
   vars:
-    kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo "
-    kubeexec_dfdemo: "kubectl --kubeconfig {{ ansible_env.HOME }}/.kube/config -n dfdemo exec admincli-0 -- "
+    kubectl_dfdemo: "kubectl --kubeconfig {{ ansible_user_dir }}/.kube/config -n dfdemo "
+    kubeexec_dfdemo: "kubectl --kubeconfig {{ ansible_user_dir }}/.kube/config -n dfdemo exec admincli-0 -- "
   tasks:
 
     - name: Collect current timestamp

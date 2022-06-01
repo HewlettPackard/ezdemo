@@ -32,8 +32,6 @@ export TRAINING_CLUSTER_NAME=trainingengineinstance
 export AD_USER_NAME=ad_user1
 export AD_USER_PASS=pass123
 
-# PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig
-
 export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
 export AD_USER_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_USER_ID-$AD_USER_NAME'.encode('utf-8')).hexdigest())")
 export AD_USER_KC_SECRET="hpecp-kc-secret-$AD_USER_SECRET_HASH"
@@ -56,7 +54,7 @@ export AD_USER_ID=$(hpecp user list --query "[?label.name=='$AD_USER_NAME'] | [0
 export AD_USER_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_USER_ID-$AD_USER_NAME'.encode('utf-8')).hexdigest())")
 export AD_USER_KC_SECRET="hpecp-kc-secret-$AD_USER_SECRET_HASH"
 
-export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
+export AD_USER_KUBECONFIG="$(PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp.conf hpecp tenant k8skubeconfig | base64 -w 0)"
 export DATA_BASE64=$(base64 -w 0 <<END
 {
   "data": {
@@ -78,7 +76,7 @@ END
 )
 
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
-PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
 
 
 ################################################################################
@@ -90,7 +88,7 @@ export AD_ADMIN_ID=$(hpecp user list --query "[?label.name=='$AD_ADMIN_NAME'] | 
 export AD_ADMIN_SECRET_HASH=$(python3 -c "import hashlib; print(hashlib.md5('$AD_ADMIN_ID-$AD_ADMIN_NAME'.encode('utf-8')).hexdigest())")
 export AD_ADMIN_KC_SECRET="hpecp-kc-secret-$AD_ADMIN_SECRET_HASH"
 
-export AD_ADMIN_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
+export AD_ADMIN_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp.conf hpecp tenant k8skubeconfig | base64 -w 0)"
 export DATA_BASE64=$(base64 -w 0 <<END
 {
   "data": {
@@ -111,19 +109,26 @@ export DATA_BASE64=$(base64 -w 0 <<END
 END
 )
 
+## remove if exist
+${KUBEATNS} delete secret $AD_ADMIN_KC_SECRET || true
+
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
-PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
 
 ################################################################################
 # Create parent git config
 ################################################################################
+
+## remove if exist
+${KUBEATNS} delete configmap demo-repo || true
+${KUBEATNS} delete configmap user-demo-repo || true
 
 export GW=$(kubectl -n mlops-ex-demo describe service gitea-service | grep hpecp-internal-gateway/3000 | awk '{ print $2 }')
 
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
 export AD_ADMIN_ID=$(hpecp user list --query "[?label.name=='ad_admin1'] | [0] | [_links.self.href]" --output text | cut -d '/' -f 5 | sed '/^$/d')
 
-export AD_USER_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp tenant k8skubeconfig | base64 -w 0)"
+export AD_USER_KUBECONFIG="$(PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp.conf hpecp tenant k8skubeconfig | base64 -w 0)"
 export DATA_BASE64=$(base64 -w 0 <<END
 {
   "data": {
@@ -153,7 +158,7 @@ END
 )
 
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
-PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
+PROFILE=tenant_admin HPECP_CONFIG_FILE=~/.hpecp.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}') || true # ignore error
 
 ################################################################################
 # Create child git config
@@ -197,7 +202,7 @@ END
 )
 
 CLUSTER_ID=$(hpecp k8scluster list -o text | grep ${K8SCLUSTER} | cut -d' ' -f1)
-PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp_tenant.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
+PROFILE=tenant HPECP_CONFIG_FILE=~/.hpecp.conf hpecp httpclient post $CLUSTER_ID/kubectl <(echo -n '{"data":"'$DATA_BASE64'","op":"create"}')
 
 ################################################################################
 
@@ -408,7 +413,7 @@ ${KUBEATNS} exec -c app $POD -- sudo -E -u ${TENANT_USER} /opt/miniconda/bin/pip
 
 echo "Setup HPECP CLI as admin user"
 
-${KUBEATNS} cp --container app ~/.hpecp_tenant.conf $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
+${KUBEATNS} cp --container app ~/.hpecp.conf $TENANT_NS/$POD:/home/${TENANT_USER}/.hpecp.conf
 
 ${KUBEATNS} exec -c app $POD -- chown ad_user1:root /home/${TENANT_USER}/.hpecp.conf
 

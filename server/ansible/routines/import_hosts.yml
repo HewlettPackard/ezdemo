@@ -3,8 +3,8 @@
   vars:
     worker_ips: "{{ groups['workers'] | list }}"
     gworker_ips: "{{ groups['gworkers'] | list }}"
-    kubeworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[:2], worker_ips) }}"
-    dfworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[2:5], []) }}"
+    dfworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[:3], []) }}"
+    kubeworker_ips: "{{ (is_mlops | bool) | ternary(worker_ips[3:], worker_ips) }}"
     ssh_prv_key_path: "../../{{ ssh_prv_key }}"
 
   tasks:

@@ -76,6 +76,7 @@
   - name: configure tenant hpecp
     blockinfile:
       dest: ~/.hpecp.conf
+      marker: ; {mark} ANSIBLE MANAGED TENANT BLOCK
       block: |
         [tenant]
         tenant = {{ tenant_id.stdout }}

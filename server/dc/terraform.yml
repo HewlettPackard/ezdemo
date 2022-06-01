@@ -14,17 +14,19 @@
     K8S_COUNT: "{{ groups['k8s']| length }}"
     PICASSO_COUNT: "{{ groups['picasso']| length }}"
     MAPR_COUNT: "{{ groups['mapr']| length }}"
+    AD_COUNT: "{{ groups['ad_server']| length }}"
 
   tasks:
   - name: amount of Hosts found.  
     debug:
       msg:
       - "we will deploy {{ HOST_COUNT }} hosts."
-      - "{{ CONTROLLER_COUNT}} controller(s)."
-      - "{{ GATEWAY_COUNT}} gateway(s)."
-      - "{{ K8S_COUNT}} k8s node(s)."
-      - "{{ PICASSO_COUNT}} picasso node(s)."
-      - "{{ MAPR_COUNT}} data fabric node(s)."
+      - "{{ CONTROLLER_COUNT }} controller(s)."
+      - "{{ GATEWAY_COUNT }} gateway(s)."
+      - "{{ K8S_COUNT }} k8s node(s)."
+      - "{{ PICASSO_COUNT }} picasso node(s)."
+      - "{{ MAPR_COUNT }} data fabric node(s)."
+      - "{{ AD_COUNT }} AD server node."
       # - "--- vCenter INFORMATION ---"
       - "vCenter IP: {{ vcenter_server }}"
       - "vCenter Username: {{ vcenter_user }}"
@@ -121,7 +123,7 @@
   - name: ensure centos user exist
     user:
       name: centos
-      groups: sudo
+      groups: wheel
       shell: /bin/bash
       createhome: true
       append: true

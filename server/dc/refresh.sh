@@ -38,4 +38,4 @@ URL=$(grep -w 'download_url' vars.ini | cut -d= -f2-)
 [ ! -z "${URL}" ] && export EPIC_DL_URL="${URL}"
 
 ## Include custom settings (ie, AD settings)
-export CUSTOM_INI=$(grep -A50 '#### Custom ####' vars.ini | grep -v -e '^#' -e '^\s*$')
+export CUSTOM_INI=$(grep -A250 '#### Custom ####' vars.ini | grep -v -e '^#' -e '^\s*$')

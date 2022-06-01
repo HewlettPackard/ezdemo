@@ -4,6 +4,7 @@
   - name: configure hpecp
     blockinfile:
       dest: ~/.hpecp.conf
+      marker: ; {mark} ANSIBLE MANAGED PLATFORM BLOCK
       block: |
         [default]
         api_host = {{ gateway_pub_dns }}
@@ -37,6 +38,7 @@
   - name: configure hpecp
     blockinfile:
       dest: ~/.hpecp.conf
+      marker: ; {mark} ANSIBLE MANAGED PLATFORM BLOCK
       block: |-
         [default]
         api_host = {{ groups['controllers'] | first }}

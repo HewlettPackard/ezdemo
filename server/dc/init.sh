@@ -28,6 +28,6 @@ cat my.tfvars | tr -d "[:blank:]" | cat - dc.ini >> vars.ini
 
 ansible -i vars.ini localhost -m template -a "src=hosts-common.ini dest=hosts.ini"
 
-echo "mapr_count=$(ansible-inventory -i hosts.ini --list | jq '.mapr[] | length')" >> ./my.tfvars
+echo "mapr_count=$(ansible-inventory -i hosts.ini --list | jq 'try (.mapr[] | length) catch 0')" >> ./my.tfvars
 
 exit 0

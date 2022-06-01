@@ -24,6 +24,7 @@
 set -euo pipefail
 
 VM_NETWORK=$(grep -w vm_network dc.ini | cut -d'"' -f2 | cut -d/ -f1)
+sed -i -e "/^Host ${VM_NETWORK%.*}./,+4d" ~/.ssh/config
 # Clear ssh host keys
 for i in $(seq 0 20); do
   ssh-keygen -R $(echo ${VM_NETWORK%.*}.$((${VM_NETWORK##*.}+i))) >> /dev/null 2>&1

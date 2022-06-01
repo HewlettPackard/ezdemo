@@ -36,7 +36,7 @@
       copy:
         dest: /opt/bluedata/tmp/ext-bm-mapr/ext-dftenant-manifest
         content: "{{ manifest }}"
-        force: True
+        force: yes
         vars: 
           manifest: |-
             CLDB_LIST="{{ groups['mapr'] | join(',') }}"

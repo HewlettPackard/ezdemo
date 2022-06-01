@@ -1,9 +1,11 @@
 - hosts: localhost
   tasks:
   - name: configure hpecp
-    copy:
+    blockinfile:
       dest: ~/.hpecp.conf
-      content: |-
+      marker: ; {mark} ANSIBLE MANAGED PLATFORM BLOCK
+      create: yes
+      block: |
         [default]
         api_host = {{ gateway_pub_dns }}
         api_port = 8080
@@ -12,7 +14,6 @@
         warn_ssl = False
         username = admin
         password = {{ admin_password }}
-      force: yes
 
 - hosts: controllers:workers:gworkers
   tasks:
