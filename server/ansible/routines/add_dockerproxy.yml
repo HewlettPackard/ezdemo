@@ -1,34 +1,32 @@
 ######################################################################################################
 # DOCKER PROXY
 ######################################################################################################
-- hosts: k8s:picasso
+- hosts: "{{ groups['controllers'] | first }}"
   gather_facts: false
+  vars:
+    docker_proxy_username: "{{ docker_proxy | urlsplit('username') | default('') }}"
+    docker_proxy_password: "{{ docker_proxy | urlsplit('password') | default('') }}"
+    docker_proxy_url: "{{ ( (docker_proxy | urlsplit('hostname'), docker_proxy | urlsplit('port')) | join(':'), (docker_proxy | urlsplit('path')) ) | join('') }}"
+    airgap_json: |
+      {
+        "airgap_parameters": {
+          "container_repo_url": "{{ docker_proxy_url }}",
+          "container_repo_username": "{{ docker_proxy_username }}",
+          "container_repo_password": "{{ docker_proxy_password }}",
+          "is_secure_container_repo": {{ docker_proxy | urlsplit('scheme') == 'https' }},
+          "container_repo_client_certificate": "",
+          "baseurl": "{{ yum_repo | default('') }}",
+          "repo_gpg_key": "",
+          "rpm_gpg_key": "",
+          "support_rpm_repo": true
+        }
+      }
   tasks:
-  - name: load var from file
-    slurp:
-      src: /etc/docker/daemon.json
-    register: imported_var
+  - name: airgap config
+    copy:
+      dest: ~/airgap.json
+      content: "{{ airgap_json }}"
+      force: yes
 
-  # - debug:
-  #     msg: "{{ imported_var.content|b64decode|from_json }}"
-
-  - name: append more key/values
-    set_fact:
-      imported_var: "{{ imported_var.content|b64decode|from_json | default([]) | combine({ 'registry-mirrors': ['http://192.168.10.3:5000','http://192.168.10.3:5000'] }) }}"
-    when: ad_username is not defined
-
-  # - debug:
-  #     var: imported_var
-
-  - name: write var to file
-    copy: 
-      content: "{{ imported_var | to_nice_json }}" 
-      dest: /etc/docker/daemon.json
-    # when: ad_username is defined
-
-  - name: restart docker daemon
-    ansible.builtin.systemd:
-      state: restarted
-      enabled: yes
-      name: docker
-    # when: copy.changed
+  - name: configure airgap
+    shell: hpecp httpclient put /api/v2/config/global_proxy --json-file ~/airgap.json

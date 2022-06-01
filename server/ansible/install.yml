@@ -9,7 +9,7 @@
 # PREPARE HOSTS (updates, selinux etc that is common to all hosts)
 ######################################################################################################
 - name: Prepare ECP Hosts
-  import_playbook: routines/prepare_centos.yml 
+  import_playbook: routines/prepare_centos.yml
 
 ### Install AD
 - name: Install AD server
@@ -47,6 +47,12 @@
 ######################################################################################################
 # IMPORT HOSTS (bring workers into ECP)
 ######################################################################################################
+
+### Configure docker proxy if provided
+- name: add docker proxy to hosts
+  import_playbook: routines/add_dockerproxy.yml
+  when: docker_proxy is defined or yum_repo is defined
+
 - name: Import Hosts
   import_playbook: routines/import_hosts.yml
   when: is_runtime | bool
@@ -63,6 +69,6 @@
   when: is_mapr | bool
 
 ### External Data Fabric
-- name: Install External MapR Hosts
-  import_playbook: routines/create_mapr.yml
+- name: Install External Data Fabric Hosts
+  import_playbook: routines/create_edf.yml
   when: is_mapr | bool
