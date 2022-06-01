@@ -1,0 +1,68 @@
+### Configure MLTenant
+- hosts: localhost
+  tasks:
+  - name: get cluster id
+    shell: "hpecp k8scluster list -o text | cut -d' ' -f1"
+    register: cluster_id
+
+  - name: get cluster name
+    shell: "hpecp k8scluster get {{ cluster_id.stdout }} -o json | jq -r '.label.name'"
+    register: cluster_name
+
+  - name: create tenant
+    shell: "hpecp tenant create --name 'k8stenant' --description 'Kubernetes Example' --k8s-cluster-id {{ cluster_id.stdout }} --tenant-type k8s --specified-namespace-name k8stenant --features '{ ml_project: false }'"
+    register: tenant
+    ignore_errors: True
+
+  - name: get tenant id
+    shell: "hpecp tenant list -o text | grep 'k8stenant' | cut -d' ' -f1"
+    register: tenant_id
+
+  - name: wait for tenant
+    shell: "hpecp tenant wait-for-status --id {{ tenant_id.stdout }} --status ['ready'] --timeout-secs 1800"
+
+  - name: get tenant namespace
+    shell: "hpecp tenant get {{ tenant_id.stdout }} | grep '^namespace: ' | cut -d' ' -f2"
+    register: tenant_ns
+
+  - set_fact:
+      kubeatns: "kubectl --kubeconfig {{ ansible_user_dir }}/.kube/config -n {{ tenant_ns.stdout }}"
+
+  - name: get admin role
+    shell: "hpecp role list --query \"[?label.name=='Admin'][_links.self.href]\" --output text"
+    register: admin_role
+
+  - name: get member role
+    shell: "hpecp role list --query \"[?label.name=='Member'][_links.self.href]\" --output text"
+    register: member_role
+    
+  - name: add admins to tenant
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ad_admin_group }}' --role-id {{ admin_role.stdout }}"
+    ignore_errors: True
+
+  - name: add members to tenant
+    shell: "hpecp tenant add-external-user-group --tenant-id {{ tenant_id.stdout }} --group '{{ ad_member_group }}' --role-id {{ member_role.stdout }}"
+    ignore_errors: True
+  
+  - name: configure tenant hpecp
+    blockinfile:
+      dest: ~/.hpecp.conf
+      marker: ; {mark} ANSIBLE MANAGED TENANT BLOCK
+      block: |
+        [tenant]
+        tenant = {{ tenant_id.stdout }}
+        username = {{ AD_USER_NAME }}
+        password = {{ AD_USER_PASS }}
+        [tenant_admin]
+        tenant = {{ tenant_id.stdout }}
+        username = {{ AD_ADMIN_NAME }}
+        password = {{ AD_ADMIN_PASS }}
+    vars: ### TODO: should be user provided (for non-embedded AD)
+      AD_USER_NAME: "ad_user1"
+      AD_USER_PASS: "pass123"
+      AD_ADMIN_NAME: "ad_admin1"
+      AD_ADMIN_PASS: "pass123"
+
+  - name: setup spark
+    shell: "./setup_spark.sh '{{ kubeatns }}'"
+    ignore_errors: yes

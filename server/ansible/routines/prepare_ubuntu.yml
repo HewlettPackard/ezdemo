@@ -53,68 +53,68 @@
     shell: sudo localectl set-locale LANG=en_US.utf8
     become: yes
 
-  - name: update sysctl
-    lineinfile:
-      dest: /etc/sysctl.conf
-      regexp: "{{ item.regex }}"
-      line: "{{ item.line }}"
-      create: true
-    with_items:
-      - regex: ^vm\.swappiness
-        line: vm.swappiness = 1
-      - regex: ^net\.ipv4\.tcp_retries2
-        line: net.ipv4.tcp_retries2 = 5
-      - regex: ^vm\.overcommit_memory
-        line: vm.overcommit_memory = 0
-      - regex: ^net\.ipv4\.tcp_fin_timeout
-        line: net.ipv4.tcp_fin_timeout = 30
-    become: yes
-    register: sysctl
+  # - name: update sysctl
+  #   lineinfile:
+  #     dest: /etc/sysctl.conf
+  #     regexp: "{{ item.regex }}"
+  #     line: "{{ item.line }}"
+  #     create: true
+  #   with_items:
+  #     - regex: ^vm\.swappiness
+  #       line: vm.swappiness = 1
+  #     - regex: ^net\.ipv4\.tcp_retries2
+  #       line: net.ipv4.tcp_retries2 = 5
+  #     - regex: ^vm\.overcommit_memory
+  #       line: vm.overcommit_memory = 0
+  #     - regex: ^net\.ipv4\.tcp_fin_timeout
+  #       line: net.ipv4.tcp_fin_timeout = 30
+  #   become: yes
+  #   register: sysctl
 
-  - name: update sysctl
-    shell: "sysctl --system"
-    become: yes
-    when: sysctl.changed
+  # - name: update sysctl
+  #   shell: "sysctl --system"
+  #   become: yes
+  #   when: sysctl.changed
 
-  - name: update limits
-    lineinfile:
-      dest: /etc/security/limits.conf
-      regexp: "{{ item.regex }}"
-      line: "{{ item.line }}"
-      create: true
-    with_items:
-      - regex: ^mapr\ -\ nofile
-        line: mapr - nofile 65536
-      - regex: ^mapr\ -\ memlock
-        line: mapr - memlock unlimited
-      - regex: ^mapr\ -\ core
-        line: mapr - core unlimited
-      - regex: ^mapr\ -\ nice
-        line: mapr - nice -10
-      - regex: ^mapr\ -\ nproc
-        line: mapr - nproc 64000
-    become: yes
-    register: sysctl
+  # - name: update limits
+  #   lineinfile:
+  #     dest: /etc/security/limits.conf
+  #     regexp: "{{ item.regex }}"
+  #     line: "{{ item.line }}"
+  #     create: true
+  #   with_items:
+  #     - regex: ^mapr\ -\ nofile
+  #       line: mapr - nofile 65536
+  #     - regex: ^mapr\ -\ memlock
+  #       line: mapr - memlock unlimited
+  #     - regex: ^mapr\ -\ core
+  #       line: mapr - core unlimited
+  #     - regex: ^mapr\ -\ nice
+  #       line: mapr - nice -10
+  #     - regex: ^mapr\ -\ nproc
+  #       line: mapr - nproc 64000
+  #   become: yes
+  #   register: sysctl
 
-  - name: check transparent_hugepage
-    shell: grep -s transparent_hugepage /etc/default/grub | wc -l
-    register: grub_needs_update
+  # - name: check transparent_hugepage
+  #   shell: grep -s transparent_hugepage /etc/default/grub | wc -l
+  #   register: grub_needs_update
 
-  - name: update hugepage
-    lineinfile:
-      path: /etc/default/grub
-      regexp: '(GRUB_CMDLINE_LINUX=.*)"'
-      line: '\1 transparent_hugepage=never"'
-      backrefs: yes
-      state: present
-    become: yes
-    register: grub_changed
-    when: grub_needs_update.stdout == "0"
+  # - name: update hugepage
+  #   lineinfile:
+  #     path: /etc/default/grub
+  #     regexp: '(GRUB_CMDLINE_LINUX=.*)"'
+  #     line: '\1 transparent_hugepage=never"'
+  #     backrefs: yes
+  #     state: present
+  #   become: yes
+  #   register: grub_changed
+  #   when: grub_needs_update.stdout == "0"
 
-  - name: Rebuild grub
-    command: update-grub
-    when: grub_changed.changed
-    become: yes
+  # - name: Rebuild grub
+  #   command: update-grub
+  #   when: grub_changed.changed
+  #   become: yes
 
   - name: update packages
     apt:
@@ -127,11 +127,11 @@
     package: name="python3-pip, syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils, expect" state=present
     become: yes
 
-  - name: reboot mapr nodes
-    reboot:
-      reboot_timeout: 300
-      connect_timeout: 5
-      pre_reboot_delay: 0
-      post_reboot_delay: 30
-    become: True
-    when: grub_changed.changed
+  # - name: reboot mapr nodes
+  #   reboot:
+  #     reboot_timeout: 300
+  #     connect_timeout: 5
+  #     pre_reboot_delay: 0
+  #     post_reboot_delay: 30
+  #   become: True
+  #   when: grub_changed.changed

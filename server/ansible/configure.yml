@@ -8,7 +8,7 @@
   when: (is_runtime | bool) and (not is_mlops | bool)
 
 # Install K8s cluster with Picasso if MLOps is selected
-- name: create picasso cluster
+- name: create Picasso cluster
   import_playbook: routines/create_picasso.yml
   when: (is_runtime | bool) and (is_mlops | bool)
 
@@ -18,7 +18,7 @@
   when: is_runtime | bool
 
 # Picasso registration for all tenants
-- name: configure picasso
+- name: configure Picasso
   import_playbook: routines/configure_picasso.yml
   when: (is_runtime | bool) and (is_mlops | bool)
 
@@ -26,6 +26,11 @@
 - name: configure gworkers
   import_playbook: routines/configure_gworkers.yml
   when: is_runtime | bool
+
+# Configure sample tenant for K8s
+- name: configure K8s tenant
+  import_playbook: routines/configure_k8s.yml
+  when: (is_runtime | bool) and (not is_mlops | bool)
 
 ######################################################################################################
 # MLOPS INSTALLATION (setup spark & kubeflow addons)
@@ -38,7 +43,7 @@
 # Configure external Data Fabric
 ###
 
-- name: configure MLOps tenant
-  import_playbook: routines/configure_mapr7.yml
+- name: configure EDF
+  import_playbook: routines/configure_edf.yml
   when: is_mapr | bool
   

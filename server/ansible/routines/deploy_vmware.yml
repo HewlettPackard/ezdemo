@@ -14,6 +14,7 @@
     picasso_ips: "{{ (groups['picasso'] | list) | default([])  }}"
     k8s_ips: "{{ (groups['k8s'] | list) | default([])  }}"
     mapr_ips: "{{ (groups['mapr'] | list) | default([]) }}"
+    ad_server_ips: "{{ groups['ad_server'] if (install_ad | bool) else ad_server) }}"
 
   gather_facts: no
   tasks:
@@ -116,6 +117,50 @@
     register: _create_gateways
     async: 1200
     poll: 0
+
+#######################
+# ADSERVER Deployment
+#######################
+
+  - name: Clone template {{ template_name }} to the ADServer
+    vmware_guest:
+      hostname: "{{ vcenter_server }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: no
+      name: "{{ item }}-ECP-ADSERVER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
+      template: "{{ template_name }}"
+      datacenter: "{{ datacenter_name }}"
+      folder: "{{vcenter_folder}}"
+      cluster: "{{ cluster_name }}"
+      datastore: "{{ vcenter_datastore }}"
+      hardware:
+        memory_mb: "{{ vm_adserver_memory }}"
+        num_cpus: "{{ vm_adserver_cpu_cores }}"
+      networks:
+      - name: "{{ vcenter_vswitch }}"
+        ip: "{{ item }}"
+        netmask: "{{ vm_network | ansible.utils.ipaddr('netmask') }}"
+        gateway: "{{ vm_gateway }}"
+        type: static
+        dns_servers: "{{ vm_dns }}"
+      disk:
+        - autoselect_datastore: no
+          datastore: "{{ vcenter_datastore }}"
+          size_gb: 400
+          type: thin
+      customization:
+        hostname: "{{ host_prefix }}{{ item.split('.')[-1][-3:] }}"
+        domain: "{{ vm_domain }}"
+        dns_servers: "{{ vm_dns }}"
+      state: poweredon
+      wait_for_ip_address: no
+    delegate_to: localhost
+    with_items: "{{ adserver_ips }}"
+    register: _create_adserver
+    async: 1200
+    poll: 0
+    when: install_ad | bool
 
 #######################
 # PICASSO Deployment

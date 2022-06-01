@@ -1,0 +1,119 @@
+### Using installer on first node
+- hosts: "{{ (groups['mapr'] | first) | default([]) }}"
+  tasks:
+  - name: set repo params
+    set_fact:
+      mapr_repo: "{{ 'https://package.mapr.hpe.com/releases' if not mapr_repo is defined else mapr_repo }}"
+
+  - name: get mapr installer
+    get_url:
+      url: "{{ mapr_repo}}/installer/mapr-setup.sh"
+      dest: /tmp/mapr-setup.sh
+      mode: '0755'
+
+  - stat: path=/opt/mapr/installer/bin/mapr-installer-cli
+    register: installer
+
+  - name: setup mapr installer
+    command: /tmp/mapr-setup.sh -y -r "{{ mapr_repo }}"
+    become: yes
+    when: not installer.stat.exists
+
+  # - shell: "fdisk -l | grep '100 GiB' | cut -d' ' -f2 | tr -d ':'"
+  #   register: mapr_disks
+  #   become: yes
+
+  # - name: get node names
+  #   set_fact:
+  #     mapr_hosts: "{{ groups['mapr'] | map ('extract', hostvars, 'ansible_fqdn') }}"
+
+  # - name: update stanza
+  #   copy:
+  #     dest: /tmp/mapr.stanza
+  #     content: |
+  #       environment:
+  #         mapr_core_version: 7.0.0
+  #       config:
+  #         hosts:
+  #           {{ mapr_hosts | to_nice_yaml | indent(4) }}
+  #         ssh_id: {{ ansible_user_id }}
+  #         ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
+  #         security: True
+  #         enable_nfs: true
+  #         nfs_type: "NFSv3"
+  #         cluster_admin_id: mapr
+  #         cluster_admin_password: mapr
+  #         custom_pbs_disable: true
+  #         license_type: M7
+  #         mep_version: 8.1.0
+  #         disks:
+  #           {{ mapr_disks.stdout_lines | to_nice_yaml | indent(4) }}
+  #         disk_stripe: 1
+  #         cluster_name: "{{ project_id | regex_replace('[ _]', '') }}.datafabric.io"
+  #         services:
+  #           template-05-converged:
+  #           mapr-hivemetastore:
+  #             database:
+  #               name: hive
+  #               user: hive
+  #               password: mapr
+  #           mapr-grafana:
+  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+  #           mapr-opentsdb:
+  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+  #           mapr-collectd:
+  #           mapr-fluentd:
+  #           mapr-kibana:
+  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+  #           mapr-elasticsearch:
+  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+  #           mapr-data-access-gateway:
+  #           mapr-mastgateway:
+
+  #     force: yes
+
+  # - name: copy ssh key file
+  #   copy:
+  #     src: ../../generated/controller.prv_key
+  #     dest: "{{ ansible_user_dir }}/controller.prv_key"
+  #     mode: "0600"
+
+  # - name: install from stanza
+  #   shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
+
+  # - name: copy the license
+  #   copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+  #   ignore_errors: yes
+
+  # - name: add license 
+  #   shell: /opt/mapr/installer/bin/mapr-installer-cli license -n -l /tmp/LatestDemoLicense-M7.txt
+  #   ignore_errors: yes
+  #   become: yes
+
+  # - name: create ticket for user
+  #   shell: echo mapr | maprlogin password -user mapr
+
+  # - name: install mapr license
+  #   shell: |
+  #     [ -f /tmp/LatestDemoLicense-M7.txt ] && sudo maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+  #   ignore_errors: yes
+
+# - hosts: localhost
+#   gather_facts: no
+#   tasks:
+#   - name: check socket file
+#     stat: path=/tmp/MCS-socket-admin
+#     register: socket_file
+    
+#   - name: MCS tunnel for ports
+#     shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
+#     when: not socket_file.stat.exists and groups['gateway'] | length > 0
+#     with_items:
+#       - port: 8443
+#         description: admin
+#       - port: 9443
+#         description: installer
+#       - port: 8780
+#         description: airflow
+#       - port: 5601
+#         description: kibana
