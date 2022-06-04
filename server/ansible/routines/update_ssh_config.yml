@@ -15,7 +15,7 @@
       create: yes
       block: |
         Host ezdemo_gateway
-          Hostname {{ groups['gateway'] | first }}
+          Hostname {{ gateway_pub_dns }}
           User centos
           IdentityFile {{ lookup('env', 'PWD') }}/generated/controller.prv_key
           StrictHostKeyChecking no
