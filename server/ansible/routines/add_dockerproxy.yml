@@ -1,32 +1,41 @@
 ######################################################################################################
 # DOCKER PROXY
 ######################################################################################################
-- hosts: "{{ groups['controllers'] | first }}"
-  gather_facts: false
-  vars:
-    docker_proxy_username: "{{ docker_proxy | urlsplit('username') | default('') }}"
-    docker_proxy_password: "{{ docker_proxy | urlsplit('password') | default('') }}"
-    docker_proxy_url: "{{ ( (docker_proxy | urlsplit('hostname'), docker_proxy | urlsplit('port')) | join(':'), (docker_proxy | urlsplit('path')) ) | join('') }}"
-    airgap_json: |
-      {
-        "airgap_parameters": {
-          "container_repo_url": "{{ docker_proxy_url }}",
-          "container_repo_username": "{{ docker_proxy_username }}",
-          "container_repo_password": "{{ docker_proxy_password }}",
-          "is_secure_container_repo": {{ docker_proxy | urlsplit('scheme') == 'https' }},
-          "container_repo_client_certificate": "",
-          "baseurl": "{{ yum_repo | default('') }}",
-          "repo_gpg_key": "",
-          "rpm_gpg_key": "",
-          "support_rpm_repo": true
-        }
-      }
-  tasks:
-  - name: airgap config
-    copy:
-      dest: ~/airgap.json
-      content: "{{ airgap_json }}"
-      force: yes
 
-  - name: configure airgap
-    shell: hpecp httpclient put /api/v2/config/global_proxy --json-file ~/airgap.json
+- hosts: workers:gworkers
+  gather_facts: no
+
+  tasks:
+  - name: ensure /etc/docker exist
+    file:
+      path: /etc/docker
+      state: directory
+    become: yes
+    register: folder
+
+  - name: get existing config.json
+    slurp:
+      src: /etc/docker/daemon.json
+    register: imported_json
+
+  - name: configure private docker registry
+    copy:
+      dest: /etc/docker/daemon.json
+      content: "{{ imported_json.content|b64decode|from_json | default([]) | combine(registry_json | to_json ) }}"
+    register: docker_conf
+    become: yes
+    vars:
+      insecure_json: "\"insecure-registries\":[\"{{ docker_proxy | urlsplit('hostname') }}\"],"
+      insecure_registry: "{{ insecure_json if (docker_proxy | urlsplit('scheme') == 'http') else '' }}"
+      registry_json: |
+        {
+          {{ insecure_registry }} "registry-mirrors": ["{{ docker_proxy }}"]
+        }
+
+  - name: restart dockerd for proxy
+    systemd:
+      state: restarted
+      enabled: yes
+      name: docker
+    when: docker_conf.changed
+    become: yes

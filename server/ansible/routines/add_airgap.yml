@@ -1,0 +1,63 @@
+######################################################################################################
+# DOCKER PROXY
+######################################################################################################
+- hosts: "{{ groups['controllers'] | first }}"
+  gather_facts: false
+  vars:
+    docker_registry_username: "{{ docker_registry | urlsplit('username') | default('') }}"
+    docker_registry_password: "{{ docker_registry | urlsplit('password') | default('') }}"
+    docker_registry_url: "{{ ( (docker_registry | urlsplit('hostname'), docker_registry | urlsplit('port')) | join(':'), (docker_registry | urlsplit('path')) ) | join('') }}"
+    airgap_json: |
+      {
+        "platform": {
+          "is_secure_container_repo": {{ docker_registry | urlsplit('scheme') == 'https' }},
+          "container_repo_url": "{{ docker_registry_url }}",
+          "container_repo_username":  "{{ docker_registry_username }}",
+          "container_repo_password": "{{ docker_registry_password }}",
+          "container_repo_client_certificate": ""
+        },
+        "rpm_repo": {
+          "rpm_gpg_key": "",
+          "baseurl": "{{ yum_repo | default('') }}",
+          "repo_gpg_key": "",
+          "support_rpm_repo": true
+        },
+        "caas_registry": {
+          "caas_is_secure_container_repo": false,
+          "caas_container_repo_url": "",
+          "caas_container_repo_username": "",
+          "caas_container_repo_client_certificate": ""
+        }
+      }
+
+    ### Following settings are used for http/https proxy settings (PUT /api/v2/config/global_proxy)
+    global_proxy_json: |
+      {
+        "global_proxy_settings": {
+          "global_proxy": "{{ http_proxy | default('') }}",
+          "global_noproxy": "{{ http_noproxy | default('') }}"
+        }
+      }
+
+  tasks:
+  - name: airgap config
+    copy:
+      dest: ~/airgap.json
+      content: "{{ airgap_json }}"
+      force: yes
+    when: docker_registry is defined and yum_repo is defined
+
+  - name: configure airgap
+    shell: hpecp httpclient put /api/v2/config/k8s --json-file ~/airgap.json
+    when: docker_registry is defined and yum_repo is defined
+
+  - name: global proxy config
+    copy:
+      dest: ~/global_proxy.json
+      content: "{{ global_proxy_json }}"
+      force: yes
+    when: http_proxy is defined
+
+  - name: configure airgap
+    shell: hpecp httpclient put /api/v2/config/global_proxy --json-file ~/global_proxy.json
+    when: http_proxy is defined

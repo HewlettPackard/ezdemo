@@ -21,5 +21,4 @@
     lineinfile:
       dest: ~/.bashrc
       line: source <(kubectl completion bash)
-    become: yes
     

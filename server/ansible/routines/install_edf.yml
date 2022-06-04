@@ -104,7 +104,7 @@
 #   - name: check socket file
 #     stat: path=/tmp/MCS-socket-admin
 #     register: socket_file
-    
+
 #   - name: MCS tunnel for ports
 #     shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
 #     when: not socket_file.stat.exists and groups['gateway'] | length > 0
