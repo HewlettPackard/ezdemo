@@ -35,26 +35,6 @@ source ./outputs.sh "${1}"
 
 CUSTOM_INI=""
 
-SSH_CONFIG="
-Host *
-  StrictHostKeyChecking no
-  Compression yes
-  ForwardX11 yes
-Host ezdemo_gateway
-  Hostname $(echo ${GATW_PUB_DNS[0]:-})
-  IdentityFile generated/controller.prv_key
-  ServerAliveInterval 30
-  User centos
-Host 10.1.0.*
-    Hostname %h
-    ConnectionAttempts 3
-    IdentityFile generated/controller.prv_key
-    ProxyJump ezdemo_gateway
-
-"
-[[ -d ~/.ssh ]] || mkdir ~/.ssh && chmod 700 ~/.ssh
-echo "${SSH_CONFIG}" > ~/.ssh/config
-
 pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
 popd > /dev/null
@@ -95,12 +75,17 @@ install_ad=${INSTALL_AD}
 app_version=${APP_VERSION}
 k8s_version=${K8S_VERSION}
 project_id=${PROJECT_ID}
+
+### Customization
+
 ${AD_CONF:-}
 ${CUSTOM_INI}
 
 "
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini
+
+# Set ansible for proxy ssh
 SSHOPT="-i generated/controller.prv_key -o ServerAliveInterval=30 -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 SSH_VIA_PROXY="${SSHOPT} -o ProxyCommand=\"ssh ${SSHOPT} -W %h:%p -q centos@${GATW_PUB_IPS[0]:-}\""
 [[ -d ./ansible/group_vars/ ]] || mkdir ./ansible/group_vars

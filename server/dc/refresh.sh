@@ -26,16 +26,9 @@
 ### Called from ../refresh_files.sh to override with user-provided vars
 ###
 
-## Clear ssh proxy
-NET=$(grep -w 'vm_network' vars.ini | cut -d'"' -f2 | cut -d/ -f1)
-NETW="${NET%.*}"
-sed -i "s/Host 10.1.0/Host ${NETW}/"  ~/.ssh/config
-sed -i '/^Host ezdemo_gateway/,+4d'  ~/.ssh/config
-sed -i '/ProxyJump ezdemo_gateway/d'  ~/.ssh/config
-
 ## Update download url for epic installer - if provided
 URL=$(grep -w 'download_url' vars.ini | cut -d= -f2-)
 [ ! -z "${URL}" ] && export EPIC_DL_URL="${URL}"
 
 ## Include custom settings (ie, AD settings)
-export CUSTOM_INI=$(grep -A250 '#### Custom ####' vars.ini | grep -v -e '^#' -e '^\s*$')
+export CUSTOM_INI=$(grep -A250 '#### Custom ####' vars.ini | grep -v -e '^#' -e '^[[:space:]]*$')

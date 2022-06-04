@@ -1,0 +1,12 @@
+ ###################################
+# HPE Container Platform Deployment
+#
+# for feature improvements contact: dirk.derichsweiler@hpe.com
+# 
+# modified by Erdinc Kaya <kaya@hpe.com>
+
+### Remove SSH configuration
+- name: Delete ssh configuration
+  import_playbook: routines/update_ssh_config.yml
+  vars:
+    op: remove

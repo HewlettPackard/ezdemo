@@ -5,6 +5,12 @@
 # 
 # modified by Erdinc Kaya <kaya@hpe.com>
 
+### Update SSH settings
+- name: Add ssh configuration for the user
+  import_playbook: routines/update_ssh_config.yml
+  vars:
+    op: add
+
 ######################################################################################################
 # PREPARE HOSTS (updates, selinux etc that is common to all hosts)
 ######################################################################################################
@@ -48,27 +54,30 @@
 # IMPORT HOSTS (bring workers into ECP)
 ######################################################################################################
 
-### Configure docker proxy if provided
-- name: add docker proxy to hosts
+### Configure docker proxy and airgap settings if provided
+- name: add docker proxy to workers
   import_playbook: routines/add_dockerproxy.yml
-  when: docker_proxy is defined or yum_repo is defined
+  when: docker_proxy is defined
+
+- name: add airgap to workers
+  import_playbook: routines/add_airgap.yml
+  when: docker_registry is defined and yum_repo is defined
 
 - name: Import Hosts
   import_playbook: routines/import_hosts.yml
   when: is_runtime | bool
 
 ######################################################################################################
-# INSTALL MAPR (only for External Data Fabric)
+# INSTALL External Data Fabric
 ######################################################################################################
-- name: Prepare MapR Hosts
+- name: Prepare EDF Hosts
   import_playbook: routines/prepare_ubuntu.yml
   when: is_mapr | bool
 
-- name: Join MapR hosts to AD
+- name: Join EDF hosts to AD
   import_playbook: routines/ad_integration.yml
   when: is_mapr | bool
 
-### External Data Fabric
-- name: Install External Data Fabric Hosts
-  import_playbook: routines/create_edf.yml
+- name: Install Data Fabric
+  import_playbook: routines/install_edf.yml
   when: is_mapr | bool

@@ -1,0 +1,59 @@
+- hosts: localhost
+  gather_facts: no
+  
+  tasks:
+  - name: ensure ~/.ssh exist
+    file:
+      dest: ~/.ssh
+      state: directory
+      mode: 0700
+    
+  - name: configure proxy host
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED PROXY BLOCK'
+      create: yes
+      block: |
+        Host ezdemo_gateway
+          Hostname {{ groups['gateway'] | first }}
+          User centos
+          IdentityFile {{ lookup('env', 'PWD') }}/generated/controller.prv_key
+          StrictHostKeyChecking no
+          Compression yes
+          ForwardX11 yes
+          ServerAliveInterval 30
+    when: target != "dc" and op == "add"
+
+  - name: configure other hosts
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED HOST BLOCK'
+      create: yes
+      block: |
+        Host {{ (groups['all'] | first | split('.'))[:3] | join('.') }}.*
+          Hostname %h
+          IdentityFile {{ lookup('env', 'PWD') }}/generated/controller.prv_key
+          StrictHostKeyChecking no
+          Compression yes
+          ForwardX11 yes
+          ServerAliveInterval 30
+          ConnectionAttempts 3
+          {{ 'ProxyJump ezdemo_gateway' if target != "dc" else '' }}
+    when: op == "add"
+
+  - name: remove ssh hosts
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED HOST BLOCK'
+    when: op == "remove"
+
+  - name: configure proxy host
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED PROXY BLOCK'
+    when: op == "remove"
+
+  - name: clean known_hosts
+    shell: ssh-keygen -R "{{ item }}" # >> /dev/null 2>&1
+    with_items: "{{ groups['all'] }}" 
+    when: op == "remove"

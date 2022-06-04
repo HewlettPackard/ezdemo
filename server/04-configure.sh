@@ -35,7 +35,7 @@ source ./outputs.sh "${1}"
 
 ANSIBLE_SSH_RETRIES=5 ${ANSIBLE_CMD} -f 10 \
   -i ./ansible/inventory.ini \
-  ./ansible/configure.yml
+  ./ansible/configure.yml --extra-vars "target=${1}"
 
 echo "Stage 4 complete"
 

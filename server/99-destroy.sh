@@ -48,8 +48,9 @@ popd > /dev/null
 ## Clean user environment
 [ ! -L ~/.hpecp.conf  ] && rm -f ~/.hpecp.conf || echo -n '' > ~/.hpecp.conf
 [ ! -L ~/.kube/config  ] && rm -f ~/.kube/config || echo -n '' >  ~/.kube/config
-## Clean up ssh proxy configuration
-sed -i -e '/^Host ezdemo_gateway/,+4d' -e '/^Host 10\.1\.0\./,+4d' ~/.ssh/config
+
+## Run cleaning playbook
+ansible-playbook -i ansible/inventory.yml ansible/destroy.yml --extra-vars "target=${1}"
 
 source outputs.sh ${1}
 
@@ -67,6 +68,6 @@ rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
 
 echo "Environment destroyed"
-echo "SSH key-pair, CA certs and cloud-init files are not removed!"
+echo "SSH key-pair and CA certs are not removed!"
 
 exit 0
