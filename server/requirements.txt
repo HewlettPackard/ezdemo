@@ -8,3 +8,4 @@ Flask-Cors
 Werkzeug
 waitress
 pyvmomi
+configparser

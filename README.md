@@ -56,14 +56,14 @@ Create dc.ini file for on premise (tested on Vmware 7.0) with following template
 ```ini
 
 ### Data Center Settings
-
+[DC]
 dc="name_of_dc" # used for specific settings
 vm_network="10.1.1.192/24" # IP allocation will start with the given IP in that subnet, controller the first (or three if HA etc)
-
+[VMWARE]
 ### VMWARE SETTINGS
 vcenter_server=""
 vcenter_user=""
-vcenter_pass=""
+vcenter_password=""
 datacenter_name=""
 cluster_name=""
 template_name=""            # CentOS/RHEL 7.x template with min 400GB OS disk
@@ -83,7 +83,6 @@ vm_domain=""
 ```
 
 More details and customization for on premise deployment is documented in [DC Readme file](./server/dc/README.md)
-
 
 Download the [start script](https://github.com/HewlettPackard/ezdemo/blob/main/start.sh), or copy/paste below to start the container.
 
@@ -122,7 +121,7 @@ docker exec -it "$(docker ps -f "status=running" -f "ancestor=erdincka/ezdemo" -
 
 ### Or run in stages
 
-Process is divided into steps to provide granularity. 
+Process is divided into steps to provide granularity.
 
 Step 1 (Init): Prepare the environment (ensure that the required settings are in place, utilities are configured etc).
 

@@ -6,6 +6,7 @@ from waitress import serve
 from sys import platform
 import subprocess
 import os, json
+from configparser import ConfigParser
 
 # from werkzeug.wrappers import response
 
@@ -15,19 +16,21 @@ app = Flask(__name__, static_url_path='', static_folder=os.path.join(base_path, 
 CORS(app)
 
 ProviderName = {
-  "aws": "AWS",
-  "azure": "Azure",
-  "vmware": "VMWare",
-  "kvm": "KVM",
-  "ovirt": "OVirt"
+  'aws': 'AWS',
+  'azure': 'Azure',
+  'dc': 'DC'
+  # 'vmware': 'VMWare',
+  # 'kvm': 'KVM',
+  # 'ovirt': 'OVirt'
 }
-# if (platform == "darwin"):
-#   ProviderName["mac"] = "Mac"
+# if (platform == 'darwin'):
+#   ProviderName['mac'] = 'Mac'
+config = ConfigParser()
 
 ## Pass environment variable to scripts, tell them they are running under web process
 web_env = os.environ.copy()
-web_env["EZWEB"] = "true"
-web_env["EZWEB_TF"] = "-no-color"
+web_env['EZWEB'] = 'true'
+web_env['EZWEB_TF'] = '-no-color'
 
 @app.route('/')
 @cross_origin()
@@ -43,7 +46,20 @@ def get_config(target):
       response = json.load(f)
   else:
     with open(conf_file + '-template') as f:
-      response = json.load(f)
+      js = json.load(f)
+      if 'user' not in js:
+        config.read(base_path + '/' + target + '/dc.ini')
+        for k,v in config.items('DC') + config.items('VMWARE'):
+          if v != '': 
+            js[k] = v
+      response = js
+  return response
+
+@app.route('/usersettings')
+def get_usersettings():
+  response = None
+  with open('user.settings') as f:
+    response=json.load(f)
   return response
 
 @app.route('/<target>/deploy', methods = ['POST'])
@@ -101,11 +117,11 @@ def getkey():
     return Response(status=HTTPStatus.NO_CONTENT)
 
 if __name__ == '__main__':
-  if "DEV" in os.environ:
+  if 'DEV' in os.environ:
    app.run(
-     host="0.0.0.0",
+     host='0.0.0.0',
      debug = True,
      port=4000
     )
   else:
-    serve(app, host="0.0.0.0", port=4000)
+    serve(app, host='0.0.0.0', port=4000)
