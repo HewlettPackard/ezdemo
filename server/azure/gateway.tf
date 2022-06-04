@@ -36,7 +36,6 @@ resource "azurerm_linux_virtual_machine" "gateways" {
   network_interface_ids = [azurerm_network_interface.gatewaynics[count.index].id]
   size                  = var.gtw_instance_type
   admin_username        = var.admin_user
-  custom_data           = base64encode(file(pathexpand(var.cloud_init_file)))
   admin_ssh_key {
       username = var.admin_user
       public_key = file(pathexpand(var.ssh_pub_key_path))

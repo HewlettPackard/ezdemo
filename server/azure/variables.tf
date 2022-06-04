@@ -24,8 +24,6 @@ variable "subnet_cidr_block" { default = "10.1.0.0/24" }
 variable "ssh_prv_key_path" { default = "../generated/controller.prv_key" }
 variable "ssh_pub_key_path" { default = "../generated/controller.pub_key" }
 
-variable "cloud_init_file" { default = "../generated/cloud-init.yaml" }
-
 variable "worker_count" { default = 3 }
 ## GPU Workers
 variable "gworker_count" { default = 0 }

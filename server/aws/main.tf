@@ -21,7 +21,3 @@ resource "aws_key_pair" "main" {
 }
 
 resource "random_uuid" "deployment_uuid" {}
-
-data "template_file" "cloud_data" {
-  template = file("../generated/cloud-init.yaml")
-}

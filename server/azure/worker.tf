@@ -25,7 +25,6 @@ resource "azurerm_linux_virtual_machine" "workers" {
   resource_group_name   = azurerm_resource_group.resourcegroup.name
   network_interface_ids = [element(azurerm_network_interface.workernics.*.id, count.index)]
   size                  = var.wkr_instance_type
-  custom_data           = base64encode(file(pathexpand(var.cloud_init_file)))
   admin_username        = var.admin_user
   admin_ssh_key {
       username = var.admin_user

@@ -10,7 +10,6 @@ resource "aws_instance" "controllers" {
     aws_security_group.main.id
   ])
   subnet_id = aws_subnet.main.id
-  user_data = data.template_file.cloud_data.rendered
 
   root_block_device {
     volume_type = "gp2"

@@ -43,15 +43,6 @@ SSH_PUB_KEY=$(cat ./generated/controller.pub_key)
 SSH_PRV_KEY=$(cat ./generated/controller.prv_key)
 SSH_PRV_KEY_B64=$(base64 ./generated/controller.prv_key)
 
-if [[ ! -f "./generated/cloud-init.yaml" ]]; then
-   CLOUD_INIT=$(eval "cat <<EOF
-$(<./etc/cloud-init.yaml-template)
-EOF
-" 2> /dev/null)
-
-   echo "$CLOUD_INIT" > ./generated/cloud-init.yaml
-fi
-
 . ./user_settings.sh
 
 cat > ${1}/my.tfvars <<EOF

@@ -11,7 +11,6 @@ resource "aws_instance" "gateway" {
     aws_security_group.allow_ecp_ports.id // this should be enabled only on gateway
   ])
   subnet_id = aws_subnet.main.id
-  user_data = data.template_file.cloud_data.rendered
 
   root_block_device {
     volume_type = "gp2"
