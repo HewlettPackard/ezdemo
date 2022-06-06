@@ -1,9 +1,10 @@
-from enum import Enum
+from crypt import methods
+from email.quoprimime import unquote
 from http import HTTPStatus
 from flask import Flask, jsonify, request, Response, send_from_directory, abort
 from flask_cors import CORS, cross_origin
 from waitress import serve
-from sys import platform
+# from sys import platform
 import subprocess
 import os, json
 from configparser import ConfigParser
@@ -18,10 +19,7 @@ CORS(app)
 ProviderName = {
   'aws': 'AWS',
   'azure': 'Azure',
-  'dc': 'DC'
-  # 'vmware': 'VMWare',
-  # 'kvm': 'KVM',
-  # 'ovirt': 'OVirt'
+  'dc': 'Data Centre'
 }
 # if (platform == 'darwin'):
 #   ProviderName['mac'] = 'Mac'
@@ -32,6 +30,9 @@ web_env = os.environ.copy()
 web_env['EZWEB'] = 'true'
 web_env['EZWEB_TF'] = '-no-color'
 
+def get_target_dir(env):
+  return [x for x,y in ProviderName.items() if y.lower() == env.lower()][0]
+
 @app.route('/')
 @cross_origin()
 def home():
@@ -40,7 +41,7 @@ def home():
 @app.route('/<target>/config')
 def get_config(target):
   response = None
-  conf_file = base_path + '/' + target + '/config.json'
+  conf_file = base_path + '/' + get_target_dir(target) + '/config.json'
   if os.path.isfile(conf_file) and os.path.getsize(conf_file) > 0:
     with open(conf_file) as f:
       response = json.load(f)
@@ -48,8 +49,8 @@ def get_config(target):
     with open(conf_file + '-template') as f:
       js = json.load(f)
       if 'user' not in js:
-        config.read(base_path + '/' + target + '/dc.ini')
-        for k,v in config.items('DC') + config.items('VMWARE'):
+        config.read(base_path + '/' + get_target_dir(target) + '/dc.ini')
+        for k,v in config.items('DC') + config.items('VMWARE') + config.items('CUSTOM'):
           if v != '': 
             js[k] = v
       response = js
@@ -63,12 +64,18 @@ def get_usersettings():
   return response
 
 @app.route('/<target>/deploy', methods = ['POST'])
-async def init(target: str):
-  conf_file = base_path + '/' + target + '/config.json'
+async def deploy(target: str):
+  data = request.get_json(force=True, silent=True)
+  conf_file = base_path + '/' + get_target_dir(target) + '/config.json'
   with open(conf_file, 'w') as f:
-    json.dump(request.get_json(force=True, silent=True), f)
+    if data['config']:
+      json.dump(data['config'], f)
+  settings_file = base_path + '/' + 'user.settings'
+  with open(settings_file, 'w') as f:
+    if data['usersettings']:
+      json.dump(data['usersettings'], f)
   def inner():
-    process = subprocess.Popen(['./00-run_all.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
+    process = subprocess.Popen(['./00-run_all.sh', get_target_dir(target)], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
     for line in iter(process.stdout.readline,''):
       yield line
   return Response(inner(), mimetype='html/text')
@@ -76,38 +83,39 @@ async def init(target: str):
 @app.route('/<target>/destroy', methods = ['POST'])
 async def destroy(target: str):
   def inner():
-    process = subprocess.Popen(['./99-destroy.sh', target], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
+    process = subprocess.Popen(['./99-destroy.sh', get_target_dir(target)], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=web_env)
     for line in iter(process.stdout.readline,''):
       yield line
   return Response(inner(), mimetype='html/text')
-
-# @app.route('/<target>/log')
-# async def log(target: str):
-#   def inner():
-#     process = subprocess.Popen(['tail', '-f', target + '/run.log'], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-#     for line in iter(process.stdout.readline,''):
-#       yield line
-#   return Response(inner(), mimetype='html/text')
 
 @app.route('/providers')
 def read_providers():
     return jsonify(list(ProviderName[x] for x in ProviderName))
 
-allowed_files = ['aws/run.log', 'azure/run.log', 'generated/controller.prv_key']
+allowed_files = ['aws/run.log', 'azure/run.log', 'dc/run.log', 'generated/controller.prv_key']
 
 @app.route('/isfile/<path:logfile>')
 def isFile(logfile: str):
-  if logfile not in allowed_files or not os.path.exists(logfile):
-    return Response(status=HTTPStatus.NO_CONTENT)
-  else:
+  file_path = os.path.join(get_target_dir(logfile.split('/')[0]), logfile.split('/')[1])
+  if file_path in allowed_files and os.path.exists(os.path.join(base_path, file_path)):
     return Response(status=HTTPStatus.OK)
+  else:
+    return Response(status=HTTPStatus.NO_CONTENT)
 
 @app.route('/log/<target>')
 def getlog(target: str):
   try:
-    return send_from_directory(directory=base_path + '/' + target, path='run.log')
+    return send_from_directory(directory=base_path + '/' + get_target_dir(target), path='run.log')
   except FileNotFoundError:
     return Response(status=HTTPStatus.NO_CONTENT)
+
+@app.route('/logstream/<target>')
+def getlogstream(target: str):
+  def inner():
+    process = subprocess.Popen(['tail', '-f', get_target_dir(target) + '/run.log'], cwd=base_path, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline,''):
+      yield line
+  return Response(inner(), mimetype='html/text')
 
 @app.route('/key')
 def getkey():
@@ -115,6 +123,18 @@ def getkey():
     return send_from_directory(directory=base_path + '/generated', path='controller.prv_key')
   except FileNotFoundError:
     return Response(status=HTTPStatus.NO_CONTENT)
+
+### v2 functions
+@app.route('/projects', methods=['GET', 'PUT', 'DELETE'])
+def get_projects():
+  if request.method == 'GET':
+    return jsonify([d for d in os.listdir(base_path + '/projects/') if d != 'archived' ])
+  if request.method == 'PUT':
+    os.mkdir(base_path + '/projects/' + request.form['name'])
+    return Response(status=HTTPStatus.OK)
+  if request.method == 'DELETE':
+    os.rename(base_path + '/projects/' + request.form['name'], base_path + '/projects/archived/' + request.form['name'])
+    return Response(status=HTTPStatus.OK)
 
 if __name__ == '__main__':
   if 'DEV' in os.environ:
