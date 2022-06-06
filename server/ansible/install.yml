@@ -54,6 +54,10 @@
 # IMPORT HOSTS (bring workers into ECP)
 ######################################################################################################
 
+- name: Import Hosts
+  import_playbook: routines/import_hosts.yml
+  when: is_runtime | bool
+
 ### Configure docker proxy and airgap settings if provided
 - name: add docker proxy to workers
   import_playbook: routines/add_dockerproxy.yml
@@ -62,10 +66,6 @@
 - name: add airgap to workers
   import_playbook: routines/add_airgap.yml
   when: docker_registry is defined and yum_repo is defined
-
-- name: Import Hosts
-  import_playbook: routines/import_hosts.yml
-  when: is_runtime | bool
 
 ######################################################################################################
 # INSTALL External Data Fabric

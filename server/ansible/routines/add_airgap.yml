@@ -50,6 +50,7 @@
   - name: configure airgap
     shell: hpecp httpclient put /api/v2/config/k8s --json-file ~/airgap.json
     when: docker_registry is defined and yum_repo is defined
+    register: airgap_configured
 
   - name: global proxy config
     copy:
@@ -58,6 +59,20 @@
       force: yes
     when: http_proxy is defined
 
-  - name: configure airgap
+  - name: configure global proxy
     shell: hpecp httpclient put /api/v2/config/global_proxy --json-file ~/global_proxy.json
     when: http_proxy is defined
+    register: proxy_configured
+
+  - name: reboot required
+    set_fact: 
+      reboot_required: "{{ airgap_configured.changed or proxy_configured.changed }}"
+    ### This is always true since API submit changes the task status
+    ## TODO: find an alternative to check if reboot needed
+
+- hosts: workers:gworkers
+  gather_facts: no
+  tasks:
+  - name: reboot for airgap
+    reboot:
+    when: reboot_required

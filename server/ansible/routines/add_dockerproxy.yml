@@ -17,11 +17,12 @@
     slurp:
       src: /etc/docker/daemon.json
     register: imported_json
+    ignore_errors: yes
 
   - name: configure private docker registry
     copy:
       dest: /etc/docker/daemon.json
-      content: "{{ imported_json.content|b64decode|from_json | default([]) | combine(registry_json | to_json ) }}"
+      content: "{{ imported_json.content | b64decode if not imported_json.failed else {} | combine( registry_json ) | to_json }}"
     register: docker_conf
     become: yes
     vars:
@@ -39,3 +40,4 @@
       name: docker
     when: docker_conf.changed
     become: yes
+    ignore_errors: yes

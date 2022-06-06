@@ -9,12 +9,12 @@
 
 - hosts: localhost
   vars:
-    controller_ips: "{{ (groups['controller'] | list) | default([])  }}"
-    gateway_ips: "{{ (groups['gateway'] | list) | default([])  }}"
-    picasso_ips: "{{ (groups['picasso'] | list) | default([])  }}"
-    k8s_ips: "{{ (groups['k8s'] | list) | default([])  }}"
-    mapr_ips: "{{ (groups['mapr'] | list) | default([]) }}"
-    ad_server_ips: "{{ groups['ad_server'] if (install_ad | bool) else ad_server) }}"
+    controller_ips: "{{ groups['controller'] | default([])  }}"
+    gateway_ips: "{{ groups['gateway'] | default([])  }}"
+    picasso_ips: "{{ groups['picasso'] | default([])  }}"
+    k8s_ips: "{{ groups['k8s'] | default([])  }}"
+    mapr_ips: "{{ groups['mapr'] | default([]) }}"
+    ad_server_ips: "{{ groups['ad_server'] if install_ad | bool else ad_server }}"
 
   gather_facts: no
   tasks:
@@ -156,7 +156,7 @@
       state: poweredon
       wait_for_ip_address: no
     delegate_to: localhost
-    with_items: "{{ adserver_ips }}"
+    with_items: "{{ ad_server_ips }}"
     register: _create_adserver
     async: 1200
     poll: 0

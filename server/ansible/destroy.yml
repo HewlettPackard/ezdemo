@@ -10,3 +10,6 @@
   import_playbook: routines/update_ssh_config.yml
   vars:
     op: remove
+
+- name: Clean up environment
+  import_playbook: routines/delete_settings.yml

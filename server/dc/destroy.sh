@@ -24,5 +24,4 @@
 set -euo pipefail
 
 rm hosts.ini > /dev/null 2>&1 || true
-rm my.tfvars > /dev/null 2>&1 || true
 rm vars.ini > /dev/null 2>&1 || true

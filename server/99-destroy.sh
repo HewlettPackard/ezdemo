@@ -40,32 +40,22 @@ pushd "${1}" > /dev/null
       "./destroy.sh"
    fi
 
+  rm my.tfvars > /dev/null 2>&1 || true
 popd > /dev/null
 
-(ls "${1}"/*run.log | xargs rm -f) 2> /dev/null || true
+## Run cleaning playbook
+ansible-playbook -i ansible/inventory.ini ansible/destroy.yml --extra-vars "target=${1}"
+
 (ls -d generated/*/ | xargs rm -rf) 2> /dev/null || true # Deletes all folders under generated, better than deleting the generated folder all together
 
-## Clean user environment
+## Clean user environment # TODO: move to ansible task
 [ ! -L ~/.hpecp.conf  ] && rm -f ~/.hpecp.conf || echo -n '' > ~/.hpecp.conf
 [ ! -L ~/.kube/config  ] && rm -f ~/.kube/config || echo -n '' >  ~/.kube/config
-
-## Run cleaning playbook
-ansible-playbook -i ansible/inventory.yml ansible/destroy.yml --extra-vars "target=${1}"
-
-source outputs.sh ${1}
-
-# If sockets are created for MCS
-if [[ ! -z "${GATW_PRV_DNS+x}" ]]
-then
-  for socket_file in "admin" "installer" "airflow" "kibana"
-  do
-    [[ -f "/tmp/MCS-socket-${socket_file}" ]] && ssh -S /tmp/MCS-socket-${socket_file} -O exit centos@${GATW_PRV_DNS} || true
-  done
-fi
 
 rm -f generated/output.json
 rm -f ansible/group_vars/all.yml
 rm -f ansible/inventory.ini
+(ls "${1}"/*run.log | xargs rm -f) 2> /dev/null || true
 
 echo "Environment destroyed"
 echo "SSH key-pair and CA certs are not removed!"
