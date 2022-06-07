@@ -33,13 +33,12 @@ set -euo pipefail
 
 source ./outputs.sh "${1}"
 
-CUSTOM_INI=""
-
 pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
 popd > /dev/null
 
-# Configure AD settings for new AD installation
+# Configure AD settings for new AD installation (force AD installation on cloud)
+[[ "${1}" == "aws" || "${1}" == "azure" ]] && export INSTALL_AD=true 
 [[ "$INSTALL_AD" == "true" ]] && AD_CONF=$(<./etc/default_ad_conf.ini)
 
 ANSIBLE_INVENTORY="####
@@ -77,10 +76,8 @@ k8s_version=${K8S_VERSION}
 project_id=${PROJECT_ID}
 
 ### Customization
-
 ${AD_CONF:-}
-${CUSTOM_INI}
-
+${CUSTOM_INI:-}
 "
 
 echo "${ANSIBLE_INVENTORY}" > ./ansible/inventory.ini

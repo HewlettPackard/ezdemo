@@ -4,7 +4,7 @@
   vars_prompt:
 
   vars:
-    ad_realm: "{{ ad_domain.split('.') | first | default('SAMDOM') }}"
+    ad_realm: "{{ (ad_domain | default('SAMDOM.EXAMPLE.COM')).split('.') | first }}"
 
   tasks:
     - name: Install ad_auth required tools for RedHat/CentOS 8
@@ -42,7 +42,7 @@
             chpass_provider = ldap
             access_provider = ldap
             ldap_uri = ldap://{{ ad_server | default(groups['ad_server'] | first) }}:389
-            ldap_search_base = {{ base_dn }}
+            ldap_search_base = {{ ad_base_dn }}
             ldap_id_use_start_tls = False
             ldap_tls_cacertdir = /etc/openldap/cacerts
             ldap_tls_reqcert = never
@@ -66,9 +66,9 @@
             ldap_idmap_range_min = 200000
             ldap_group_name = cn
             ldap_user_name = cn
-            ldap_default_bind_dn = {{ bind_dn }}
+            ldap_default_bind_dn = {{ ad_bind_dn }}
             ldap_user_shell = loginShell
-            ldap_default_authtok = {{ bind_pwd }}
+            ldap_default_authtok = {{ ad_bind_pwd }}
             ldap_user_fullname = cn
 
           [sssd]

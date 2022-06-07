@@ -34,17 +34,19 @@ pushd "${1}" > /dev/null
   TF_IN_AUTOMATION=1 terraform destroy ${EZWEB_TF:-} \
     -parallelism 12 \
     -var-file=<(cat ./*.tfvars) \
-    -auto-approve=true \
+    -auto-approve=true
 
+popd > /dev/null
+
+## Run cleaning playbook and then clean up the folder
+[ -f ansible/inventory.ini ] && ansible-playbook -i ansible/inventory.ini ansible/destroy.yml --extra-vars "target=${1}"
+
+pushd "${1}" > /dev/null
    if [[ -f "./destroy.sh" ]]; then
       "./destroy.sh"
    fi
-
   rm my.tfvars > /dev/null 2>&1 || true
 popd > /dev/null
-
-## Run cleaning playbook
-ansible-playbook -i ansible/inventory.ini ansible/destroy.yml --extra-vars "target=${1}"
 
 (ls -d generated/*/ | xargs rm -rf) 2> /dev/null || true # Deletes all folders under generated, better than deleting the generated folder all together
 

@@ -7,7 +7,16 @@
       dest: ~/.ssh
       state: directory
       mode: 0700
-    
+  - name: find xauth
+    shell: which xauth
+    register: xauth_cmd
+    when: op == "add"
+
+  - name: set xauth path
+    set_fact:
+      xauth_path: "{{ xauth_cmd is succeeded | ternary(xauth_cmd.stdout, '/dev/null') }}"
+    when: op == "add"
+
   - name: configure proxy host
     blockinfile:
       dest: ~/.ssh/config
@@ -21,6 +30,7 @@
           StrictHostKeyChecking no
           Compression yes
           ForwardX11 yes
+          XAuthLocation {{ xauth_path }}
           ServerAliveInterval 30
     when: target != "dc" and op == "add"
 
@@ -36,6 +46,7 @@
           StrictHostKeyChecking no
           Compression yes
           ForwardX11 yes
+          XAuthLocation {{ xauth_path }}
           ServerAliveInterval 30
           ConnectionAttempts 3
           {{ 'ProxyJump ezdemo_gateway' if target != "dc" else '' }}
@@ -47,11 +58,11 @@
       marker: '# {mark} ANSIBLE MANAGED HOST BLOCK'
     when: op == "remove"
 
-  - name: configure proxy host
+  - name: remove proxy host
     blockinfile:
       dest: ~/.ssh/config
       marker: '# {mark} ANSIBLE MANAGED PROXY BLOCK'
-    when: op == "remove"
+    when: target != "dc" and op == "remove"
 
   - name: clean known_hosts
     shell: ssh-keygen -R "{{ item }}" # >> /dev/null 2>&1

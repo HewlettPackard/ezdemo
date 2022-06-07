@@ -4,7 +4,7 @@
 
   tasks:
   - name: MCS tunnel for ports
-    shell: "ssh -S /tmp/MCS-socket-{{ item.portname }} -O exit centos@${{ (groups['gateway'] | default(['localhost'])) | first }} || true"
+    shell: "ssh -S /tmp/MCS-socket-{{ item.portname }} -O exit centos@${{ groups['gateway'] | default([]) | first | default('localhost') }} || true"
     with_items:
       - portname: admin
       - portname: installer
