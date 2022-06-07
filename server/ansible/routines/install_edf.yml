@@ -19,64 +19,67 @@
     become: yes
     when: not installer.stat.exists
 
-  # - shell: "fdisk -l | grep '100 GiB' | cut -d' ' -f2 | tr -d ':'"
-  #   register: mapr_disks
-  #   become: yes
+  - shell: "fdisk -l | grep '100 GiB' | cut -d' ' -f2 | tr -d ':'"
+    register: mapr_disks
+    become: yes
 
-  # - name: get node names
-  #   set_fact:
-  #     mapr_hosts: "{{ groups['mapr'] | map ('extract', hostvars, 'ansible_fqdn') }}"
+  - name: get node names
+    set_fact:
+      mapr_hosts: "{{ groups['mapr'] | map ('extract', hostvars, 'ansible_fqdn') }}"
 
-  # - name: update stanza
-  #   copy:
-  #     dest: /tmp/mapr.stanza
-  #     content: |
-  #       environment:
-  #         mapr_core_version: 7.0.0
-  #       config:
-  #         hosts:
-  #           {{ mapr_hosts | to_nice_yaml | indent(4) }}
-  #         ssh_id: {{ ansible_user_id }}
-  #         ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
-  #         security: True
-  #         enable_nfs: true
-  #         nfs_type: "NFSv3"
-  #         cluster_admin_id: mapr
-  #         cluster_admin_password: mapr
-  #         custom_pbs_disable: true
-  #         license_type: M7
-  #         mep_version: 8.1.0
-  #         disks:
-  #           {{ mapr_disks.stdout_lines | to_nice_yaml | indent(4) }}
-  #         disk_stripe: 1
-  #         cluster_name: "{{ project_id | regex_replace('[ _]', '') }}.datafabric.io"
-  #         services:
-  #           template-05-converged:
-  #           mapr-hivemetastore:
-  #             database:
-  #               name: hive
-  #               user: hive
-  #               password: mapr
-  #           mapr-grafana:
-  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
-  #           mapr-opentsdb:
-  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
-  #           mapr-collectd:
-  #           mapr-fluentd:
-  #           mapr-kibana:
-  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
-  #           mapr-elasticsearch:
-  #             enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
-  #           mapr-data-access-gateway:
-  #           mapr-mastgateway:
+  - name: update stanza
+    copy:
+      dest: /tmp/mapr.stanza
+      content: |
+        environment:
+          mapr_core_version: 7.0.0
+        config:
+          hosts:
+            {{ mapr_hosts | to_nice_yaml | indent(4) }}
+          ssh_id: {{ ansible_user_id }}
+          ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
+          security: "true"
+          enable_nfs: "true"
+          nfs_type: "NFSv3"
+          cluster_admin_password: "{{ admin_password }}"
+          # db_admin_user: root
+          # db_admin_password: {{ admin_password }}
+          # log_admin_password: {{ admin_password }}
+          # metrics_ui_admin_password: {{ admin_password }}
+          custom_pbs_disable: "true"
+          license_type: M7
+          mep_version: 8.1.0
+          disks:
+            {{ mapr_disks.stdout_lines | to_nice_yaml | indent(4) }}
+          disk_stripe: 1
+          cluster_name: "{{ project_id | regex_replace('[ _]', '') }}.datafabric.io"
+          services:
+            template-05-converged:
+            mapr-hivemetastore:
+              database:
+                name: hive
+                user: hive
+                password: {{ admin_password }}
+            mapr-grafana:
+              enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+            mapr-opentsdb:
+              enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+            mapr-collectd:
+            mapr-fluentd:
+            mapr-kibana:
+              enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+            mapr-elasticsearch:
+              enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
+            mapr-data-access-gateway:
+            mapr-mastgateway:
 
-  #     force: yes
+      force: yes
 
-  # - name: copy ssh key file
-  #   copy:
-  #     src: ../../generated/controller.prv_key
-  #     dest: "{{ ansible_user_dir }}/controller.prv_key"
-  #     mode: "0600"
+  - name: copy ssh key file
+    copy:
+      src: ../../generated/controller.prv_key
+      dest: "{{ ansible_user_dir }}/controller.prv_key"
+      mode: "0600"
 
   # - name: install from stanza
   #   shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"

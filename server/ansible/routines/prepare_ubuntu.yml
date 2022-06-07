@@ -5,42 +5,50 @@
   # - name: enable passwordless sudo
   #   shell: 'echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/$USER'
   tasks:
-  - name: Create MapR Group
-    group:
-      name: "mapr"
-      gid: "5000"
-      state: present
-    become: yes
+  # - name: Create MapR Group
+  #   group:
+  #     name: "mapr"
+  #     gid: "5000"
+  #     state: present
+  #   become: yes
 
-  - name: Create MapR User
-    user:
-      name: "mapr"
-      comment: "MapR default user"
-      uid: "5000"
-      group: "mapr"
-      groups: "mapr"
-      password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0" # password is mapr
-      createhome: true
-      update_password: on_create
-      shell: /bin/bash
-      state: present
-      append: true
-    become: yes
+  # - name: Create MapR User
+  #   user:
+  #     name: "mapr"
+  #     comment: "MapR default user"
+  #     uid: "5000"
+  #     group: "mapr"
+  #     groups: "mapr"
+  #     password: "$6$GzlcP5ei$E6P9QM40O6KJFLZ3wMcg3jzQBNxGXrf8yc77CbCmf0KtFSxK0mpCParhc3WVNEAm4fHKPAqyRV9rsiF6DAFlW0" # password is mapr
+  #     createhome: true
+  #     update_password: on_create
+  #     shell: /bin/bash
+  #     state: present
+  #     append: true
+  #   become: yes
 
   - name: clean up /etc/hosts
     lineinfile:
       path: /etc/hosts
-      regexp: 'ip6-|IPv6|::1|127.0.1.1'
+      # regexp: 'ip6-|IPv6|::1|127.0.1.1'
+      regexp: '127.0.1.1'
       state: absent
     become: yes
 
-  - name: build hosts file
-    lineinfile: 
-      dest: /etc/hosts
-      regexp: '.*{{ item }}$'
-      line: "{{item}} {{ hostvars[item].ansible_fqdn }} {{ hostvars[item].ansible_hostname }}"
-      state: present
-    with_items: "{{ groups['mapr'] }}"
+  # - name: build hosts file
+  #   lineinfile: 
+  #     dest: /etc/hosts
+  #     regexp: '.*{{ item }}$'
+  #     line: "{{item}} {{ hostvars[item].ansible_fqdn }} {{ hostvars[item].ansible_hostname }}"
+  #     state: present
+  #   with_items: "{{ groups['mapr'] }}"
+  #   become: yes
+
+  - name: set umask for installer
+    lineinfile:
+      path: /etc/login.defs
+      regexp: '^UMASK'
+      line: UMASK      0022
     become: yes
 
   - name: Ensure the locale exists
@@ -124,7 +132,7 @@
     become: yes
 
   - name: Install prerequisites
-    package: name="python3-pip, syslinux, openjdk-11-jdk, net-tools, iputils-arping, wamerican, rpcbind, nfs-common, gnupg2, python, syslinux-utils, expect" state=present
+    package: name="dnsutils, iputils-arping, netcat, nfs-common, ntp, ntpdate, sdparm, syslinux, sysstat, wamerican, rpcbind, gnupg2, python, syslinux-utils" state=present
     become: yes
 
   # - name: reboot mapr nodes

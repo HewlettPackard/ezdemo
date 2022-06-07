@@ -233,7 +233,7 @@ function App() {
                 >
                   { Object.keys(config).filter(k => !k.includes('region')).map( key => 
                       <FormField name={key} htmlfor={key} label={ key.toUpperCase() } key={key} margin='small'>
-                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
+                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') || key.includes('pwd') ? 'password' : 'text' } />
                       </FormField>
                     )}
                     { (provider.toLowerCase() === 'aws' || provider.toLowerCase() === 'azure') && <FormField name='region' htmlfor='region' label='REGION' key='region' required={ true } margin='small'>
@@ -261,7 +261,7 @@ function App() {
                         }
                       </Box>
                       <Box direction='row' justify='center'>
-                        { Object.keys(usersettings).filter(k => k.includes('is_') && k.includes('install_ad')).map( key => 
+                        { Object.keys(usersettings).filter(k => k.includes('is_') || k.includes('install_ad')).map( key => 
                             <CheckBox toggle reverse key={key} label={ key.replace('is_', '').toUpperCase() } checked={ usersettings[key] } onChange={ (e) => setUsersettings( old => ( {...old, [key]: !old[key] }) ) } />
                           )
                         }

@@ -1,6 +1,7 @@
 from crypt import methods
 from email.quoprimime import unquote
 from http import HTTPStatus
+import itertools
 from flask import Flask, jsonify, request, Response, send_from_directory, abort
 from flask_cors import CORS, cross_origin
 from waitress import serve
@@ -41,19 +42,26 @@ def home():
 @app.route('/<target>/config')
 def get_config(target):
   response = None
-  conf_file = base_path + '/' + get_target_dir(target) + '/config.json'
-  if os.path.isfile(conf_file) and os.path.getsize(conf_file) > 0:
-    with open(conf_file) as f:
-      response = json.load(f)
-  else:
-    with open(conf_file + '-template') as f:
-      js = json.load(f)
-      if 'user' not in js:
-        config.read(base_path + '/' + get_target_dir(target) + '/dc.ini')
-        for k,v in config.items('DC') + config.items('VMWARE') + config.items('CUSTOM'):
-          if v != '': 
+  search_path = os.path.join(base_path, get_target_dir(target))
+  conf_file =  os.path.join(search_path, 'config.json')
+  conf_template = os.path.join(search_path, 'config.json-template')
+  dc_file = os.path.join(search_path, 'dc.ini')
+  for file in [conf_file, conf_template, dc_file]:
+    try:
+      with open(file, "r") as f:
+        try:
+          response = json.load(f)
+          break
+        except json.JSONDecodeError:
+          config.read(file)
+          js = {}
+          for k,v in [ pair for items in [ config.items(section) for section in config.sections() ] for pair in items ]:
             js[k] = v
-      response = js
+          response = js
+          break
+    except OSError as err:
+      print(file, err.strerror)
+      response = Response(status=HTTPStatus.NO_CONTENT)
   return response
 
 @app.route('/usersettings')

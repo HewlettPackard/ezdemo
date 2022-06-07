@@ -1,7 +1,7 @@
 ######################################################################################################
 # DOCKER PROXY
 ######################################################################################################
-- hosts: "{{ groups['controllers'] | first }}"
+- hosts: "{{ groups['controllers'] | first | default([]) }}"
   gather_facts: false
   vars:
     docker_registry_username: "{{ docker_registry | urlsplit('username') | default('') }}"

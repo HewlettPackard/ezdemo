@@ -3,11 +3,9 @@ import { Grommet, Box, Notification, Button, DataTable, Layer, Card, Select, Tex
 import { Add, Edge, Amazon, Vmware, Connect } from 'grommet-icons'
 import { hpe as theme } from 'grommet-theme-hpe'
 
-function NewUI() {
-  // const [theme, setTheme] = React.useState('dark');
+export default () => {
   const [layer, setLayer] = React.useState()
-
-  return(
+  return (
     <Grommet full theme={theme}>
       <Box fill overflow="auto" align="stretch" flex elevation="xsmall">
         <Notification message="This UI is under development, things may work!" status="critical" title="Experimental Features" toast global />
@@ -16,7 +14,7 @@ function NewUI() {
           columns={[
             {header: "Project", property: "folder", primary: true},
             {header: "Environment", property: "target"}]}
-            data={[{"folder":"Test1","target":"aws"},{"folder":"Test2","target":"azure"}]} sortable size="small" onSelect select="selectthis()" paginate />
+           data={[{"folder":"Test1","target":"aws"},{"folder":"Test2","target":"azure"}]} sortable size="small" onSelect select="selectthis()" paginate />
         <Box align="start" justify="start" fill margin="small" elevation="xsmall">
           <Button label="Login" />
           {layer === 16 && (
@@ -49,7 +47,5 @@ function NewUI() {
         </Box>
       </Box>
     </Grommet>
-  );
+  )
 }
-
-export default NewUI;
