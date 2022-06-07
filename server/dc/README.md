@@ -46,18 +46,18 @@ Any lines after "#### Custom ####" will be copied as is to provide additional in
 #### Custom ####
 ad_server=""
 ad_domain="example.com"
-bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
-bind_pwd=""
-security_protocol="ldap" # defaults to ldaps
-bind_type="search_bind" # this is default
-base_dn="DC=example,DC=com"
-user_attribute="sAMAccountName" # this is default
-group_attribute="member" # defaults to memberOf
-type="Active Directory" # this is default
-port=389
+ad_bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
+ad_bind_pwd=""
+ad_security_protocol="ldap" # defaults to ldaps
+ad_bind_type="search_bind" # this is default
+ad_base_dn="DC=example,DC=com"
+ad_user_attribute="sAMAccountName" # this is default
+ad_group_attribute="member" # defaults to memberOf
+ad_type="Active Directory" # this is default
+ad_port=389
 ad_admin_group="CN=Administrators,CN=Users,DC=example,DC=com"
 ad_member_group="CN=Users,DC=example,DC=com"
-verify_peer=false # this is not used, always defaults to false
+ad_verify_peer=false # this is not used, always defaults to false
 
 http_proxy= ### add http proxy environment to all nodes (NOT TESTED)
 https_proxy= ### add https proxy environment to all nodes (NOT TESTED)
@@ -73,13 +73,13 @@ mapr_repo=http://www.local.site/repos/mapr/releases/
 
 - CentOS 7 template:
 
-  - template_user is configured with [paswordless sudo](https://www.google.com/search?q=centos+7+passwordless+sudo)
+  - vcenter_template_user is configured with [paswordless sudo](https://www.google.com/search?q=centos+7+passwordless+sudo)
 
   - Root volume with min 400GB
 
 - Ubuntu 20.04 template (if you want to deploy Standalone Data Fabric):
 
-  - mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)
+  - vcenter_mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)
 
 ## TODO
 

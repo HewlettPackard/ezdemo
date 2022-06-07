@@ -26,23 +26,23 @@
       password: "{{ vcenter_password }}"
       validate_certs: no
       datacenter_name: "{{ datacenter_name }}"
-      folder_name: "{{vcenter_folder}}"
+      folder_name: "{{ vcenter_folder }}"
       folder_type: vm
       state: present
     register: vm_folder_creation_result
     delegate_to: localhost
 
-  - name: Clone template {{ template_name }} to the Controller
+  - name: Clone template {{ vcenter_template_name }} to the Controller
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-ECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
+      template: "{{ vcenter_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_controller_memory }}"
@@ -79,17 +79,17 @@
 # GATEWAY Deployment
 #######################
 
-  - name: Clone template {{ template_name }} to the Gateway
+  - name: Clone template {{ vcenter_template_name }} to the Gateway
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-ECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
+      template: "{{ vcenter_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_gateway_memory }}"
@@ -122,17 +122,17 @@
 # ADSERVER Deployment
 #######################
 
-  - name: Clone template {{ template_name }} to the ADServer
+  - name: Clone template {{ vcenter_template_name }} to the ADServer
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-ECP-ADSERVER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
+      template: "{{ vcenter_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_adserver_memory }}"
@@ -166,17 +166,17 @@
 # PICASSO Deployment
 #######################
 
-  - name: Clone template {{ template_name }} to the PICASSO
+  - name: Clone template {{ vcenter_template_name }} to the PICASSO
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-ECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
+      template: "{{ vcenter_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_picasso_memory }}"
@@ -217,17 +217,17 @@
 # K8S Deployment
 #######################
 
-  - name: Clone template {{ template_name }} to the k8s
+  - name: Clone template {{ vcenter_template_name }} to the k8s
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-ECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ template_name }}"
+      template: "{{ vcenter_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_k8s_memory }}"
@@ -268,17 +268,17 @@
 # Standalone Data Fabric Deployment
 #######################
 
-  - name: Clone template {{ mapr_template_name }} to the mapr
+  - name: Clone template {{ vcenter_mapr_template_name }} to the mapr
     vmware_guest:
       hostname: "{{ vcenter_server }}"
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
       name: "{{ item }}-EDF-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
-      template: "{{ mapr_template_name }}"
+      template: "{{ vcenter_mapr_template_name }}"
       datacenter: "{{ datacenter_name }}"
-      folder: "{{vcenter_folder}}"
-      cluster: "{{ cluster_name }}"
+      folder: "{{ vcenter_folder }}"
+      cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
       hardware:
         memory_mb: "{{ vm_mapr_memory }}"

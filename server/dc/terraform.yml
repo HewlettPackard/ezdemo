@@ -31,9 +31,9 @@
       - "vCenter IP: {{ vcenter_server }}"
       - "vCenter Username: {{ vcenter_user }}"
       - "Datacentername: {{ datacenter_name }}"
-      - "Clustername: {{ cluster_name }}"
-      - "Templatename: {{ template_name }}"
-      - "DF Templatename: {{ mapr_template_name }}"
+      - "Clustername: {{ vcenter_cluster_name }}"
+      - "Templatename: {{ vcenter_template_name }}"
+      - "DF Templatename: {{ vcenter_mapr_template_name }}"
 
 ####
 # check inventory and find the right deployment

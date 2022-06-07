@@ -141,14 +141,14 @@
           "external_identity_server":  {
             "host":"{{ install_ad | bool | ternary(groups['ad_server'] | first, ad_server) }}",
             "port": {{ ad_port | default('636') | int }},
-            "bind_dn":"{{ bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
-            "bind_pwd":"{{ bind_pwd }}",
-            "user_attribute":"{{ user_attribute | default('sAMAccountName') }}",
-            "group_attribute":"{{ group_attribute | default('memberOf') }}",
-            "bind_type":"{{ bind_type | default('search_bind') }}",
-            "security_protocol":"{{ security_protocol | default('ldaps') }}",
-            "base_dn":"{{ base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
-            "type":"{{ type | default('Active Directory') }}",
+            "bind_dn":"{{ ad_bind_dn | default('cn=Administrator,CN=Users,DC=samdom,DC=example,DC=com') }}",
+            "bind_pwd":"{{ ad_bind_pwd }}",
+            "user_attribute":"{{ ad_user_attribute | default('sAMAccountName') }}",
+            "group_attribute":"{{ ad_group_attribute | default('memberOf') }}",
+            "bind_type":"{{ ad_bind_type | default('search_bind') }}",
+            "security_protocol":"{{ ad_security_protocol | default('ldaps') }}",
+            "base_dn":"{{ ad_base_dn | default('CN=Users,DC=samdom,DC=example,DC=com') }}",
+            "type":"{{ ad_type | default('Active Directory') }}",
             "verify_peer": false
           }
         }
