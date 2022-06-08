@@ -77,7 +77,7 @@ resource "aws_volume_attachment" "gworker-volume-attachment-sdc" {
   force_detach = true
 }
 ### OUTPUTS
-output "gworkers_private_ip" {
+output "gworker_private_ips" {
   value = aws_instance.gworkers.*.private_ip
 }
 output "gworkers_private_dns" {

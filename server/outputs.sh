@@ -53,7 +53,7 @@ WRKR_PRV_IPS=($(jq -r '.workers_private_ip.value[]' generated/output.json))
 
 #### GPU WORKERS
 GWORKER_COUNT=($(jq -r '.gworker_count.value' generated/output.json))
-GWRKR_PRV_IPS=($(jq -r '.gworkers_private_ip.value[]' generated/output.json))
+GWRKR_PRV_IPS=($(jq -r '.gworker_private_ips.value[]' generated/output.json))
 
 #### MAPR NODES
 MAPR_COUNT=($(jq -r '.mapr_count.value' generated/output.json))

@@ -74,7 +74,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "gwrkdatadisk-attach" {
 }
 
 ## Outputs
-output "gworkers_private_ip" {
+output "gworker_private_ips" {
   value = azurerm_network_interface.gworkernics.*.private_ip_address
 }
 output "gworkers_private_dns" {

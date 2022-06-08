@@ -57,7 +57,7 @@ output "workers_private_ip" {
 output "gworker_count" {
   value = 0
 }
-output "gworkers_private_ip" {
+output "gworker_private_ips" {
   value = []
 }
 output "mapr_count" {
