@@ -6,7 +6,7 @@
 
 - [x] Select number of nodes per type (picasso/k8s/mapr)
 
-- [ ] Output while running ansible-create.sh
+- [ ] Output while running ansible-create.sh, or switch stage 2 to ansible
 
 - [ ] GPU Worker support
 

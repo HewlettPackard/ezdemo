@@ -17,6 +17,7 @@ variable "client_secret" { }
 variable "tenant_id" { }
 
 variable "admin_user" { default = "centos" }
+variable "mapr_admin_user" { default = "rocky" }
 
 variable "vpc_cidr_block" { default = "10.1.0.0/16" } 
 variable "subnet_cidr_block" { default = "10.1.0.0/24" }

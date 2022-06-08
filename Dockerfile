@@ -6,7 +6,7 @@ COPY . ./
 RUN npm run build
 
 FROM python:3-slim
-LABEL Name=ezdemo Version=0.0.2
+LABEL Name=ezdemo Version=1.0.0
 ENV PATH /root/.local/bin:$PATH
 
 RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \

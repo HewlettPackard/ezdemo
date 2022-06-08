@@ -23,7 +23,7 @@
 
 set -euo pipefail
 
-./ansible-delete.sh ## workaround for terraform not processing lifecycle_commands
+# ./ansible-delete.sh ## workaround for terraform not processing lifecycle_commands
 
 rm hosts.ini > /dev/null 2>&1 || true
 rm vars.ini > /dev/null 2>&1 || true

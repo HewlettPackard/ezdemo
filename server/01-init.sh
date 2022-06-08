@@ -41,7 +41,7 @@ fi
 
 SSH_PUB_KEY=$(cat ./generated/controller.pub_key)
 SSH_PRV_KEY=$(cat ./generated/controller.prv_key)
-SSH_PRV_KEY_B64=$(base64 ./generated/controller.prv_key)
+SSH_PRV_KEY_B64=$(base64 -i ./generated/controller.prv_key)
 
 . ./user_settings.sh
 

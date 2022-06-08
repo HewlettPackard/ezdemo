@@ -1,4 +1,4 @@
-# Worker NICs
+# MapR NICs
 resource "azurerm_network_interface" "maprnics" {
     count                = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
     name                 = "mapr${count.index + 1}-nic"
@@ -11,7 +11,7 @@ resource "azurerm_network_interface" "maprnics" {
     }
 }
 
-# Worker VMs
+# MapR VMs
 resource "azurerm_linux_virtual_machine" "mapr" {
   count                 = var.is_mapr ? var.is_mapr_ha ? var.mapr_count : 1 : 0
   name                  = "mapr${count.index + 1}"
@@ -19,9 +19,9 @@ resource "azurerm_linux_virtual_machine" "mapr" {
   resource_group_name   = azurerm_resource_group.resourcegroup.name
   network_interface_ids = [element(azurerm_network_interface.maprnics.*.id, count.index)]
   size                  = var.mapr_instance_type
-  admin_username        = var.admin_user
+  admin_username        = var.mapr_admin_user
   admin_ssh_key {
-      username = var.admin_user
+      username = var.mapr_admin_user
       public_key = file(pathexpand(var.ssh_pub_key_path))
   }
   os_disk {
@@ -35,11 +35,16 @@ resource "azurerm_linux_virtual_machine" "mapr" {
       # offer     = "CentOS"
       # sku       = "8_4"
       # version   = "latest"
-      publisher = "Canonical"
-      offer     = "0001-com-ubuntu-server-focal"
-      sku       = "20_04-lts-gen2"
+      publisher = "erockyenterprisesoftwarefoundationinc1653071250513"
+      offer     = "rockylinux"
+      sku       = "free"
       version   = "latest"
   }
+  plan { ### Required since rocky set free offer under a plan
+    name        = "free"
+    product     = "rockylinux"
+    publisher   = "erockyenterprisesoftwarefoundationinc1653071250513"
+  } 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.storageaccount.primary_blob_endpoint
   }

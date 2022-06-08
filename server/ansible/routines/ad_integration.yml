@@ -4,7 +4,7 @@
   vars_prompt:
 
   vars:
-    ad_realm: "{{ (ad_domain | default('SAMDOM.EXAMPLE.COM')).split('.') | first }}"
+    ad_realm: "{{ ad_domain | default('SAMDOM.EXAMPLE.COM') | upper }}"
 
   tasks:
     - name: Install ad_auth required tools for RedHat/CentOS 8
@@ -33,7 +33,7 @@
       become: yes
       vars:
         sssd_file: |-
-          [domain/{{ ad_realm | lower }}]
+          [domain/{{ ad_realm }}]
             debug_level = 3
             autofs_provider = ldap
             cache_credentials = True
@@ -73,7 +73,7 @@
 
           [sssd]
             services = nss, pam, autofs
-            domains = {{ ad_realm | lower }}
+            domains = {{ ad_domain | lower }}
 
           [nss]
 
@@ -91,15 +91,40 @@
 
           [ifp]
 
-          [secrets]
-
           [session_recording]
+      when: ansible_facts['os_family'] == 'Debian'
 
     - shell: pam-auth-update --enable mkhomedir
       become: yes
+      when: ansible_facts['os_family'] == 'Debian'
+
+    - name: ensure AD can be discovered from hosts (cloud providers dont resolve to self-installed AD)
+      lineinfile:
+        dest: /etc/hosts
+        line: "{{ ad_server | default(groups['ad_server'] | first) }}     {{ ad_domain }}"
+      become: yes
+      when: install_ad | bool
+
+    - shell: "realm list | grep -q {{ ad_domain }}"
+      register: realm_joined
+      ignore_errors: yes
+
+    - shell: |
+        authselect select sssd --force
+        echo "sudoers:    files sss" >> /etc/nsswitch.conf
+        echo "session optional pam_oddjob_mkhomedir.so skel=/etc/skel/ umask=0022" >> /etc/pam.d/system-auth
+        update-crypto-policies --set DEFAULT:AD-SUPPORT
+      become: yes
+      when: realm_joined is failed and (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8')
 
     - service: name=oddjobd state=restarted enabled=yes
       become: yes
+      when: realm_joined is failed
 
     - service: name=sssd state=restarted enabled=yes
       become: yes
+      when: realm_joined is failed
+
+    - shell: "echo {{ ad_bind_pwd }} | realm join {{ ad_domain }} ; realm permit -a"
+      become: yes
+      when: realm_joined is failed and ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'

@@ -70,9 +70,9 @@
 ######################################################################################################
 # INSTALL External Data Fabric
 ######################################################################################################
-- name: Prepare EDF Hosts
-  import_playbook: routines/prepare_ubuntu.yml
-  when: is_mapr | bool
+# - name: Prepare EDF Hosts
+#   import_playbook: routines/prepare_ubuntu.yml
+#   when: is_mapr | bool
 
 - name: Join EDF hosts to AD
   import_playbook: routines/ad_integration.yml

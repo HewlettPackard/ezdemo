@@ -10,3 +10,5 @@
       - portname: installer
       - portname: airflow
       - portname: kibana
+      - portname: drill
+      - portname: dag

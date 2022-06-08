@@ -37,8 +37,8 @@ pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
 popd > /dev/null
 
-# Configure AD settings for new AD installation (force AD installation on cloud)
-[[ "${1}" == "aws" || "${1}" == "azure" ]] && export INSTALL_AD=true 
+# Configure AD settings for new AD installation (force AD installation on cloud) and enable monitoring on DF if MAPR_HA set
+[[ "${1}" == "aws" || "${1}" == "azure" ]] && export INSTALL_AD=true && [[ "${IS_MAPR_HA}" == "true" ]] && export CUSTOM_INI="mapr_monitoring=true"
 [[ "$INSTALL_AD" == "true" ]] && AD_CONF=$(<./etc/default_ad_conf.ini)
 
 ANSIBLE_INVENTORY="####
@@ -55,7 +55,7 @@ ${AD_PRV_IP:-}
 [mapr]
 $(echo ${MAPR_PRV_IPS[@]:- } | sed 's/ /\n/g')
 [mapr:vars]
-ansible_user=ubuntu
+ansible_user=rocky
 [all:vars]
 ansible_connection=ssh
 ansible_user=centos

@@ -77,9 +77,17 @@ mapr_repo=http://www.local.site/repos/mapr/releases/
 
   - Root volume with min 400GB
 
-- Ubuntu 20.04 template (if you want to deploy Standalone Data Fabric):
+~~- Ubuntu 20.04 template (if you want to deploy Standalone Data Fabric):~~
 
-  - vcenter_mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)
+  ~~- vcenter_mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)~~
+
+- Rocky Linux 8 template for Data Fabric:
+  
+  - vcenter_mapr_template_user configured with passwordless sudo (same as CentOS7)
+  
+  - Has cloud-init and perl packages installed (for dynamic IP assignment)
+
+  - Root volume with min 400GB
 
 ## TODO
 

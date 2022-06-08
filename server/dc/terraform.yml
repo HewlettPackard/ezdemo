@@ -117,7 +117,7 @@
 # Set baseline users and connectivity for hosts (aligning with cloud images)
 ###
 
-- hosts: all:!mapr
+- hosts: all:!mapr_ubuntu
   gather_facts: no
   tasks:
   - name: ensure centos user exist
@@ -135,6 +135,23 @@
       key: "{{ lookup('file', '../generated/controller.pub_key') }}"
 
 - hosts: mapr
+  gather_facts: no
+  tasks:
+  - name: ensure rocky user exist
+    user:
+      name: rocky
+      groups: wheel
+      shell: /bin/bash
+      createhome: true
+      append: true
+    become: yes
+  - name: add ssh key to rocky user
+    authorized_key:
+      user: rocky
+      state: present
+      key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+
+- hosts: mapr_ubuntu
   gather_facts: no
   tasks:
   - name: ensure ubuntu user exist
