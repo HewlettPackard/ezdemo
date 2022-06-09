@@ -30,7 +30,8 @@
     set_fact:
       mapr_hosts: "{{ groups['mapr'] | map ('extract', hostvars, 'ansible_fqdn') }}"
 
-  - name: update stanza
+  #### TODO: install only 3 nodes as workaround - non-CLDB nodes failing to configure disks
+  - name: stanza for first 3 nodes
     copy:
       dest: /tmp/mapr.stanza
       content: |
@@ -45,16 +46,12 @@
           db_admin_password: {{ admin_password }}
           db_admin_user: root
           debug_set: false
-          disk_format: true
-          disk_stripe: 1
-          disks:
-          - /dev/xvdb
           elasticsearch_path: /opt/mapr/es_db
           enable_encryption_at_rest: true
           enable_min_metrics_collection: true
           enable_nfs: true
           hosts:
-            {{ mapr_hosts | to_nice_yaml | indent(4) }}
+            {{ mapr_hosts[:3] | to_nice_yaml | indent(4) }}
           license_type: M7
           log_admin_password: {{ admin_password }}
           mep_version: 8.1.0
@@ -65,17 +62,10 @@
           ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
           disks:
             {{ mapr_disks.stdout_lines | to_nice_yaml | indent(4) }}
+          disk_format: true
           disk_stripe: 1
           services:
             template-05-converged:
-            mapr-airflow:
-              enabled: true
-            mapr-airflow-client:
-              enabled: true
-            mapr-airflow-scheduler:
-              enabled: true
-            mapr-airflow-webserver:
-              enabled: true
             mapr-hivemetastore:
               database:
                 create: true
@@ -89,7 +79,7 @@
             mapr-opentsdb:
               enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
             mapr-collectd:
-            # mapr-fluentd:
+            mapr-fluentd:
             mapr-kibana:
               enabled: {{ mapr_monitoring is defined and mapr_monitoring | bool }}
             mapr-elasticsearch:
@@ -108,6 +98,10 @@
   - name: install from stanza
     shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
     when: stanza.changed
+    register: first_install
+    failed_when: 
+      - first_install.rc != 0
+      - "'Install is not required' not in first_install.stderr"
 
   - name: copy the license
     copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
@@ -119,12 +113,16 @@
   #   become: yes
 
   - name: create ticket for user
-    shell: "echo {{ admin_password }} | maprlogin password -user mapr"
+    shell: 'echo "{{ admin_password }}" | maprlogin password -user mapr'
 
   - name: install mapr license
     shell: |
       [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
     ignore_errors: yes
+    register: licensed
+    failed_when: 
+      - licensed.rc != 0
+      - "'license exists' not in licensed.stdout"
 
 ##### TODO: Query the service information, get which service is running on which node and setup forwarding accordingly
 #####

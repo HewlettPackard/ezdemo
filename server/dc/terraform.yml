@@ -145,13 +145,15 @@
       createhome: true
       append: true
     become: yes
+
   - name: add ssh key to rocky user
     authorized_key:
       user: rocky
       state: present
       key: "{{ lookup('file', '../generated/controller.pub_key') }}"
+    become: yes
 
-- hosts: mapr_ubuntu
+- hosts: "{{ groups['mapr_ubuntu'] | default([]) }}"
   gather_facts: no
   tasks:
   - name: ensure ubuntu user exist
@@ -162,6 +164,7 @@
       createhome: true
       append: true
     become: yes
+    
   - name: add ssh key to ubuntu user
     authorized_key:
       user: ubuntu
