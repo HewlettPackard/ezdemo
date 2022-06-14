@@ -1,16 +1,13 @@
-from crypt import methods
-from email.quoprimime import unquote
+from urllib import response
+from urllib.parse import urlparse
+from hpecp import ContainerPlatformClient
 from http import HTTPStatus
-import itertools
-from flask import Flask, jsonify, request, Response, send_from_directory, abort
+from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS, cross_origin
 from waitress import serve
-# from sys import platform
 import subprocess
 import os, json
 from configparser import ConfigParser
-
-# from werkzeug.wrappers import response
 
 base_path = os.path.dirname(__file__)
 
@@ -133,15 +130,97 @@ def getkey():
     return Response(status=HTTPStatus.NO_CONTENT)
 
 ### v2 functions
-@app.route('/projects', methods=['GET', 'PUT', 'DELETE'])
-def get_projects():
-  if request.method == 'GET':
-    return jsonify([d for d in os.listdir(base_path + '/projects/') if d != 'archived' ])
-  if request.method == 'PUT':
-    os.mkdir(base_path + '/projects/' + request.form['name'])
-    return Response(status=HTTPStatus.OK)
+# @app.route('/projects', methods=['GET', 'PUT', 'DELETE'])
+# def get_projects():
+#   if request.method == 'GET':
+#     return jsonify([d for d in os.listdir(base_path + '/projects/') if d != 'archived' ])
+#   if request.method == 'PUT':
+#     os.mkdir(base_path + '/projects/' + request.form['name'])
+#     return Response(status=HTTPStatus.OK)
+#   if request.method == 'DELETE':
+#     os.rename(base_path + '/projects/' + request.form['name'], base_path + '/projects/archived/' + request.form['name'])
+#     return Response(status=HTTPStatus.OK)
+
+# @app.route('/yaml/<filename>', methods=['GET'])
+# def get_yaml(filename):
+#   if request.method == 'GET':
+#     try:
+#       return send_from_directory(directory=base_path + '/files/yaml/', path=filename)
+#     except:
+#       return Response(status=HTTPStatus.NOT_FOUND)
+
+@app.route('/platform/<op>', methods=['POST', 'DELETE'])
+def platform(op=None):
+  data = request.get_json(force=True)
+  try:
+    url = urlparse(data['url'])
+  except Exception as err:
+    print('Invalid request', f"{err=}")
+    return Response(status=HTTPStatus.UNAUTHORIZED)
+
+  if data['payload'] is not None and 'tenant' in data['payload']:
+    client = ContainerPlatformClient(
+            username=data['username'],
+            password=data['password'],
+            api_host=url.hostname,
+            api_port=int(url.port or 8080),
+            use_ssl=url.scheme == 'https',
+            verify_ssl=False,
+            tenant=data['payload']['tenant']['_links']['self']['href']
+          )
+  else:
+    client = ContainerPlatformClient(
+            username=data['username'],
+            password=data['password'],
+            api_host=url.hostname,
+            api_port=int(url.port or 8080),
+            use_ssl=url.scheme == 'https',
+            verify_ssl=False
+          )
+
+  if request.method == 'POST':
+    try:
+      if op == 'connect':
+        client.create_session() # Login
+        return jsonify(client.config.get())
+      elif op == 'list':
+        client.create_session() # Login
+        # try: # get cluster list if user has access
+        #   clusters = { 'clusters' : [({ 'id': x.id, 'name': x.name, 'description': x.description, 'k8s_version': x.k8s_version, 'status': x.status}) for x in client.k8s_cluster.list()] }
+        # except Exception:
+        #   clusters = { 'clusters' : [] }
+        # query details for each tenant
+        tenants = { 'tenants' : [ y.json for y in [ client.tenant.get(t) for t in [ x.id for x in client.tenant.list() ] ] ] }
+        # or get simple information about tenants
+        # tenants = { 'tenants' : [({ 'id': x.id, 'name': x.name, 'description': x.description,'status': x.status, 'tenant_type': x.tenant_type }) for x in client.tenant.get('/api/v1/tenant/')] }
+        return jsonify(tenants)
+        # return jsonify({**clusters, **tenants})
+      # elif op == 'tenants':
+      #   client.create_session() # Login
+      #   return jsonify([({ 'id': x.id, 'name': x.name, 'description': x.description,'status': x.status, 'tenant_type': x.tenant_type }) for x in client.tenant.list()])
+      elif op == 'deploy':
+        tenant = data['payload']['tenant']
+        app = data['payload']['app']
+        
+        # ensure mlops enabled and datatap/tenantstorage configured in the tenant
+        # get kubeconfig
+        # create user secret - need kubeconfig, username, namespace
+        # create mlflow cluster - needs mlflow sc, namespace
+        # create training cluster - needs user sc, namespace
+        # create notebook - need kubeconfig, username, namespace, clusters (mlflow?, training), secrets (user sc, mlflow sc), 
+        # update yaml files
+        # submit jobs
+        
+        client.create_session() # Login
+        
+        return jsonify(tenant)
+    except Exception as err:
+      print(f"{err=}, {type(err)=}")
+      return Response(format(err), status=HTTPStatus.UNAUTHORIZED)
+
+    return Response(status=HTTPStatus.NOT_IMPLEMENTED)
+      
   if request.method == 'DELETE':
-    os.rename(base_path + '/projects/' + request.form['name'], base_path + '/projects/archived/' + request.form['name'])
     return Response(status=HTTPStatus.OK)
 
 if __name__ == '__main__':

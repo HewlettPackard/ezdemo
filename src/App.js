@@ -4,7 +4,7 @@ import { Grommet, Box, Card, CardFooter, CheckBox, Button, Text, TextInput, Form
 import { hpe } from 'grommet-theme-hpe';
 import * as Icons from 'grommet-icons';
 import regions from './regions';
-import NewUI from './NewUI';
+import ProjectFocus from './projectFocus';
 
 function App() {
   const [theme, setTheme] = React.useState('dark');
@@ -23,7 +23,7 @@ function App() {
   const [gwready, setGwready] = React.useState(false);
   const [MCSready, setMCSready] = React.useState(false);
   const [prvkey, setPrvkey] = React.useState(false);
-  const [newui, setNewui] = React.useState(false);
+  const [projectFocus, setprojectFocus] = React.useState(false);
   const outputRef = React.useRef(undefined);
   const srvUrl = 'http://localhost:4000'
  
@@ -184,7 +184,7 @@ function App() {
           <Button icon={ <Icons.Ezmeral color='brand' /> } onClick={ () => reset() } />
           {/* Providers */}
           <Box animation='zoomIn'>
-            { !newui && providers && <RadioButtonGroup id='target-id' 
+            { !projectFocus && providers && <RadioButtonGroup id='target-id' 
               name='target' 
               direction='row'
               justify='evenly'
@@ -200,13 +200,13 @@ function App() {
               checked={ theme === 'dark' ? false : true }
               onChange={ () => setTheme(theme === 'dark' ? 'light' : 'dark')}
             />
-            { !newui && <CheckBox 
+            { !projectFocus && <CheckBox 
               toggle reverse
               label={ showoutput ? <Icons.Console /> : <Icons.Desktop /> }
               checked={ showoutput ? true : false }
               onChange={ () => setShowoutput(!showoutput) }
             /> }
-            { !newui && <CheckBox 
+            { !projectFocus && <CheckBox 
               toggle reverse
               label={ showconfig ? <Icons.HostMaintenance /> : <Icons.System /> }
               checked={ showconfig ? true : false }
@@ -214,17 +214,17 @@ function App() {
             /> }
             { <CheckBox 
               toggle reverse
-              label={ newui ? <Icons.Desktop /> : <Icons.TestDesktop /> }
-              checked={ newui ? true : false }
-              onChange={ () => setNewui(!newui) }
+              label={ <Icons.Apps /> }
+              checked={ projectFocus ? true : false }
+              onChange={ () => setprojectFocus(!projectFocus) }
             /> }
           </Box>
         </Box>
         {/* Content area */}
         <Box flex overflow="auto" justify='between'>
-          { newui && <NewUI />}
+          { projectFocus && <ProjectFocus />}
           {/* Configure */}
-          { ! newui && showconfig && provider &&
+          { ! projectFocus && showconfig && provider &&
             <Card margin='small' flex animation='zoomIn' overflow='auto'>
               <Form
                 value= { config }
@@ -270,7 +270,7 @@ function App() {
                   </Form>
             </Card> }
           {/* Run */}
-          { ! newui && provider && (! Object.values(config).some(v => v===''))
+          { ! projectFocus && provider && (! Object.values(config).some(v => v===''))
             && <Box animation='zoomIn' direction='row' justify='between' margin='none'>
             <Button 
               label={ 'Deploy on ' + provider } 
@@ -280,7 +280,7 @@ function App() {
             />
           </Box>}
 
-          { ! newui && showoutput && 
+          { ! projectFocus && showoutput && 
             <Card margin='small' flex animation='zoomIn' overflow='auto'>
               <TextArea 
                 readOnly 
@@ -296,7 +296,7 @@ function App() {
         {/* Footer */}
         <Box flex={false} pad="none" justify='end'>
           <Footer background='brand' pad='xsmall'>
-              { ! newui && <Fragment>
+              { ! projectFocus && <Fragment>
                 { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
                 { spin && <Text color='status-warning'>Please wait...</Text> }
                 { error && <Text tip={ error } color='red'>{ error.substring(0,50) }...</Text> }

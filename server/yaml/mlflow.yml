@@ -1,0 +1,34 @@
+apiVersion: "kubedirector.hpe.com/v1beta1"
+kind: "KubeDirectorCluster"
+metadata:
+  name: "$MLFLOW_CLUSTER_NAME"
+  namespace: "${KUBEATNS##* }"
+  labels:
+    description: "mlflow"
+spec:
+  app: "mlflow"
+  namingScheme: "CrNameRole"
+  appCatalog: "local"
+  connections:
+    secrets:
+      - mlflow-sc
+  roles:
+    -
+      id: "controller"
+      members: 1
+      resources:
+        requests:
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+        limits:
+          cpu: "2"
+          memory: "4Gi"
+          nvidia.com/gpu: "0"
+      storage:
+        size: "20Gi"
+        storageClassName: "dfdemo"
+
+      #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
+      podLabels:
+        hpecp.hpe.com/dtap: "hadoop2"
