@@ -1,4 +1,4 @@
-from urllib import response
+from functools import reduce
 from urllib.parse import urlparse
 from hpecp import ContainerPlatformClient
 from http import HTTPStatus
@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS, cross_origin
 from waitress import serve
 import subprocess
-import os, json
+import os, json, base64
 from configparser import ConfigParser
 
 base_path = os.path.dirname(__file__)
@@ -30,6 +30,9 @@ web_env['EZWEB_TF'] = '-no-color'
 
 def get_target_dir(env):
   return [x for x,y in ProviderName.items() if y.lower() == env.lower()][0]
+
+def get_base64_string(str):
+  return base64.b64encode(str.encode()).decode()
 
 @app.route('/')
 @cross_origin()
@@ -198,24 +201,51 @@ def platform(op=None):
       # elif op == 'tenants':
       #   client.create_session() # Login
       #   return jsonify([({ 'id': x.id, 'name': x.name, 'description': x.description,'status': x.status, 'tenant_type': x.tenant_type }) for x in client.tenant.list()])
-      elif op == 'deploy':
+      elif op == 'apply' or op == 'delete':
         tenant = data['payload']['tenant']
         app = data['payload']['app']
-        
-        # ensure mlops enabled and datatap/tenantstorage configured in the tenant
-        # get kubeconfig
-        # create user secret - need kubeconfig, username, namespace
-        # create mlflow cluster - needs mlflow sc, namespace
-        # create training cluster - needs user sc, namespace
-        # create notebook - need kubeconfig, username, namespace, clusters (mlflow?, training), secrets (user sc, mlflow sc), 
-        # update yaml files
-        # submit jobs
-        
         client.create_session() # Login
-        
-        return jsonify(tenant)
+
+        # TODO: ensure mlops enabled and datatap/tenantstorage configured in the tenant etc
+
+        if not tenant['features']['ml_project'] or not tenant['state'] == 'ready':
+          return jsonify('Tenant not ready')
+
+        # get replacement parameters
+        # t_id = client.tenant_config
+        ns = tenant['namespace']
+        kubeconfig = get_base64_string(client.tenant.k8skubeconfig())
+
+        # Replacements
+        repls = (
+          ('TENANTNS', ns),
+          ('KUBECONFIG', kubeconfig),
+          ('USERNAME', data['username']),
+          ('USERID', data['username']),
+          ('STORAGECLASS', 'CHANGEME'),
+          ('KCSECRET', 'CHANGEME'),
+          ('NBCLUSTER', data['username'] + '_Notebook'),
+          ('TRAINING_CLUSTER', data['username'] + '_Training'),
+          ('MLFLOW_CLUSTER', data['username'] + '_Mlflow')
+        )
+        # update yaml files
+        for file in app['deploy']:
+          loaded_yaml = ""
+          with open(os.path.join(base_path, 'yaml', file['yaml']), 'r') as stream:
+            for line in stream:
+              loaded_yaml += line
+          # submit jobs
+          try:
+            cleaned_yaml = reduce(lambda a, kv: a.replace(*kv), repls, loaded_yaml)
+            return jsonify(client.k8s_cluster.run_kubectl_command(tenant['k8s_cluster'], op, get_base64_string(cleaned_yaml)))
+          except BaseException as err:
+            print(f"{err=}")
+            return jsonify(err.message), HTTPStatus.NOT_ACCEPTABLE
+                
+        return Response(status=HTTPStatus.OK)
+
     except Exception as err:
-      print(f"{err=}, {type(err)=}")
+      print(f"{err=}")
       return Response(format(err), status=HTTPStatus.UNAUTHORIZED)
 
     return Response(status=HTTPStatus.NOT_IMPLEMENTED)

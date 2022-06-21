@@ -33,6 +33,17 @@ const apps =
         "yaml": 'notebook.yml'
       }
     ]
+  },
+  {
+    "title": "Hello World",
+    "description": "Welcome to Kubernetes",
+    "depends": [],
+    "deploy":[
+      {
+        "name": "helloworld",
+        "yaml": 'helloworld.yml'
+      }
+    ]
   }
 ]
 

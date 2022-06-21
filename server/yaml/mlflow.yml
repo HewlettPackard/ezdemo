@@ -1,8 +1,8 @@
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
 metadata:
-  name: "$MLFLOW_CLUSTER_NAME"
-  namespace: "${KUBEATNS##* }"
+  name: "MLFLOW_CLUSTER_NAME"
+  namespace: "TENANTNS"
   labels:
     description: "mlflow"
 spec:
@@ -27,7 +27,7 @@ spec:
           nvidia.com/gpu: "0"
       storage:
         size: "20Gi"
-        storageClassName: "dfdemo"
+        storageClassName: "STORAGECLASS"
 
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
       podLabels:

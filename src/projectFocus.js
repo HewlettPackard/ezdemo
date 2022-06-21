@@ -1,17 +1,20 @@
 import React, { Fragment } from 'react'
-import { Box, Notification, Button, Layer, TextInput, Form, FormField, DataTable, Text, Tip, CheckBox, Card, CardHeader, CardBody, CardFooter, Grid } from 'grommet'
-import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, StatusCritical, StatusGood, User } from 'grommet-icons'
+import { Box, Notification, Button, Layer, TextInput, Form, FormField, DataTable, Text, Tip, CheckBox, Card, CardHeader, CardBody, CardFooter, Grid, TextArea } from 'grommet'
+import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, StatusCritical, StatusGood, Trash, User } from 'grommet-icons'
 import apps from './foucsapps';
 
 function ProjectFocus() {
   const [remember, setRemember] = React.useState(true);
   const [layer, setLayer] = React.useState();
-  const [credentials, setCredentials] = React.useState(false);
+  const [alert, setAlert] = React.useState(null);
+  const [credentials, setCredentials] = React.useState({ 'url': '', 'username': '', 'password': ''});
   const [platform, setPlatform] = React.useState();
 
   // load credentials if saved
   React.useEffect(() => {
-    setCredentials(JSON.parse(localStorage.getItem('ezmeral')));
+    var stored = localStorage.getItem('ezmeral');
+    if ( stored )
+      setCredentials(JSON.parse(stored));
   }, []);
 
   const srvUrl = 'http://localhost:4000'
@@ -24,10 +27,7 @@ function ProjectFocus() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify( { ...credentials, payload })
     })
-    .then(res => {
-      if (res.status === 200) return res.json();
-      else console.error('Error returned: ', res.status, res.statusText);
-    }, err => console.error('Error returned:', err.message));
+    .then( res => res.json() )
   }
   const getData = (link, payload=null) => {
     if (Object.keys(credentials).length === 3)
@@ -56,12 +56,9 @@ function ProjectFocus() {
     })    
   }
   
-  const deployApp = (tenant, app) => {
-    getData('platform/deploy', { app, tenant })
-    .then(data => {
-      console.dir(data);
-      alert('Work in progress! This will submit app creation in a future release...')
-    });
+  const appOp = (op, tenant, app) => {
+    getData(op === 'apply' ? 'platform/apply' : 'platform/delete', { app, tenant })
+    .then(data => setAlert( { title: op.toUpperCase() + ' "' + app.title + '" on "' + platform.tenant.label.name + '"', message: data, status: 'normal' } ) );
     setLayer(4);
   }
 
@@ -73,6 +70,7 @@ function ProjectFocus() {
   return(
     <Box flex overflow="auto" align="start" margin='small' gap='small'>
       <Notification title='Experimental Features' message='This UI is under development, things may work!' status='warning' toast global />
+      { alert && <Notification title={ alert.title } message={ alert.message } status={ alert.status } onClose={ () => setAlert(null) } toast /> }
       <Box align="start" fill='horizontal'>
         <Box direction='row' justify='between' fill='horizontal'>
           { <Button label={ platform?.config?.result === 'Success' ? 'Connected as: ' + credentials.username : 'Connect to Ezmeral' } onClick={ () => setLayer(2) } /> }
@@ -157,6 +155,7 @@ function ProjectFocus() {
       </Box>
       { platform?.tenant && 
       <Box>
+        <Text weight='bold'>Tenant: { platform.tenant.label.name }</Text>
         <Grid columns={ { count: 4, size: 'auto' }} gap="small">
           { apps.map(app => (
               <Card key={ app.title }>
@@ -165,14 +164,15 @@ function ProjectFocus() {
                   <Text truncate='tip'>{ app.description }</Text>
                 </CardBody>
                 <CardFooter pad={{horizontal: "small"}}>
-                  <Button icon={<Info color="plain" />} hoverIndicator onClick={ () => alert(app.description) } />
-                  <Button icon={<Add color="plain" />} hoverIndicator onClick={ () => deployApp(platform.tenant, app) } />
+                  <Button icon={<Trash color="red" />} hoverIndicator onClick={ () => appOp('delete', platform.tenant, app) } />
+                  <Button icon={<Info color="plain" />} hoverIndicator onClick={ () => setAlert( { title: app.title, message: app.description, status: 'normal' } ) } />
+                  <Button icon={<Add color="plain" />} hoverIndicator onClick={ () => appOp('apply', platform.tenant, app) } />
                 </CardFooter>
               </Card>
           ))}
         </Grid>
       </Box> }
-      {/* <TextArea contentEditable={false} fill flex size='xsmall' plain title='Platform' value={ JSON.stringify(platform.tenant, 0,2) } /> */}
+      {/* <TextArea contentEditable={false} fill flex size='xsmall' plain title='Platform' value={ JSON.stringify(apps, 0,2) } /> */}
     </Box>
   );
 }
