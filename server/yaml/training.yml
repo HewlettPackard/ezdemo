@@ -1,17 +1,17 @@
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
 metadata:
-  name: "${TRAINING_CLUSTER_NAME}"
-  namespace: "${TENANT_NS}"
+  name: "TRAINING_CLUSTER"
+  namespace: "TENANTNS"
   labels:
-    description: ""
+    description: "CreatedByEzdemo"
 spec:
   app: "training-engine"
   namingScheme: "CrNameRole"
   appCatalog: "local"
   connections:
     secrets:
-      - ${AD_USER_KC_SECRET}
+      - KC_SECRET
       - hpecp-ext-auth-secret
   roles:
     -

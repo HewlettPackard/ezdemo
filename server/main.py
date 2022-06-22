@@ -1,4 +1,6 @@
 from functools import reduce
+import hashlib
+import re
 from urllib.parse import urlparse
 from hpecp import ContainerPlatformClient
 from http import HTTPStatus
@@ -22,6 +24,63 @@ ProviderName = {
 # if (platform == 'darwin'):
 #   ProviderName['mac'] = 'Mac'
 config = ConfigParser()
+
+## Application definitions
+ml_apps = [
+  {
+    "title": "ML 101",
+    "description": "Machine Learning starting point, requires K8s admin rights to create mlflow and source control.",
+    "depends": ["kubeflow"],
+    "deploy":[
+      {
+        "name": "kcsecret",
+        "yaml": 'kcsecret.yml'
+      },
+      {
+        "name": "mlflow",
+        "yaml": 'mlflow.yml'
+      },
+      {
+        "name": "sourcecontrol",
+        "yaml": 'sourcecontrol.yml'
+      },
+      {
+        "name": "trainingcluster",
+        "yaml": 'training.yml'
+      },
+      {
+        "name": "notebook",
+        "yaml": 'notebook.yml'
+      }
+    ]
+  },
+  {
+    "title": "Jupyter Notebook",
+    "description": "Just a Jupyter Notebook with pytorch, tensorflow and more libraries.",
+    "depends": [],
+    "deploy":[
+      {
+        "name": "kcsecret",
+        "yaml": 'kcsecret.yml'
+      },
+      {
+        "name": "notebook",
+        "yaml": 'notebook.yml'
+      }
+    ]
+  },
+  {
+    "title": "Hello World",
+    "description": "Welcome to Kubernetes",
+    "depends": [],
+    "deploy":[
+      {
+        "name": "helloworld",
+        "yaml": 'helloworld.yml'
+      }
+    ]
+  }
+]
 
 ## Pass environment variable to scripts, tell them they are running under web process
 web_env = os.environ.copy()
@@ -152,6 +211,10 @@ def getkey():
 #     except:
 #       return Response(status=HTTPStatus.NOT_FOUND)
 
+@app.route('/mlapps')
+def getmlapps():
+  return jsonify(ml_apps)
+
 @app.route('/platform/<op>', methods=['POST', 'DELETE'])
 def platform(op=None):
   data = request.get_json(force=True)
@@ -183,7 +246,11 @@ def platform(op=None):
 
   if request.method == 'POST':
     try:
-      if op == 'connect':
+      if op == 'test':
+        client.create_session() # Login
+        res = 'Success!'
+        return jsonify(res)
+      elif op == 'connect':
         client.create_session() # Login
         return jsonify(client.config.get())
       elif op == 'list':
@@ -215,34 +282,46 @@ def platform(op=None):
         # t_id = client.tenant_config
         ns = tenant['namespace']
         kubeconfig = get_base64_string(client.tenant.k8skubeconfig())
+        userid_href = [ id for id in [users.json for users in client.user.list() ] if id['label']['name'] == data['username']][0]['_links']['self']['href']
+        userid = userid_href.split('/')[-1]
+        userhash = hashlib.md5((userid + '-' + data['username']).encode('utf-8')).hexdigest()
+        kcsecret = "hpecp-kc-secret-" + userhash
+        client_config = client.config.get()
+        storageclass = client_config['objects']['tenant_storage_root']['endpoint']['cluster_name']
 
         # Replacements
         repls = (
           ('TENANTNS', ns),
           ('KUBECONFIG', kubeconfig),
           ('USERNAME', data['username']),
-          ('USERID', data['username']),
+          ('USERID', userid),
           ('STORAGECLASS', 'CHANGEME'),
-          ('KCSECRET', 'CHANGEME'),
-          ('NBCLUSTER', data['username'] + '_Notebook'),
-          ('TRAINING_CLUSTER', data['username'] + '_Training'),
-          ('MLFLOW_CLUSTER', data['username'] + '_Mlflow')
+          ('KCSECRET', kcsecret),
+          ('NOTEBOOK_CLUSTER', 'eznotebook'),
+          ('TRAINING_CLUSTER', 'eztraining'),
+          ('MLFLOW_CLUSTER', 'ezmlflow'),
+          ('MLFLOW_ADMIN_USER', get_base64_string(data['username'])),
+          ('MLFLOW_ADMIN_PASSWORD', get_base64_string(data['password'])),
+          ('STORAGECLASS', storageclass)
         )
-        # update yaml files
+
+        result = ""
         for file in app['deploy']:
           loaded_yaml = ""
           with open(os.path.join(base_path, 'yaml', file['yaml']), 'r') as stream:
             for line in stream:
               loaded_yaml += line
-          # submit jobs
           try:
+            # update yaml files
             cleaned_yaml = reduce(lambda a, kv: a.replace(*kv), repls, loaded_yaml)
-            return jsonify(client.k8s_cluster.run_kubectl_command(tenant['k8s_cluster'], op, get_base64_string(cleaned_yaml)))
+            # submit the file and save the result
+            result += client.k8s_cluster.run_kubectl_command(tenant['k8s_cluster'], op, get_base64_string(cleaned_yaml))
           except BaseException as err:
             print(f"{err=}")
             return jsonify(err.message), HTTPStatus.NOT_ACCEPTABLE
-                
-        return Response(status=HTTPStatus.OK)
+
+        # Return all submission results
+        return jsonify(result)
 
     except Exception as err:
       print(f"{err=}")

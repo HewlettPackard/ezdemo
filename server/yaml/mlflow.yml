@@ -1,10 +1,22 @@
+apiVersion: v1
+data:
+  MLFLOW_ARTIFACT_ROOT: czM6Ly9tbGZsb3c= #s3://mlflow
+  AWS_ACCESS_KEY_ID: MLFLOW_ADMIN_USER # YWRtaW4= #admin
+  AWS_SECRET_ACCESS_KEY: MLFLOW_ADMIN_PASSWORD
+kind: Secret
+metadata:
+  name: mlflow-sc
+  labels:
+    kubedirector.hpe.com/secretType: mlflow
+type: Opaque
+---
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
 metadata:
-  name: "MLFLOW_CLUSTER_NAME"
+  name: "MLFLOW_CLUSTER"
   namespace: "TENANTNS"
   labels:
-    description: "mlflow"
+    description: "CreatedByEzdemo"
 spec:
   app: "mlflow"
   namingScheme: "CrNameRole"

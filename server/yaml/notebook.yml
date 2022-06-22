@@ -1,40 +1,36 @@
+---
 apiVersion: "kubedirector.hpe.com/v1beta1"
 kind: "KubeDirectorCluster"
-metadata:
-  name: "NBCLUSTER"
+metadata: 
+  name: "NOTEBOOK_CLUSTER"
   namespace: "TENANTNS"
-  labels:
-    "kubedirector.hpe.com/createdBy": "USERID"
-spec:
+  labels: 
+    description: "CreatedByEzdemo"
+spec: 
   app: "jupyter-notebook"
   namingScheme: "CrNameRole"
   appCatalog: "local"
-  connections:
-    clusters:
-      - MLFLOW_CLUSTER
+  connections: 
+    clusters: 
       - TRAINING_CLUSTER
-    secrets:
-      - hpecp-sc-secret-gitea-ad-user1-nb
+      - MLFLOW_CLUSTER
+    secrets: 
       - hpecp-ext-auth-secret
-      - mlflow-sc
       - KCSECRET
-  roles:
-    -
+  roles: 
+    - 
       id: "controller"
       members: 1
       serviceAccountName: "ecp-tenant-member-sa"
-      resources:
-        requests:
+      resources: 
+        requests: 
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-        limits:
+        limits: 
           cpu: "2"
           memory: "4Gi"
           nvidia.com/gpu: "0"
-      storage:
-        # size: "20Gi"
-        # storageClassName: "dfdemo"
       #Note: "if the application is based on hadoop3 e.g. using StreamCapabilities interface, then change the below dtap label to 'hadoop3', otherwise for most applications use the default 'hadoop2'"
-      podLabels:
+      podLabels: 
         hpecp.hpe.com/dtap: "hadoop2"
