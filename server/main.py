@@ -102,25 +102,26 @@ def home():
 def get_config(target):
   response = None
   search_path = os.path.join(base_path, get_target_dir(target))
-  conf_file =  os.path.join(search_path, 'config.json')
-  conf_template = os.path.join(search_path, 'config.json-template')
   dc_file = os.path.join(search_path, 'dc.ini')
-  for file in [conf_file, conf_template, dc_file]:
-    try:
-      with open(file, "r") as f:
-        try:
+  if target == "data centre":
+      config.read(dc_file)
+      if 'DEV' in os.environ:
+        print(config.sections())
+      js = {}
+      for k,v in [ pair for items in [ config.items(section) for section in config.sections() ] for pair in items ]:
+        js[k] = v
+      response = js
+  else:
+    conf_file =  os.path.join(search_path, 'config.json')
+    conf_template = os.path.join(search_path, 'config.json-template')
+    for file in [conf_file, conf_template]:
+      try:
+        with open(file, "r") as f:
           response = json.load(f)
           break
-        except json.JSONDecodeError:
-          config.read(file)
-          js = {}
-          for k,v in [ pair for items in [ config.items(section) for section in config.sections() ] for pair in items ]:
-            js[k] = v
-          response = js
-          break
-    except OSError as err:
-      print(file, err.strerror)
-      response = Response(status=HTTPStatus.NO_CONTENT)
+      except OSError as err:
+        print(file, err.strerror)
+        response = Response(status=HTTPStatus.NO_CONTENT)
   return response
 
 @app.route('/usersettings')

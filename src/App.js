@@ -243,31 +243,31 @@ function App() {
                           value={ config['region'] } />
                       </FormField>
                     }
-                    </Form>
-                    <Form
-                      value= { usersettings }
-                      validate='change' 
-                      onChange= { (value) => setUsersettings(value) }
-                      >
+              </Form>
+              <Form
+                value= { usersettings }
+                validate='change' 
+                onChange= { (value) => setUsersettings(value) }
+                >
 
-                      <CardFooter direction='column'>
-                        <Box direction='row' justify='center'>
-                        {
-                          Object.keys(usersettings).filter(k => !k.includes('is_') && !k.includes('install_ad')).map( key => 
-                            <FormField name={key} htmlfor={key} label={ key.replace('is_', '').toUpperCase() } key={key} margin='small'>
-                              <TextInput placeholder={key} id={key} name={key} value={ String(usersettings[key]) } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
-                            </FormField>
-                          )
-                        }
-                      </Box>
-                      <Box direction='row' justify='center'>
-                        { Object.keys(usersettings).filter(k => k.includes('is_') || k.includes('install_ad')).map( key => 
-                            <CheckBox toggle reverse key={key} label={ key.replace('is_', '').toUpperCase() } checked={ usersettings[key] } onChange={ (e) => setUsersettings( old => ( {...old, [key]: !old[key] }) ) } />
-                          )
-                        }
-                      </Box>
-                    </CardFooter>
-                  </Form>
+                <CardFooter direction='column'>
+                  <Box direction='row' justify='center'>
+                    {
+                      Object.keys(usersettings).filter(k => !k.includes('is_') && !k.includes('install_ad')).map( key => 
+                        <FormField name={key} htmlfor={key} label={key.replace('is_', '').toUpperCase()} key={key} margin='small'>
+                          <TextInput placeholder={key} id={key} name={key} value={ String(usersettings[key]) } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
+                        </FormField>
+                      )
+                    }
+                  </Box>
+                  <Box direction='row' justify='center'>
+                    { Object.keys(usersettings).filter(k => k.includes('is_') || k.includes('install_ad')).map( key => 
+                        <CheckBox toggle reverse key={key} label={ key.replace('is_', '').toUpperCase() } checked={ usersettings[key] } onChange={ (e) => setUsersettings( old => ( {...old, [key]: !old[key] }) ) } />
+                      )
+                    }
+                  </Box>
+                </CardFooter>
+              </Form>
             </Card> }
           {/* Run */}
           { ! projectFocus && provider && (! Object.values(config).some(v => v===''))
@@ -296,23 +296,23 @@ function App() {
         {/* Footer */}
         <Box flex={false} pad="none" justify='end'>
           <Footer background='brand' pad='xsmall'>
-              { ! projectFocus && <Fragment>
-                { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
-                { spin && <Text color='status-warning'>Please wait...</Text> }
-                { error && <Text tip={ error } color='red'>{ error.substring(0,50) }...</Text> }
-                { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
-                { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
-                { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
-                { logfile && <Anchor label='Log' href={`${srvUrl}/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
-                { logfile && <Button label='Attach to run.log' icon={ <Icons.Multiple color='gray' /> } onClick={ () => reconnectToLogs() } margin='none' /> }
-                { prvkey && <Anchor label='PrvKey' href={`${srvUrl}/key`} target='_blank' rel='noreferrer' /> }
-                {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
-                { logfile && <Button label='Destroy' alignSelf='end'
-                  icon={ <Icons.Trash color='status-critical' /> } 
-                  tip='Destroy the environment' 
-                  onClick={ () => window.confirm('All will be deleted') && destroy() } 
-                /> }
-              </Fragment>
+            {!projectFocus && <Fragment>
+              { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
+              { spin && <Text color='status-warning'>Please wait...</Text> }
+              { error && <Text tip={ error } color='red'>{ error.substring(0,50) }...</Text> }
+              { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
+              { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
+              { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
+              { logfile && <Anchor label='Log' href={`${srvUrl}/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
+              { logfile && <Button label='Attach to run.log' icon={ <Icons.Multiple color='gray' /> } onClick={ () => reconnectToLogs() } margin='none' /> }
+              { prvkey && <Anchor label='PrvKey' href={`${srvUrl}/key`} target='_blank' rel='noreferrer' /> }
+              {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
+              { logfile && <Button label='Destroy' alignSelf='end'
+                icon={ <Icons.Trash color='status-critical' /> } 
+                tip='Destroy the environment' 
+                onClick={ () => window.confirm('All will be deleted') && destroy() } 
+              /> }
+            </Fragment>
             }
             <Box direction='row'>
               <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
