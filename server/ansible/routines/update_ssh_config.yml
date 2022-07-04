@@ -1,6 +1,9 @@
 - hosts: localhost
   gather_facts: no
-  
+  vars:
+    corehost: "{{ groups['mapr'] | first }}"
+    eephost: "{{ groups['mapr'][1] | default( corehost ) }}"
+
   tasks:
   - name: ensure ~/.ssh exist
     file:
@@ -34,6 +37,25 @@
           ServerAliveInterval 30
     when: target != "dc" and op == "add"
 
+  ##### TODO: Query the service information, get which service is running on which node and setup forwarding accordingly
+  - name: configure proxy portforward
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED PORTFORWARD BLOCK'
+      block: |2
+          LocalForward 9443 {{ corehost }}:9443 # df installer
+          LocalForward 8443 {{ eephost }}:8443 # df apiserver
+          LocalForward 8047 {{ corehost }}:8047 # df drill
+          LocalForward 8888 {{ corehost }}:8888 # df hue
+          LocalForward 8998 {{ corehost }}:8998 # df livy
+          LocalForward 3000 {{ eephost }}:3000 # df grafana
+          LocalForward 5601 {{ eephost }}:5601 # df kibana
+          LocalForward 18480 {{ corehost }}:18480 # df spart historyserver
+          LocalForward 8243 {{ corehost }}:8243 # df data access gateway
+          LocalForward 8780 {{ corehost }}:8780 # df airflow
+      insertbefore: "# END ANSIBLE MANAGED PROXY BLOCK"
+    when: op == "add" and is_mapr | bool
+
   - name: configure other hosts
     blockinfile:
       dest: ~/.ssh/config
@@ -57,6 +79,12 @@
       dest: ~/.ssh/config
       marker: '# {mark} ANSIBLE MANAGED HOST BLOCK'
     when: op == "remove"
+
+  - name: remove port forwarding
+    blockinfile:
+      dest: ~/.ssh/config
+      marker: '# {mark} ANSIBLE MANAGED PORTFORWARD BLOCK'
+    when: target != "dc" and op == "remove" and is_mapr | bool
 
   - name: remove proxy host
     blockinfile:

@@ -30,18 +30,13 @@
     set_fact:
       mapr_hosts: "{{ groups['mapr'] | map ('extract', hostvars, 'ansible_fqdn') }}"
 
-  #### TODO: install only 3 nodes as workaround - non-CLDB nodes failing to configure disks
-  - name: stanza for first 3 nodes
-    copy:
-      dest: /tmp/mapr.stanza
-      content: |
+  - set_fact:
+      stanza_file: |
         environment:
           mapr_core_version: 7.0.0
         config:
           admin_id: mapr
-          cluster_admin_create: true
-          cluster_admin_password: "{{ admin_password }}"
-          cluster_name: "{{ project_id | regex_replace('[ _]', '') }}.datafabric.io"
+          cluster_name: "{{ project_id | regex_replace('[ _]', '') | lower }}.datafabric.io"
           db_admin_password_set: true
           db_admin_password: {{ admin_password }}
           db_admin_user: root
@@ -56,7 +51,7 @@
           log_admin_password: {{ admin_password }}
           mep_version: 8.1.0
           metrics_ui_admin_password: {{ admin_password }}
-          nfs_type: "NFSv3"
+          nfs_type: "NFSv4"
           security: true
           ssh_id: {{ ansible_user_id }}
           ssh_key_file: "{{ ansible_user_dir }}/controller.prv_key"
@@ -87,65 +82,68 @@
             mapr-data-access-gateway:
             mapr-mastgateway:
 
+  #### TODO: install only 3 nodes as workaround - non-CLDB nodes failing to configure disks in secure cluster (race condition)
+  - name: stanza for first 3 nodes
+    copy:
+      dest: /tmp/mapr.stanza
+      content: "{{ stanza_file }}"
     register: stanza
 
-  - name: copy ssh key file
-    copy:
-      src: ../../generated/controller.prv_key
-      dest: "{{ ansible_user_dir }}/controller.prv_key"
-      mode: "0600"
+  # - name: copy ssh key file
+  #   copy:
+  #     src: ../../generated/controller.prv_key
+  #     dest: "{{ ansible_user_dir }}/controller.prv_key"
+  #     mode: "0600"
 
-  - name: install from stanza
-    shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
-    when: stanza.changed
-    register: first_install
-    failed_when: 
-      - first_install.rc != 0
-      - "'Install is not required' not in first_install.stderr"
+  # - name: install from stanza
+  #   shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
+  #   when: stanza.changed
+  #   register: first_install
+  #   failed_when: 
+  #     - first_install.rc != 0
+  #     - "'Install is not required' not in first_install.stderr"
 
-  - name: copy the license
-    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
-    ignore_errors: yes
+  # - name: copy the license
+  #   copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+  #   ignore_errors: yes
 
   # - name: add license 
   #   shell: "/opt/mapr/installer/bin/mapr-installer-cli license -n -l /tmp/LatestDemoLicense-M7.txt -o config.ssh_id={{ ansible_user_id }} -o config.ssh_key_file={{ ansible_user_dir }}/controller.prv_key"
   #   ignore_errors: yes
   #   become: yes
 
-  - name: create ticket for user
-    shell: 'echo "{{ admin_password }}" | maprlogin password -user mapr'
+  # - name: wait for DF services to come up
+  #   wait_for:
+  #     timeout: 300
+  #   delegate_to: localhost
 
-  - name: install mapr license
-    shell: |
-      [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-    ignore_errors: yes
-    register: licensed
-    failed_when: 
-      - licensed.rc != 0
-      - "'license exists' not in licensed.stdout"
+  # - name: create ticket for user # installer default password for cluster admin (mapr) user is mapr
+  #   shell: '[ -f /tmp/maprticket_1000 ] || (echo mapr | maprlogin password -user mapr)'
 
-##### TODO: Query the service information, get which service is running on which node and setup forwarding accordingly
-#####
-# - hosts: localhost
-#   gather_facts: no
-#   tasks:
-#   - name: check socket file
-#     stat: path=/tmp/MCS-socket-admin
-#     register: socket_file
+  # - name: create ticket for root # installer default password for cluster admin (mapr) user is mapr
+  #   shell: '[ -f /tmp/maprticket_0 ] || (echo mapr | sudo maprlogin password -user mapr)'
 
-#   - name: MCS tunnel for ports
-#     shell: "cd ../..; ssh -M -S /tmp/MCS-socket-{{ item.description }} -fNT -L 0.0.0.0:{{ item.port }}:{{ groups['mapr'] | first }}:{{ item.port }} centos@{{ groups['gateway'] | first }}"
-#     when: not socket_file.stat.exists and groups['gateway'] | length > 0
-#     with_items:
-#       - port: 8443
-#         description: admin
-#       - port: 9443
-#         description: installer
-#       - port: 8780
-#         description: airflow
-#       - port: 5601
-#         description: kibana
-#       - port: 8047
-#         description: drill
-#       - port: 8243
-#         description: dag
+  # - name: install mapr license
+  #   shell: |
+  #     [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+  #   ignore_errors: yes
+  #   register: licensed
+  #   failed_when: 
+  #     - licensed.rc != 0
+  #     - "'license exists' not in licensed.stdout"
+
+  - name: update stanza for remaining nodes
+    copy:
+      dest: /tmp/mapr.stanza
+      content: "{{ stanza_yaml | combine( (new_nodes | from_yaml), recursive=True) | to_nice_yaml() }}"
+    when: mapr_hosts | length > 3
+    vars:
+      stanza_yaml: "{{ stanza_file | from_yaml }}"
+      new_nodes: |
+        config:
+          scaled_hosts2:
+            {{ mapr_hosts[3:] | to_nice_yaml | indent(4) }}
+
+  # - name: add remaining nodes
+  #   shell: "echo y | (cat /tmp/mapr_addnodes | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza -o -)"
+  #   when: mapr_hosts | length > 3

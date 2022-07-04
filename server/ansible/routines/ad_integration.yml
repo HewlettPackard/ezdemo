@@ -125,6 +125,14 @@
       become: yes
       when: realm_joined is failed
 
+    - shell: "realm discover {{ ad_domain }}"
+      become: yes
+      when: realm_joined is failed and ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+      retries: 12 # retry for 5 minutes
+      delay: 30
+      register: realm
+      until: realm.rc == 0
+
     - shell: "echo {{ ad_bind_pwd }} | realm join {{ ad_domain }} ; realm permit -a"
       become: yes
       when: realm_joined is failed and ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'

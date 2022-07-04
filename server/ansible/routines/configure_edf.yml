@@ -1,28 +1,71 @@
 # Setup Data Fabric for external use
 
 - hosts: "{{ groups['mapr'] | default([]) }}"
+  gather_facts: no
   tasks:
 
   - name: create impersonation ticket for fuse
-    shell: sudo maprlogin generateticket -type servicewithimpersonation -user mapr -out /opt/mapr/conf/maprfuseticket
+    shell: |
+      ([ -f /tmp/maprfuseticket ] || maprlogin generateticket -type servicewithimpersonation -user mapr -out /tmp/maprfuseticket) || true
+      ([ -f /opt/mapr/conf/maprfuseticket ] || sudo cp /tmp/maprfuseticket /opt/mapr/conf/maprfuseticket) || true
 
   - name: configure delta
     shell: pip3 install delta_spark
+    become: yes
     # /opt/mapr/spark/spark-3.2.0/bin/pyspark --packages io.delta:delta-core_2.12:1.1.0 --conf "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" --conf "spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
 
   - name: configure s3
     shell: |
       mkdir -p /home/mapr/.mc/certs/CAs
-      ln -s /opt/mapr/conf/ca/chain-ca.pem /home/mapr/.mc/certs/CAs/chain-ca.pem || true
+      [ -f /home/mapr/.mc/certs/CAs/chain-ca.pem ] || ln -s /opt/mapr/conf/ca/chain-ca.pem /home/mapr/.mc/certs/CAs/chain-ca.pem
       chown -R mapr:mapr /home/mapr/.mc/certs/CAs
       export JAVA_HOME=$(dirname $(dirname $(readlink $(readlink $(which javac)))))
       ${JAVA_HOME}/bin/keytool -noprompt -importcert -file /opt/mapr/conf/ca/chain-ca.pem -alias maprca -storepass changeit -cacerts || true
     become: yes
 
 - hosts: "{{ (groups['mapr'] | first) | default([]) }}"
+  gather_facts: no
   tasks:
   - name: configure spark
     shell: |
       hadoop fs -mkdir /apps/spark
       hadoop fs -chmod 777 /apps/spark
+
+  - name: generate s3 keys
+    shell: "[ -f /tmp/s3_credentials ] || maprcli s3keys generate -username mapr -accountname default -domainname primary -json"
+    register: s3keys
+    #### result looks like
+    #       .......
+    #         "data":[
+    #                 {
+    #                         "accesskey":"AGKH1718LJ4FWGPXSW4F0GIADDIDMQB40ALFNZID42U5O88X8V0Y6UXIE7F24CWNHWKNVUNJ9ERQ2",
+    #                         "secretkey":"IXBOD9J9FUWKSDWPSLYORTAK7AMJ5VKQ73XV3QO"
+    #                 }
+    #         ]
+
+  - name: s3 credentials
+    set_fact:
+      s3_endpoint: "https://{{ groups['mapr'] | first }}:9000"
+      s3_access_key: "{{ s3keys.stdout | to_json }}" #| json_query('data[*].accesskey')
+      s3_secret_key: "{{ s3keys.stdout | to_json }}"
+
+  - name: save s3 credentials
+    shell: "[ -f /tmp/s3_credentials ] || (echo {{ s3_access_key }}\n{{ s3_secret_key }} > /tmp/s3_credentials)"
+
+- hosts: "{{ (groups['mapr'][1:]) | default([]) }}"
+  gather_facts: no
+  tasks:
+  - name: collect s3 credentials
+    ansible.posix.synchronize:
+      src: /tmp/s3_credentials
+      dest: /tmp/s3_credentials
+    delegate_to: "{{ groups['mapr'] | first }}"
+
+- hosts: "{{ groups['mapr'] | last | default([]) }}"
+  gather_facts: no
+  tasks:
+  - name: install airflow
+    package: name="mapr-airflow mapr-airflow-webserver",state=present
     become: yes
+
+  

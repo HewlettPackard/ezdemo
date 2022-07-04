@@ -2,13 +2,13 @@
   gather_facts: no
   vars:
 
-  tasks:
-  - name: MCS tunnel for ports
-    shell: "ssh -S /tmp/MCS-socket-{{ item.portname }} -O exit centos@${{ groups['gateway'] | default([]) | first | default('localhost') }} || true"
-    with_items:
-      - portname: admin
-      - portname: installer
-      - portname: airflow
-      - portname: kibana
-      - portname: drill
-      - portname: dag
+  # tasks:
+  # - name: MCS tunnel for ports
+  #   shell: "ssh -S /tmp/MCS-socket-{{ item.portname }} -O exit centos@${{ groups['gateway'] | default([]) | first | default('localhost') }} || true"
+  #   with_items:
+  #     - portname: admin
+  #     - portname: installer
+  #     - portname: airflow
+  #     - portname: kibana
+  #     - portname: drill
+  #     - portname: dag
