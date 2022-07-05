@@ -89,48 +89,48 @@
       content: "{{ stanza_file }}"
     register: stanza
 
-  # - name: copy ssh key file
-  #   copy:
-  #     src: ../../generated/controller.prv_key
-  #     dest: "{{ ansible_user_dir }}/controller.prv_key"
-  #     mode: "0600"
+  - name: copy ssh key file
+    copy:
+      src: ../../generated/controller.prv_key
+      dest: "{{ ansible_user_dir }}/controller.prv_key"
+      mode: "0600"
 
-  # - name: install from stanza
-  #   shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
-  #   when: stanza.changed
-  #   register: first_install
-  #   failed_when: 
-  #     - first_install.rc != 0
-  #     - "'Install is not required' not in first_install.stderr"
+  - name: install from stanza
+    shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
+    when: stanza.changed
+    register: first_install
+    failed_when: 
+      - first_install.rc != 0
+      - "'Install is not required' not in first_install.stderr"
 
-  # - name: copy the license
-  #   copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
-  #   ignore_errors: yes
+  - name: copy the license
+    copy: src="../../LatestDemoLicense-M7.txt" dest="/tmp/LatestDemoLicense-M7.txt" mode="0644"
+    ignore_errors: yes
 
   # - name: add license 
   #   shell: "/opt/mapr/installer/bin/mapr-installer-cli license -n -l /tmp/LatestDemoLicense-M7.txt -o config.ssh_id={{ ansible_user_id }} -o config.ssh_key_file={{ ansible_user_dir }}/controller.prv_key"
   #   ignore_errors: yes
   #   become: yes
 
-  # - name: wait for DF services to come up
-  #   wait_for:
-  #     timeout: 300
-  #   delegate_to: localhost
+  - name: wait for DF services to come up
+    wait_for:
+      timeout: 300
+    delegate_to: localhost
 
-  # - name: create ticket for user # installer default password for cluster admin (mapr) user is mapr
-  #   shell: '[ -f /tmp/maprticket_1000 ] || (echo mapr | maprlogin password -user mapr)'
+  - name: create ticket for user # installer default password for cluster admin (mapr) user is mapr
+    shell: '[ -f /tmp/maprticket_1000 ] || (echo mapr | maprlogin password -user mapr)'
 
-  # - name: create ticket for root # installer default password for cluster admin (mapr) user is mapr
-  #   shell: '[ -f /tmp/maprticket_0 ] || (echo mapr | sudo maprlogin password -user mapr)'
+  - name: create ticket for root # installer default password for cluster admin (mapr) user is mapr
+    shell: '[ -f /tmp/maprticket_0 ] || (echo mapr | sudo maprlogin password -user mapr)'
 
-  # - name: install mapr license
-  #   shell: |
-  #     [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
-  #   ignore_errors: yes
-  #   register: licensed
-  #   failed_when: 
-  #     - licensed.rc != 0
-  #     - "'license exists' not in licensed.stdout"
+  - name: install mapr license
+    shell: |
+      [ -f /tmp/LatestDemoLicense-M7.txt ] && maprcli license add -license /tmp/LatestDemoLicense-M7.txt -is_file true 
+    ignore_errors: yes
+    register: licensed
+    failed_when: 
+      - licensed.rc != 0
+      - "'license exists' not in licensed.stdout"
 
   - name: update stanza for remaining nodes
     copy:
@@ -144,6 +144,7 @@
           scaled_hosts2:
             {{ mapr_hosts[3:] | to_nice_yaml | indent(4) }}
 
-  # - name: add remaining nodes
-  #   shell: "echo y | (cat /tmp/mapr_addnodes | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza -o -)"
-  #   when: mapr_hosts | length > 3
+  # TODO: More debug needed, this is hanging forever
+  - name: add remaining nodes
+    shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
+    when: mapr_hosts | length > 3

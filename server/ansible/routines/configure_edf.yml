@@ -4,6 +4,13 @@
   gather_facts: no
   tasks:
 
+  ## These two tasks required on non-installer nodes
+  - name: create ticket for user # installer default password for cluster admin (mapr) user is mapr
+    shell: '[ -f /tmp/maprticket_1000 ] || (echo mapr | maprlogin password -user mapr)'
+
+  - name: create ticket for root # installer default password for cluster admin (mapr) user is mapr
+    shell: '[ -f /tmp/maprticket_0 ] || (echo mapr | sudo maprlogin password -user mapr)'
+
   - name: create impersonation ticket for fuse
     shell: |
       ([ -f /tmp/maprfuseticket ] || maprlogin generateticket -type servicewithimpersonation -user mapr -out /tmp/maprfuseticket) || true
@@ -46,8 +53,8 @@
   - name: s3 credentials
     set_fact:
       s3_endpoint: "https://{{ groups['mapr'] | first }}:9000"
-      s3_access_key: "{{ s3keys.stdout | to_json }}" #| json_query('data[*].accesskey')
-      s3_secret_key: "{{ s3keys.stdout | to_json }}"
+      s3_access_key: "{{ s3keys.stdout | to_json | json_query('data[*].accesskey') }}"
+      s3_secret_key: "{{ s3keys.stdout | to_json | json_query('data[*].secretkey') }}"
 
   - name: save s3 credentials
     shell: "[ -f /tmp/s3_credentials ] || (echo {{ s3_access_key }}\n{{ s3_secret_key }} > /tmp/s3_credentials)"
