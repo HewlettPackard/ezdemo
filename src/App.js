@@ -1,54 +1,44 @@
-import React, { Fragment } from 'react';
-import { Grommet, Box, Card, CardFooter, CheckBox, Button, Text, TextInput, Form, FormField, 
-  Footer, Anchor, TextArea, Select, RadioButtonGroup } from 'grommet';
+import React, { useState } from 'react';
+import { Grommet, Box, Button, Text,
+   Anchor, PageHeader, Paragraph, Spinner, Page } from 'grommet';
 import { hpe } from 'grommet-theme-hpe';
 import * as Icons from 'grommet-icons';
-import regions from './regions';
+import { HeaderWithActions } from './Header';
+import Providers from './Providers';
+import Settings from './Settings';
+import FooterWithActions from './Footer';
+import Output from './Output';
 import ProjectFocus from './projectFocus';
 
 function App() {
-  const [theme, setTheme] = React.useState('dark');
-  const [output, setOutput] = React.useState([]);
-  const [showoutput, setShowoutput] = React.useState(false);
-  const [error, setError] = React.useState(undefined);
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [provider, setProvider] = React.useState();
-  const [providers, setProviders] = React.useState();
-  const [config, setConfig] = React.useState({});
-  const [usersettings, setUsersettings] = React.useState({});
-  const [showconfig, setShowconfig] = React.useState(false);
-  const [logfile, setLogfile] = React.useState(false);
-  const [spin, setSpin] = React.useState(false);
-  const [gwurl, setGwurl] = React.useState(undefined);
-  const [gwready, setGwready] = React.useState(false);
-  const [MCSready, setMCSready] = React.useState(false);
-  const [prvkey, setPrvkey] = React.useState(false);
-  const [projectFocus, setprojectFocus] = React.useState(false);
-  const outputRef = React.useRef(undefined);
-  const srvUrl = 'http://localhost:4000'
- 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      fetch(`${srvUrl}/providers`)
-      .then(res => res.json())
-      .then(
-        (result) => {
-          setProviders(result);
-          setIsLoaded(true);
-        },
-        (error) => {
-          setIsLoaded(true);
-          setError(error.message);
-        }
-      )
-    };
-    if (! isLoaded) fetchData();
-  }, [isLoaded]);
+  const [theme, setTheme] = useState('dark');
+  const [config, setConfig] = useState({});
+  const [usersettings, setUsersettings] = useState({});
+  const [output, setOutput] = useState([]);
+  const [error, setError] = useState(undefined);
+  const [provider, setProvider] = useState();
+  const [logfile, setLogfile] = useState(false);
+  const [spin, setSpin] = useState(false);
+  const [gwurl, setGwurl] = useState(undefined);
+  const [gwready, setGwready] = useState(false);
+  const [prvkey, setPrvkey] = useState(false);
+  const [showSettings, setShowsettings] = useState(false);
+  const [stage, setStage] = useState(false);
+  const [actionButton, setActionButton] = useState();
+  // const [showOutput, setShowoutput] = useState(false);
+  // const outputRef = useRef(undefined);
+  
+  const srvurl = process.env.NODE_ENV === "development" ? "http://localhost:4000" : "";
+  const readyForDeployment = provider && !error && (!['runtime', 'datafabric'].includes(provider.id))
+    // tricking to check valid configuration
+    // TODO: need to validate configuration
+    && (config['region'] !== '' || config['vcenter_server'] !== '')
+  const readyForMlapps = provider && !error && ['runtime', 'datafabric'].includes(provider.id)
 
   const fetchData = async (url) => {
     return await fetch(url, {})
   }
-  
+
   const postData = async (url = '', data = {}) => {
     const fetchParams = {
       method: 'POST',
@@ -60,41 +50,54 @@ function App() {
   }
 
   const checkExistingRun = async (provider) => {
-    const response = await fetchData(`${srvUrl}/isfile/${provider.toLowerCase()}/run.log`);
+    const response = await fetchData(`${srvurl}/isfile/${provider}/run.log`);
     return response.status === 200;
   }
   
-  const configureProvider = (val) => {
-    setProvider(val);
-    setShowconfig(true);
-    setSpin(false);
-    setOutput([]); setShowoutput(false); setError(null) // clear state
-    checkExistingRun(val).then(res => { setLogfile(res) } );
-    fetchData(`${srvUrl}/${val.toLowerCase()}/config`)
+  const get_config = (target) =>
+    fetchData(`${srvurl}/${target.id}/config`)
+      .then(response => {
+        if (!response.ok) setError(response.statusText);
+        return response.json();
+      }).then(
+      (result) => {
+        setConfig(result);
+      },
+      (error) => {
+        console.error(error);
+        setError(error.message)
+      }
+    );
+  
+  const get_usersettings = () =>
+    fetchData(`${srvurl}/usersettings`)
       .then(response => {
         if (! response.ok) setError(response.statusText)
         return response.json();
-      })
-      .then(
-        (result) => { setConfig(result); },
-        (error) => { console.error(error); setError(error.message) }
-      );
-    fetchData(`${srvUrl}/usersettings`)
-      .then(response => {
-        if (! response.ok) setError(response.statusText)
-        return response.json();
-      })
-      .then(
-        (result) => { setUsersettings(result); },
-        (error) => { console.error(error); setError(error.message) }
-      );
+      }).then(
+        (result) => {
+          setUsersettings(result);
+        },
+        (error) => {
+          console.error(error);
+          setError(error.message)
+        }
+    );
+  
+  const configureProvider = (target) => {
+    setProvider(target);
+    setSpin(false); setOutput([]); setError(null) // clear state
+    if (['aws', 'azure', 'vmware'].includes(target.id)) {
+      checkExistingRun(target.id).then(res => { setLogfile(res) } );
+      get_config(target);
+      get_usersettings();
+      setShowsettings(true);
+    }
   }
 
   const processResponse = (responseBody) => {
     setSpin(true); // start spinning
     setError(undefined); // clear up errors
-    setShowconfig(false); // automatically close config form
-    setShowoutput(true); // show output
     const reader = responseBody.getReader();
     return new ReadableStream({
       start(controller) {
@@ -104,14 +107,16 @@ function App() {
             if (done) {
               // finished with the stream
               controller.close();
-              setSpin(false);
+              // setSpin(false);
               return;
             }
             controller.enqueue(value);
             const textVal = new TextDecoder().decode(value);
             // Capture fatal errors
             if (reg.test(textVal)) setError(textVal);
-            if (textVal.includes('...ignoring')) setError(undefined);
+            if (textVal.includes('Terraform has been successfully initialized!'))
+              setPrvkey(true);
+            // if (textVal.includes('...ignoring')) setError(undefined);
             // Capture the gateway dns name
             if (textVal.includes('gateway_public_dns = [')) {
               setGwurl(textVal.split('gateway_public_dns = [')[1].split("'")[1]); // extract the IP
@@ -121,18 +126,23 @@ function App() {
             if (textVal.includes('TASK [exit site lockdown]'))
               setGwready(true);
             // if External Data Fabric console ready
-            if (textVal.includes('TASK [MCS tunnel for ports]'))
-              setMCSready(true);
             if (textVal.includes('Environment destroyed'))
             {
               setPrvkey(false);
               setError(undefined);
+              setSpin(false);
+              controller.close();
+              return;
             }
             // capture errors in output
-            if (textVal.includes('Terraform has been successfully initialized!'))
-              setPrvkey(true);
+            if (textVal.includes('Stage 4 complete')) {
+              setSpin(false);
+              controller.close();
+              return;
+            }
+            
             setOutput( old => [...old, textVal] );
-            outputRef.current.scrollTop = outputRef.current.scrollHeight;
+            // outputRef.current.scrollTop = outputRef.current.scrollHeight;
             push();
           })
         }
@@ -142,186 +152,121 @@ function App() {
     });
   }
 
-  const deploy = () => 
-    postData(`${srvUrl}/${provider.toLowerCase()}/deploy`, { config, usersettings } )
-    .then(response => response.body)
-    .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
-    .then(result => setLogfile(result));
-
-  const destroy = () =>
-    postData(`${srvUrl}/${provider.toLowerCase()}/destroy`, { config, usersettings } )
-    .then(response => response.body)
-    .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
-    .then(result => { setGwurl(undefined); setLogfile(undefined); } );
-
-  const reconnectToLogs = () => 
-    fetchData(`${srvUrl}/logstream/${provider.toLowerCase()}`)
-    .then(response => response.body)
-    .then(rb => processResponse(rb))
-    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
-    .then(result => setLogfile(result));
-
-    const reset = () => {
-    // configureProvider(providers[0]);
-    setProvider(null);
-    setConfig({});
-    setShowconfig(false);
-    setOutput([]);
-    setShowoutput(false);
-    setGwurl(undefined);
-    setMCSready(false);
-    setLogfile(undefined);
-    setError(undefined);
+  const deploy = () => {
+    setSpin(true); setStage('Deploying');
+    postData(`${srvurl}/${provider.id}/deploy` )
+      .then(response => {
+        if (!response.ok) setError(response.statusText);
+        else return response.body;
+      })
+      .then(rb => processResponse(rb))
+      .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
+      .then(result => setOutput([...result]) );
   }
+
+  const saveSettings = (settings) =>
+  {
+    postData(`${srvurl}/usersettings`, { usersettings: settings["usersettings"] })
+      .then(response => {
+        if (!response.ok) setError(response.statusText);
+        else return response.body;
+      })
+    postData(`${srvurl}/${provider.id}/config`, { config: settings["config"] })
+      .then(response => {
+        if (!response.ok) setError(response.statusText);
+        else return response.body;
+      })
+    if (readyForDeployment) {
+      setActionButton(deployButton)
+      setOutput([
+        "Ready to deploy:", "\n",
+        Object.keys(usersettings)
+          .filter(key => usersettings[key] === true) // selected options
+          .filter(key => key !== 'is_verbose') // discard verbose setting
+          .map(selected =>
+            selected.replace('is_', '').replace('install_', '').toUpperCase() // clean up
+          ).join('\n')
+      ]);
+    }
+  }
+
+  const destroy = () => {
+    setSpin(true); setStage('Destroying');
+    postData(`${srvurl}/${provider.id}/destroy`)
+      .then(response => response.body)
+      .then(rb => processResponse(rb))
+      .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
+      .then(result => setOutput([...result]) );
+    setGwurl(undefined); setLogfile(undefined);    
+  }
+
+  const reconnectToLogs = () => {
+    setOutput([]);
+    fetchData(`${srvurl}/logstream/${provider.id}`)
+    .then(response => response.body)
+    .then(rb => processResponse(rb))
+    .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
+    .then(result => setOutput([...result]));
+    }
+
+  const themeButton = <Button
+                        tip= 'Switch Theme' key='theme'
+                        icon={ theme === 'dark' ? <Icons.Moon /> : <Icons.Sun /> }
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        active={ theme === 'dark' ? false : true }
+  />
+  const deployButton = <Button
+            label={spin ? `${stage} on ${provider?.title} ...` : `Start Deployment on ${provider?.title}`}
+            onClick={deploy}
+            primary
+            disabled={spin}
+  />
 
   return (
     <Grommet theme={hpe} themeMode={theme} full>
-      <Box fill>
-        {/* Navigation Bar */}
-        <Box direction='row' flex={false} justify='between'>
-          <Button icon={ <Icons.Ezmeral color='brand' /> } onClick={ () => reset() } />
-          {/* Providers */}
-          <Box animation='zoomIn'>
-            { !projectFocus && providers && <RadioButtonGroup id='target-id' 
-              name='target' 
-              direction='row'
-              justify='evenly'
-              options={ providers }
-              value={ provider }
-              onChange={ e => configureProvider(e.target.value) } 
-            />}
-          </Box>
-          <Box direction='row' justify='end'>
-            <CheckBox
-              toggle reverse
-              label={ theme === 'dark' ? <Icons.Moon /> : <Icons.Sun /> }
-              checked={ theme === 'dark' ? false : true }
-              onChange={ () => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            />
-            { !projectFocus && <CheckBox 
-              toggle reverse
-              label={ showoutput ? <Icons.Console /> : <Icons.Desktop /> }
-              checked={ showoutput ? true : false }
-              onChange={ () => setShowoutput(!showoutput) }
-            /> }
-            { !projectFocus && <CheckBox 
-              toggle reverse
-              label={ showconfig ? <Icons.HostMaintenance /> : <Icons.System /> }
-              checked={ showconfig ? true : false }
-              onChange={ () => setShowconfig(!showconfig) }
-            /> }
-            { <CheckBox 
-              toggle reverse
-              label={ <Icons.Apps /> }
-              checked={ projectFocus ? true : false }
-              onChange={ () => setprojectFocus(!projectFocus) }
-            /> }
-          </Box>
+      {/* Global Header */}
+      <HeaderWithActions buttons={ [ themeButton ] } />
+      {/* Content area */}
+      <Page flex overflow='auto'>
+        {/* { process.env.NODE_ENV === "development" ? "Running in development" : "" } */}
+        {/* Title Content */}
+        <PageHeader background="background-front"
+          title="Experience Ezmeral"
+          subtitle='Start your Ezmeral journey!'
+          actions={
+            <Box pad={{ 'horizontal': 'small' }} align='end'>
+              {provider && <Text>{provider.title}</Text>}
+              {spin && <Spinner size="medium" message={{ start: 'Wait while installing.', end: 'Install complete.' }} />}
+            </Box>}
+          pad={{ horizontal:'medium', top: 'small', bottom: 'large' }}
+          />
+        {/* Page Content */}
+        <Providers params={{ provider, configureProvider }} />
+        {showSettings && <Settings
+          params={{ provider, config, setConfig, usersettings, setUsersettings, setShowsettings, saveSettings }} />}
+        { // Connect to existing platform
+          ['runtime', 'datafabric'].includes(provider?.id) && <ProjectFocus params={{ srvurl, setError, setActionButton, setSpin }} />
+        }
+        {/* Output Pane */}
+        <Output params={{ output }} />
+ 
+        { //Deployment button
+          (readyForDeployment || readyForMlapps) && actionButton
+        }
+        <Paragraph fill='horizontal'>
+            Deploy fully functional HPE Ezmeral products in your prefered environment and get going. Or connect to an existing one to use examples.
+            Further help is available on <Anchor href='https://youtube.com/playlist?list=PLskrf_RqaboJpWGzNkMxqc5QBUiwJ6S7x' label='Youtube' target='_blank' /> and via your <Anchor href='https://hpe.sharepoint.com/sites/ezmeral/SitePages/Ezmeral-Champions.aspx' label=' HPE Ezmeral Champion' target='_blank' />!
+        </Paragraph>
+        <Box direction='row' margin="none" justify='between' border='between' gap='small' pad='small'>
+          <Anchor href='https://learn.ezmeral.software.hpe.com/' label='Discover' target='_blank' />
+          <Anchor href='https://hackshack.hpedev.io/workshops' label='Experience' target='_blank' />
+          <Anchor href='https://www.hpe.com/demos/ezmeral' label='Show' target='_blank' />
         </Box>
-        {/* Content area */}
-        <Box flex overflow="auto" justify='between'>
-          { projectFocus && <ProjectFocus />}
-          {/* Configure */}
-          { ! projectFocus && showconfig && provider &&
-            <Card margin='small' flex animation='zoomIn' overflow='auto'>
-              <Form
-                value= { config }
-                validate='change' 
-                onChange= { (value) => setConfig(value) }
-                >
-                  { Object.keys(config).filter(k => !k.includes('region')).map( key => 
-                      <FormField name={key} htmlfor={key} label={ key.toUpperCase() } key={key} margin='small'>
-                        <TextInput placeholder={key} id={key} name={key} value={ config[key] } type={ key.includes('password') || key.includes('secret') || key.includes('pwd') ? 'password' : 'text' } />
-                      </FormField>
-                    )}
-                    { (provider.toLowerCase() === 'aws' || provider.toLowerCase() === 'azure') && <FormField name='region' htmlfor='region' label='REGION' key='region' required={ true } margin='small'>
-                        <Select placeholder='Region' id='region' name='region' 
-                          options={regions[provider.toLowerCase()]}
-                          onChange={({ option }) => setConfig( old => ( {...old, 'region': option }) )  }
-                          value={ config['region'] } />
-                      </FormField>
-                    }
-              </Form>
-              <Form
-                value= { usersettings }
-                validate='change' 
-                onChange= { (value) => setUsersettings(value) }
-                >
-
-                <CardFooter direction='column'>
-                  <Box direction='row' justify='center'>
-                    {
-                      Object.keys(usersettings).filter(k => !k.includes('is_') && !k.includes('install_ad')).map( key => 
-                        <FormField name={key} htmlfor={key} label={key.replace('is_', '').toUpperCase()} key={key} margin='small'>
-                          <TextInput placeholder={key} id={key} name={key} value={ String(usersettings[key]) } type={ key.includes('password') || key.includes('secret') ? 'password' : 'text' } />
-                        </FormField>
-                      )
-                    }
-                  </Box>
-                  <Box direction='row' justify='center'>
-                    { Object.keys(usersettings).filter(k => k.includes('is_') || k.includes('install_ad')).map( key => 
-                        <CheckBox toggle reverse key={key} label={ key.replace('is_', '').toUpperCase() } checked={ usersettings[key] } onChange={ (e) => setUsersettings( old => ( {...old, [key]: !old[key] }) ) } />
-                      )
-                    }
-                  </Box>
-                </CardFooter>
-              </Form>
-            </Card> }
-          {/* Run */}
-          { ! projectFocus && provider && (! Object.values(config).some(v => v===''))
-            && <Box animation='zoomIn' direction='row' justify='between' margin='none'>
-            <Button 
-              label={ 'Deploy on ' + provider } 
-              icon={ <Icons.Run /> } 
-              onClick={ () => window.confirm('Installation will start') && deploy() } 
-              margin='none' 
-            />
-          </Box>}
-
-          { ! projectFocus && showoutput && 
-            <Card margin='small' flex animation='zoomIn' overflow='auto'>
-              <TextArea 
-                readOnly 
-                fill flex
-                ref={ outputRef }
-                value={ output.join('') }
-                size='xsmall'
-                plain
-                style={{ whiteSpace: 'pre', fontFamily: 'Consolas,Courier New,monospace', fontSize: 'small' }} />
-            </Card>
-          }
-        </Box>
-        {/* Footer */}
-        <Box flex={false} pad="none" justify='end'>
-          <Footer background='brand' pad='xsmall'>
-            {!projectFocus && <Fragment>
-              { error ? <Icons.StatusCritical color='status-critical' /> : <Icons.StatusGood color='status-ok' /> }
-              { spin && <Text color='status-warning'>Please wait...</Text> }
-              { error && <Text tip={ error } color='red'>{ error.substring(0,50) }...</Text> }
-              { gwurl && <Anchor label='ECP Gateway' href={ 'https://' + gwurl } target='_blank' rel='noreferrer' disabled={ !gwready } tip={ gwurl } /> }
-              { config['is_mapr'] && MCSready && <Anchor label='MCS' href='https://localhost:8443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Management Console' /> }
-              { config['is_mapr'] && MCSready && <Anchor label='MCS Installer' href='https://localhost:9443' target='_blank' rel='noreferrer' disabled={ !MCSready } tip='External Data Fabric Installer' /> }
-              { logfile && <Anchor label='Log' href={`${srvUrl}/log/${provider.toLowerCase()}`} target='_blank' rel='noreferrer' /> }
-              { logfile && <Button label='Attach to run.log' icon={ <Icons.Multiple color='gray' /> } onClick={ () => reconnectToLogs() } margin='none' /> }
-              { prvkey && <Anchor label='PrvKey' href={`${srvUrl}/key`} target='_blank' rel='noreferrer' /> }
-              {/* { tfstate && <Anchor label='TF State' href={`/file/${provider.toLowerCase()}/terraform.tfstate`} rel='noreferrer' /> } */}
-              { logfile && <Button label='Destroy' alignSelf='end'
-                icon={ <Icons.Trash color='status-critical' /> } 
-                tip='Destroy the environment' 
-                onClick={ () => window.confirm('All will be deleted') && destroy() } 
-              /> }
-            </Fragment>
-            }
-            <Box direction='row'>
-              <Text margin={ { right: 'small' } }>HPE Ezmeral @2022 </Text>
-              <Anchor label='About' onClick={ () => alert('https://github.com/hewlettpackard/ezdemo for issues and suggestions.') } />
-            </Box>
-          </Footer>
-
-        </Box>
-      </Box>
+      </Page>
+      {/* Footer */}
+      <FooterWithActions
+        params={{ error, gwurl, gwready, logfile, provider, reconnectToLogs, prvkey, destroy, srvurl } }
+      />
   </Grommet>
   );
 }

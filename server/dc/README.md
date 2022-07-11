@@ -42,21 +42,21 @@ Any lines after "#### Custom ####" will be copied as is to provide additional in
 
 - You may also provide local repository for Data Fabric packages
 
- ```ini
+```ini
 #### Custom ####
-ad_server=""
-ad_domain="example.com"
-ad_bind_dn="CN=Administrator,CN=Users,DC=example,DC=com"
-ad_bind_pwd=""
-ad_security_protocol="ldap" # defaults to ldaps
-ad_bind_type="search_bind" # this is default
-ad_base_dn="DC=example,DC=com"
-ad_user_attribute="sAMAccountName" # this is default
-ad_group_attribute="member" # defaults to memberOf
-ad_type="Active Directory" # this is default
+ad_server=
+ad_domain=example.com
+ad_bind_dn=CN=Administrator,CN=Users,DC=example,DC=com
+ad_bind_pwd=
+ad_security_protocol=ldap # defaults to ldaps
+ad_bind_type=search_bind # this is default
+ad_base_dn=DC=example,DC=com
+ad_user_attribute=sAMAccountName # this is default
+ad_group_attribute=member # defaults to memberOf
+ad_type=Active Directory # this is default
 ad_port=389
-ad_admin_group="CN=Administrators,CN=Users,DC=example,DC=com"
-ad_member_group="CN=Users,DC=example,DC=com"
+ad_admin_group=CN=Administrators,CN=Users,DC=example,DC=com
+ad_member_group=CN=Users,DC=example,DC=com
 ad_verify_peer=false # this is not used, always defaults to false
 
 http_proxy= ### add http proxy environment to all nodes (NOT TESTED)
@@ -67,7 +67,7 @@ mapr_monitoring=false
 mapr_repo=http://www.local.site/repos/mapr/releases/
 
 ...
- ```
+```
 
 ## Requirements
 
@@ -75,19 +75,19 @@ mapr_repo=http://www.local.site/repos/mapr/releases/
 
   - vcenter_template_user is configured with [paswordless sudo](https://www.google.com/search?q=centos+7+passwordless+sudo)
 
-  - Root volume with min 400GB
+  - Root volume with 400GB size
 
 ~~- Ubuntu 20.04 template (if you want to deploy Standalone Data Fabric):~~
 
-  ~~- vcenter_mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)~~
+~~- vcenter_mapr_template_user is configured with [paswordless sudo](https://www.google.com/search?q=ubuntu+20.04+passwordless+sudo)~~
 
 - Rocky Linux 8 template for Data Fabric:
-  
+
   - vcenter_mapr_template_user configured with passwordless sudo (same as CentOS7)
-  
+
   - Has cloud-init and perl packages installed (for dynamic IP assignment)
 
-  - Root volume with min 400GB
+  - Root volume with 400GB size
 
 ## TODO
 

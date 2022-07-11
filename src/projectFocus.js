@@ -1,52 +1,72 @@
 import React, { Fragment } from 'react'
-import { Box, Notification, Button, Layer, TextInput, Form, FormField, DataTable, Text, Tip, CheckBox, Card, CardHeader, CardBody, CardFooter, Grid, TextArea } from 'grommet'
-import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, StatusCritical, StatusGood, Test, Trash, User } from 'grommet-icons'
+import { Box, Notification, Button, TextInput, Form, FormField, DataTable, Text, Tip, CheckBox, Card, CardHeader, CardBody, CardFooter, Grid } from 'grommet'
+import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, SettingsOption, StatusCritical, StatusGood, Trash, User } from 'grommet-icons'
+import Modal from './Modal';
 
-function ProjectFocus() {
+export const ProjectFocus = (props) => {
   const [remember, setRemember] = React.useState(true);
-  const [layer, setLayer] = React.useState();
+  const [layer, setLayer] = React.useState(2);
   const [alert, setAlert] = React.useState(null);
   const [credentials, setCredentials] = React.useState({ 'url': '', 'username': '', 'password': ''});
   const [platform, setPlatform] = React.useState();
   const [ml_apps, setMlapps] = React.useState();
 
+  const { srvurl, setError, setActionButton, setSpin } = props.params;
   // load credentials if saved
   React.useEffect(() => {
     var stored = localStorage.getItem('ezmeral');
     if ( stored )
       setCredentials(JSON.parse(stored));
-      fetch(`${srvUrl}/mlapps`, {mode: 'cors'}).then(res => res.json().then(data => setMlapps(data)));
-    }, []);
+    // fetch app list
+    fetch(`${srvurl}/mlapps`, { mode: 'cors' })
+      .then(res => res.json()
+        .then(data => setMlapps(data))
+        .catch(error => setError(error)));
+    }, [srvurl, setError]);
 
-  const srvUrl = 'http://localhost:4000'
-
-  const _fetch = (url, path, payload=null) => {
-    // remove trailing slash from url if any
-    return fetch(`${url.replace(/\/$/, '')}/${path}`, { 
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify( { ...credentials, payload })
-    })
-    .then( res => res.json() )
-  }
-  const getData = (link, payload=null) => {
-    if (Object.keys(credentials).length === 3)
-      return _fetch(srvUrl, link, payload)
+  const getData = (link, payload = null) => {
+    if (Object.keys(credentials).length === 3) {
+      setSpin(true);
+      return fetch(`${srvurl}/${link}`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...credentials, payload })
+      })
+        .then(
+          res => {
+            setSpin(false); // stop spinning
+            if (res.ok) return res.json()
+            else {
+              setError(res.statusText);
+              return null;
+            }
+          },
+          error => console.dir('catch here', error)
+        )
+        .catch(error => {
+          console.dir('or catch here', error)
+          return null;
+        })
+    }
   }
 
   const connect = () => {
-    if (! credentials) return;
+    if (!credentials) return;
+    setLayer(0); // close the modal
     return getData('platform/connect')
-    .then(config => {
-      if (config) {
-        setPlatform(old => ({ ...old, config } ) )
-        if (remember && credentials) localStorage.setItem('ezmeral', JSON.stringify(credentials));
-        else localStorage.removeItem('ezmeral');
-        k8sc_list();
-        setLayer(0); 
-      };
-    });
+      .then( config => {
+        if (config) {
+          setPlatform(old => ({ ...old, config }))
+          if (remember && credentials) localStorage.setItem('ezmeral', JSON.stringify(credentials));
+          else localStorage.removeItem('ezmeral');
+          k8sc_list();
+          setLayer(0);
+          setSpin(false);
+        }
+      })
+      .catch(error => setError(error));
+      ;
   }
 
   const k8sc_list = () => {
@@ -79,18 +99,25 @@ function ProjectFocus() {
     console.log("Logged out!")
   }
 
+  const actionButton =
+    <Button
+      label={platform?.config?.result === 'Success' ? 'Connected as: ' + credentials.username : 'Connect to Ezmeral'}
+      onClick={() => setLayer(2)}
+    />
+
   return(
     <Box flex overflow="auto" align="start" margin='small' gap='small'>
-      {/* <Notification title='Experimental Features' message='This UI is under development, things may work!' status='warning' toast global /> */}
       <Box align="start" fill='horizontal'>
         <Box direction='row' justify='between' fill='horizontal'>
-          { <Button label={ platform?.config?.result === 'Success' ? 'Connected as: ' + credentials.username : 'Connect to Ezmeral' } onClick={ () => setLayer(2) } /> }
+          { actionButton }
           { platform?.config && <Button icon={<Refresh />} label="Refresh" onClick={ () => k8sc_list() } /> }
           { platform?.config && <Button label="Logout" onClick={ () => disconnect() } /> }
         </Box>
 
         {layer === 2 && (
-          <Layer animate modal onClickOutside={ () => setLayer(0) } onEsc={ () => setLayer(0) } plain={false} key='connect'>
+          <Modal
+            closer={()=> setLayer(0)}
+            content={
               <Form
                 validate='blur'
                 value={ credentials }
@@ -112,7 +139,8 @@ function ProjectFocus() {
                   <Button label='Connect' icon={<Login />} type='submit' />
                 </Box>
           </Form>
-        </Layer>
+          }
+          />
         )}
 
         { platform?.config && 
@@ -185,7 +213,6 @@ function ProjectFocus() {
         </Grid>
       </Box> }
       { alert && <Notification title={ alert.title } message={ alert.message } status={ alert.status } onClose={ () => setAlert(null) } /> }
-      {/* <TextArea contentEditable={false} fill flex size='xsmall' plain title='Platform' value={ JSON.stringify(platform.objects, 0,2) } /> */}
     </Box>
   );
 }

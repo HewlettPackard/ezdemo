@@ -1,0 +1,25 @@
+[DEFAULT]
+### Data Center Settings
+dc=name_of_dc # used for specific settings
+vm_network=10.1.1.192/24 # IP allocation will start with the given IP in that subnet, controller the first (or three if HA etc)
+### VMWARE SETTINGS
+vcenter_server=vcenter.demo.local
+vcenter_user=Administrator@vsphere.local
+vcenter_password=Adm1nPwd_
+vcenter_datacenter_name=DataCenter
+vcenter_cluster_name=Cluster1
+vcenter_template_name=centos-template
+vcenter_template_user=centos
+vcenter_template_keyfile=/home/centos/.ssh/id_rsa
+vcenter_mapr_template_name=rocky-template
+vcenter_mapr_template_user=rocky
+vcenter_mapr_template_keyfile=/home/rocky/.ssh/id_rsa
+vcenter_folder=Folder
+vcenter_datastore=Datastore
+vcenter_vswitch=VM Network
+vm_gateway=gateway.demo.local
+vm_dns=dns.demo.local
+vm_domain=demo.local
+
+#### Custom ####
+ad_server=ad.demo.local

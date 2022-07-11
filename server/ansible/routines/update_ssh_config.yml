@@ -97,3 +97,4 @@
     shell: ssh-keygen -R "{{ item }}" # >> /dev/null 2>&1
     with_items: "{{ groups['all'] }}" 
     when: op == "remove"
+    ignore_errors: yes
