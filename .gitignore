@@ -149,3 +149,4 @@ mip.ini
 server/dc/dc.ini
 server/dc/hosts.ini
 server/dc/vars.ini
+dc.ini

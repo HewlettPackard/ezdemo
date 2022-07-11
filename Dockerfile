@@ -29,7 +29,7 @@ RUN rm -rf aws* terraform.zip go1.* terratag* kubectl minica /usr/local/go /usr/
 
 ## Install Terratag 
 RUN curl -C - -o terratag_0.1.40_linux_amd64.tar.gz -L  https://github.com/env0/terratag/releases/download/v0.1.40/terratag_0.1.40_linux_amd64.tar.gz && tar -xzf terratag_0.1.40_linux_amd64.tar.gz terratag \ 
-    && mv terratag /usr/local/bin && rm -rf terratag_0.1.40_linux_amd64.tar.gz
+  && mv terratag /usr/local/bin && rm -rf terratag_0.1.40_linux_amd64.tar.gz
 
 
 WORKDIR /app
@@ -40,6 +40,8 @@ COPY server /app/server
 WORKDIR /app/server/aws
 RUN terraform init -upgrade
 WORKDIR /app/server/azure
+RUN terraform init -upgrade
+WORKDIR /app/server/dc
 RUN terraform init -upgrade
 
 WORKDIR /app/server
