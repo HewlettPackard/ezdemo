@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react'
 import { Box, Notification, Button, TextInput, Form, FormField, DataTable, Text, Tip, CheckBox, Card, CardHeader, CardBody, CardFooter, Grid } from 'grommet'
-import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, SettingsOption, StatusCritical, StatusGood, Trash, User } from 'grommet-icons'
+import { Add, AddCircle, FormLock, Info, Link, Login, Refresh, StatusCritical, StatusGood, Trash, User } from 'grommet-icons'
 import Modal from './Modal';
 
 export const ProjectFocus = (props) => {
@@ -63,6 +63,7 @@ export const ProjectFocus = (props) => {
           k8sc_list();
           setLayer(0);
           setSpin(false);
+          setActionButton(actionButton);
         }
       })
       .catch(error => setError(error));
