@@ -144,7 +144,6 @@
           scaled_hosts2:
             {{ mapr_hosts[3:] | to_nice_yaml | indent(4) }}
 
-  # TODO: More debug needed, this is hanging forever
   - name: add remaining nodes
     shell: "echo y | sudo /opt/mapr/installer/bin/mapr-installer-cli install -nv -t /tmp/mapr.stanza"
     when: mapr_hosts | length > 3

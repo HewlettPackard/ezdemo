@@ -25,7 +25,7 @@
       username: "{{ vcenter_user }}"
       password: "{{ vcenter_password }}"
       validate_certs: no
-      datacenter_name: "{{ datacenter_name }}"
+      datacenter_name: "{{ vcenter_datacenter_name }}"
       folder_name: "{{ vcenter_folder }}"
       folder_type: vm
       state: present
@@ -40,7 +40,7 @@
       validate_certs: no
       name: "{{ item }}-ECP-CONTROLLER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
@@ -87,7 +87,7 @@
       validate_certs: no
       name: "{{ item }}-ECP-GATEWAY-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
@@ -130,7 +130,7 @@
       validate_certs: no
       name: "{{ item }}-ECP-ADSERVER-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
@@ -174,7 +174,7 @@
       validate_certs: no
       name: "{{ item }}-ECP-K8S-PICASSO-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
@@ -225,7 +225,7 @@
       validate_certs: no
       name: "{{ item }}-ECP-K8S-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"
@@ -276,7 +276,7 @@
       validate_certs: no
       name: "{{ item }}-EDF-{{ vm_prefix }}{{ item.split('.')[-1][-3:] }}"
       template: "{{ vcenter_mapr_template_name }}"
-      datacenter: "{{ datacenter_name }}"
+      datacenter: "{{ vcenter_datacenter_name }}"
       folder: "{{ vcenter_folder }}"
       cluster: "{{ vcenter_cluster_name }}"
       datastore: "{{ vcenter_datastore }}"

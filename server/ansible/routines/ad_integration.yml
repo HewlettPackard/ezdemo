@@ -1,10 +1,22 @@
+- name: collect ad_server info for fqdn
+  hosts: ad_server
+  gather_facts: yes
+
 - name: Install and configure AD authentication
   hosts: mapr
   gather_facts: yes
-  vars_prompt:
 
   vars:
     ad_realm: "{{ ad_domain | default('SAMDOM.EXAMPLE.COM') | upper }}"
+    ad_fqdn: "{{ groups['ad_server'] | map('extract', hostvars, 'ansible_fqdn') | first }}"
+    # realms_value: |
+    #   {
+    #     kdc = {{ ad_fqdn }}:88
+    #     admin_server = {{ ad_fqdn }}:749
+    #   }
+    # domain_realm_value: |
+    #   {{ ad_realm | lower }} = {{ ad_fqdn }}
+    #   .{{ ad_realm | lower }} = {{ ad_fqdn }}
 
   tasks:
     - name: Install ad_auth required tools for RedHat/CentOS 8
@@ -28,6 +40,7 @@
       when: ansible_facts['os_family'] == 'Debian'
       become: yes
 
+    ### TODO: remove, used for manual setup
     - name: configure sssd
       copy: dest=/etc/sssd/sssd.conf content={{ sssd_file }} mode=0600
       become: yes
@@ -98,12 +111,12 @@
       become: yes
       when: ansible_facts['os_family'] == 'Debian'
 
-    - name: ensure AD can be discovered from hosts (cloud providers dont resolve to self-installed AD)
-      lineinfile:
-        dest: /etc/hosts
-        line: "{{ ad_server | default(groups['ad_server'] | first) }}     {{ ad_domain }}"
-      become: yes
-      when: install_ad | bool
+    # - name: ensure AD can be discovered from hosts (cloud providers dont resolve to self-installed AD)
+    #   lineinfile:
+    #     dest: /etc/hosts
+    #     line: "{{ ad_server | default(groups['ad_server'] | first) }}     {{ ad_domain }}"
+    #   become: yes
+    #   when: install_ad | bool
 
     - shell: "realm list | grep -q {{ ad_domain }}"
       register: realm_joined
@@ -125,7 +138,33 @@
       become: yes
       when: realm_joined is failed
 
-    - shell: "realm discover {{ ad_domain }}"
+    - name: workaround for realm join - bypass cloud providers dns
+      lineinfile:
+        path: /etc/resolv.conf
+        search_string: "nameserver"
+        line: "nameserver {{ groups['ad_server'] | first }}"
+      become: yes
+      when: install_ad | bool
+
+    - name: update krb5.conf for cloud
+      community.general.ini_file:
+        path: /etc/krb5.conf
+        section: "{{ item.section }}"
+        option: "{{ item.key }}"
+        value: "{{ item.value }}"
+        backup: yes
+      with_items:
+        - { section : libdefaults, key: 'dns_lookup_realm', value: "false" }
+        - { section : libdefaults, key: 'dns_lookup_kdc', value: "false" }
+        - { section : libdefaults, key: 'default_realm', value: "{{ ad_realm }}" }
+        - { section : realms, key: "{{ ad_realm }}", value: "{\n kdc = {{ ad_fqdn }}:88 \n admin_server = {{ ad_fqdn }}:88 \n}" } 
+        - { section : domain_realm, key: "{{ ad_realm | lower }}", value: "{{ ad_fqdn }}" }
+        - { section : domain_realm, key: ".{{ ad_realm | lower }}", value: "{{ ad_fqdn }}" }
+      become: yes
+      when: install_ad | bool
+
+    - name: realm discover
+      shell: "realm discover {{ ad_domain }}"
       become: yes
       when: realm_joined is failed and ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
       retries: 12 # retry for 5 minutes
@@ -133,6 +172,15 @@
       register: realm
       until: realm.rc == 0
 
-    - shell: "echo {{ ad_bind_pwd }} | realm join {{ ad_domain }} ; realm permit -a"
+    - name: realm join
+      shell: "echo {{ ad_bind_pwd }} | realm join {{ ad_domain }} ; realm permit -a"
       become: yes
       when: realm_joined is failed and ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8'
+
+    - name: revert the workaround for dns
+      lineinfile:
+        path: /etc/resolv.conf
+        search_string: "nameserver"
+        line: "nameserver 10.1.0.2"
+      become: yes
+      when: install_ad | bool
