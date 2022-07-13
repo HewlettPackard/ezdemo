@@ -9,7 +9,7 @@ FROM python:3-slim
 LABEL Name=ezdemo Version=1.0.0
 ENV PATH /root/.local/bin:$PATH
 
-RUN apt update -y && apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \
+RUN apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \
   libcurl4-openssl-dev libssl-dev libxml2-dev gcc sshpass
 WORKDIR /tmp
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
@@ -24,13 +24,11 @@ RUN curl -LO "https://go.dev/dl/go1.18.linux-amd64.tar.gz" && tar -C /usr/local 
 RUN git clone https://github.com/jsha/minica.git && cd minica/ && /usr/local/go/bin/go build &&\
   mv minica /usr/local/bin
 ## clean temp files
-
 RUN rm -rf aws* terraform.zip go1.* terratag* kubectl minica /usr/local/go /usr/local/aws-cli/v2/current/dist/awscli/examples
 
 ## Install Terratag 
 RUN curl -C - -o terratag_0.1.40_linux_amd64.tar.gz -L  https://github.com/env0/terratag/releases/download/v0.1.40/terratag_0.1.40_linux_amd64.tar.gz && tar -xzf terratag_0.1.40_linux_amd64.tar.gz terratag \ 
   && mv terratag /usr/local/bin && rm -rf terratag_0.1.40_linux_amd64.tar.gz
-
 
 WORKDIR /app
 COPY --from=builder /app/build /app/build
@@ -47,10 +45,10 @@ RUN terraform init -upgrade
 WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt
-EXPOSE 3000
+# Defer updates till the end - reduce image download times
+RUN apt update -y
+RUN apt-upgrade -y
 EXPOSE 4000
 EXPOSE 8443
 EXPOSE 9443
-EXPOSE 8780
-EXPOSE 5601
 CMD python3 ./main.py 

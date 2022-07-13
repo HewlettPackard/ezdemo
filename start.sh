@@ -38,7 +38,8 @@ done
 
 printf -v joined ' -v %s' "${VOLUMES[@]}"
 
+ports="-p 4000:4000 -p 8443:8443 -p 9443:9443"
 ## run at the background with web service exposed at 4000, mapr grafana at 3000, mcs at 8443, mcs installer at 9443
-docker run --name ezdemo --pull always -d -p 3000:3000 -p 4000:4000 -p 8443:8443 -p 9443:9443 ${joined} erdincka/ezdemo:latest
+docker run --name ezdemo --pull always -d ${ports} ${joined} erdincka/ezdemo:latest
 
 exit 0
