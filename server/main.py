@@ -1,7 +1,5 @@
-from crypt import methods
 from functools import reduce
 import hashlib
-import re
 from urllib.parse import urlparse
 from hpecp import ContainerPlatformClient
 from http import HTTPStatus
@@ -75,8 +73,8 @@ def home():
 @app.route("/<target>/config", methods=["GET", "POST"])
 def getset_config(target):
     search_path = os.path.join(base_path, get_target_dir(target))
-    dc_file = os.path.join(search_path, "dc.ini")
-    dc_template = os.path.join(search_path, "dc.ini-template")
+    dc_file = os.path.join(base_path, "dc", "dc.ini")
+    dc_template = os.path.join(base_path, "dc" "dc.ini-template")
     conf_file = os.path.join(search_path, "config.json")
     conf_template = os.path.join(search_path, "config.json-template")
 
@@ -124,7 +122,10 @@ def getset_config(target):
 def getset_usersettings():
     if request.method == "GET":
         response = None
-        with open("user.settings") as f:
+        user_settings_file = "user.settings-template"
+        if os.path.isfile(os.path.join(base_path, "user.settings")):
+            user_settings_file = "user.settings"
+        with open(user_settings_file) as f:
             response = json.load(f)
 
         if "DEV" in os.environ:

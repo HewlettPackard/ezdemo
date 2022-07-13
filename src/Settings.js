@@ -40,7 +40,6 @@ function Settings(props) {
                 htmlfor={key}
                 name={key}
                 label={key.toUpperCase()}
-                required
               >
                 <TextInput
                   placeholder={key}
