@@ -30,7 +30,7 @@
       # - "--- vCenter INFORMATION ---"
       - "vCenter IP: {{ vcenter_server }}"
       - "vCenter Username: {{ vcenter_user }}"
-      - "Datacentername: {{ datacenter_name }}"
+      - "Datacentername: {{ vcenter_datacenter_name }}"
       - "Clustername: {{ vcenter_cluster_name }}"
       - "Templatename: {{ vcenter_template_name }}"
       - "DF Templatename: {{ vcenter_mapr_template_name }}"

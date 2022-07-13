@@ -28,7 +28,7 @@ export const FooterWithActions = (props) => {
           />}
         </Fragment>
         <Box direction='row'>
-          <Text margin={{ right: 'small' }}>HPE Ezmeral @2022 </Text>
+          <Text wordBreak='keep-all' margin={{ right: 'small' }}>HPE Ezmeral @2022 </Text>
           <Anchor label='About' href='https://github.com/hewlettpackard/ezdemo' target='_blank' />
         </Box>
       </Footer>
