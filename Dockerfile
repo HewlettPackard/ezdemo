@@ -46,7 +46,7 @@ RUN terraform init -upgrade
 WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt
-RUN apt-upgrade -y
+# RUN apt upgrade -y
 EXPOSE 4000
 EXPOSE 8443
 EXPOSE 9443
