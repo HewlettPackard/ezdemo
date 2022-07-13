@@ -10,7 +10,6 @@ LABEL Name=ezdemo Version=1.0.0
 ENV PATH /root/.local/bin:$PATH
 
 RUN apt update
-RUN apt-upgrade -y
 RUN apt install -y curl unzip openssh-client jq vim git nodejs yarn azure-cli \
   libcurl4-openssl-dev libssl-dev libxml2-dev gcc sshpass
 WORKDIR /tmp
@@ -47,6 +46,7 @@ RUN terraform init -upgrade
 WORKDIR /app/server
 RUN chmod +x *.sh */*.sh
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-upgrade -y
 EXPOSE 4000
 EXPOSE 8443
 EXPOSE 9443
