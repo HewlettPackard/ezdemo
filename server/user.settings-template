@@ -1,1 +1,13 @@
-../user.settings
+{
+  "admin_password": "ChangeMe..1",
+  "install_ad": true,
+  "is_gpu": false,
+  "is_ha": false,
+  "is_mapr": false,
+  "is_mapr_ha": false,
+  "is_mlops": true,
+  "is_runtime": true,
+  "is_verbose": false,
+  "project_id": "ezdemo",
+  "user": "myuser"
+}

@@ -124,6 +124,7 @@ def getset_usersettings():
         response = None
         user_settings_file = "user.settings-template"
         if os.path.isfile(os.path.join(base_path, "user.settings")):
+            print("existing settings file for the user")
             user_settings_file = "user.settings"
         with open(user_settings_file) as f:
             response = json.load(f)
@@ -409,6 +410,6 @@ def platform(op=None):
 
 if __name__ == "__main__":
     if "DEV" in os.environ:
-        app.run(host="0.0.0.0", debug=True, port=4000)
+        app.run(host="0.0.0.0", debug=True, port=4001)
     else:
         serve(app, host="0.0.0.0", port=4000)
