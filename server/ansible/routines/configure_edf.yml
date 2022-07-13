@@ -16,6 +16,19 @@
       ([ -f /tmp/maprfuseticket ] || maprlogin generateticket -type servicewithimpersonation -user mapr -out /tmp/maprfuseticket) || true
       ([ -f /opt/mapr/conf/maprfuseticket ] || sudo cp /tmp/maprfuseticket /opt/mapr/conf/maprfuseticket) || true
 
+  - name: install posix client
+    package:
+      name: mapr-posix-client-basic
+      state: present
+    become: yes
+  
+  - name: start posix client
+    service:
+      name: mapr-posix-client-basic
+      state: restarted
+      enabled: yes
+    become: yes
+
   - name: configure delta
     shell: pip3 install delta_spark
     become: yes
@@ -68,11 +81,16 @@
       dest: /tmp/s3_credentials
     delegate_to: "{{ groups['mapr'] | first }}"
 
-- hosts: "{{ groups['mapr'] | last | default([]) }}"
-  gather_facts: no
-  tasks:
-  - name: install airflow
-    package: name="mapr-airflow mapr-airflow-webserver",state=present
-    become: yes
+### TODO: fluentd conflicting with this package - fix at 20220526
+# - hosts: "{{ groups['mapr'] | last | default([]) }}"
+#   gather_facts: no
+#   tasks:
+#   - name: install airflow
+#     package: 
+#       name: 
+#         - mapr-airflow
+#         - mapr-airflow-webserver
+#       state: present
+#     become: yes
 
   
