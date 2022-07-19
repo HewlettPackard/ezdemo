@@ -236,7 +236,6 @@ function App() {
           actions={
             <Box pad={{ 'horizontal': 'small' }} align='end'>
               {provider && <Text>{provider.title}</Text>}
-              {spin && <Spinner size="medium" message={{ start: 'Wait while installing.', end: 'Install complete.' }} />}
             </Box>}
           pad={{ horizontal:'medium', top: 'small', bottom: 'large' }}
           />
@@ -248,7 +247,7 @@ function App() {
           ['runtime', 'datafabric'].includes(provider?.id) && <ProjectFocus params={{ srvurl, setError, setActionButton, setSpin }} />
         }
         {/* Output Pane */}
-        <Output params={{ output }} />
+        <Output params={{ output, spin }} />
  
         { //Deployment button
           (readyForDeployment || readyForMlapps) && actionButton

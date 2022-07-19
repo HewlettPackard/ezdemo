@@ -184,22 +184,26 @@ async def destroy(target: str):
 allowed_files = [
     "aws/run.log",
     "azure/run.log",
-    "vmware/run.log",
-    "ovirt/run.log",
+    "dc/run.log",
     "generated/controller.prv_key",
 ]
 
 
 @app.route("/isfile/<path:logfile>")
 def isFile(logfile: str):
+    print(logfile) if "DEV" in os.environ else None
     file_path = os.path.join(
         get_target_dir(logfile.split("/")[0]), logfile.split("/")[1]
     )
+    print(file_path) if "DEV" in os.environ else None
+    print(file_path in allowed_files) if "DEV" in os.environ else None
     if file_path in allowed_files and os.path.exists(
         os.path.join(base_path, file_path)
     ):
+        print("log found") if "DEV" in os.environ else None
         return Response(status=HTTPStatus.OK)
     else:
+        print("no log found") if "DEV" in os.environ else None
         return Response(status=HTTPStatus.NO_CONTENT)
 
 

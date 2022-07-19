@@ -1,6 +1,6 @@
 {
   "aws_access_key": "",
   "aws_secret_key": "",
-  "admin_password": "ChangeMe!",
+  "admin_password": "",
   "region": ""
 }

@@ -37,9 +37,22 @@ pushd "${1}" > /dev/null
   [ -f "refresh.sh" ] && source ./refresh.sh || true
 popd > /dev/null
 
-# Configure AD settings for new AD installation (force AD installation on cloud) and enable monitoring on DF if MAPR_HA set
-[[ "${1}" == "aws" || "${1}" == "azure" ]] && export INSTALL_AD=true && [[ "${IS_MAPR_HA}" == "true" ]] && export CUSTOM_INI="mapr_monitoring=true"
+# Configure AD settings for new AD installation (force AD installation on cloud) 
+[[ "${1}" == "aws" || "${1}" == "azure" ]] && export INSTALL_AD=true
 [[ "$INSTALL_AD" == "true" ]] && AD_CONF=$(<./etc/default_ad_conf.ini)
+
+[[ "${1}" == "dc" ]] && while IFS='=' read var val
+do
+  if [[ $var == \[*] ]]
+  then
+    section=$var
+  elif [[ $val ]]
+  then
+	  CUSTOM_INI="${CUSTOM_INI}
+${var}=${val}"
+  fi
+done < ./dc/dc.ini
+
 
 ANSIBLE_INVENTORY="####
 [controllers]
