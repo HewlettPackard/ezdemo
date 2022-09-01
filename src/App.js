@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Grommet, Box, Button, Text,
-   Anchor, PageHeader, Paragraph, Spinner, Page } from 'grommet';
+   Anchor, PageHeader, Paragraph, Page } from 'grommet';
 import { hpe } from 'grommet-theme-hpe';
 import * as Icons from 'grommet-icons';
 import { HeaderWithActions } from './Header';
@@ -161,7 +161,7 @@ function App() {
       })
       .then(rb => processResponse(rb))
       .then(stream => new Response(stream, { headers: { 'Content-Type': 'text/html' } }).text())
-      .then(result => setOutput([...result]) );
+      .then(result => setOutput([...result]) && setActionButton(deployButton) );
   }
 
   const saveSettings = (settings) =>
@@ -253,8 +253,8 @@ function App() {
           (readyForDeployment || readyForMlapps) && actionButton
         }
         <Paragraph fill='horizontal'>
-            Deploy fully functional HPE Ezmeral products in your prefered environment and get going. Or connect to an existing one to use examples.
-            Further help is available on <Anchor href='https://youtube.com/playlist?list=PLskrf_RqaboJpWGzNkMxqc5QBUiwJ6S7x' label='Youtube' target='_blank' /> and via your <Anchor href='https://hpe.sharepoint.com/sites/ezmeral/SitePages/Ezmeral-Champions.aspx' label=' HPE Ezmeral Champion' target='_blank' />!
+          Help is available on <Anchor href='https://youtube.com/playlist?list=PLskrf_RqaboJpWGzNkMxqc5QBUiwJ6S7x' label='Youtube' target='_blank' />
+          and via your <Anchor href='https://hpe.sharepoint.com/sites/ezmeral/SitePages/Ezmeral-Champions.aspx' label=' HPE Ezmeral Champion' target='_blank' />!
         </Paragraph>
         <Box direction='row' margin="none" justify='between' border='between' gap='small' pad='small'>
           <Anchor href='https://learn.ezmeral.software.hpe.com/' label='Discover' target='_blank' />
